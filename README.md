@@ -149,8 +149,10 @@ Select an SOP Markdown file and validate its template. The app either validates
 an adjacent reviewed `.ir.json` file or helps you create one by copying or
 saving the generated semantic prompt and accepting the returned JSON. It then
 builds validated BPMN files beside the Markdown source, reports the number
-created, and opens the output folder. No network access or additional package
-is required.
+created, and opens the output folder. Each BPMN file uses the Markdown
+basename with a `.bpmn` extension; bundles use `_0`, `_1`, and later suffixes
+when more than one file is emitted. No network access or additional package is
+required.
 
 Run the regression suite with:
 

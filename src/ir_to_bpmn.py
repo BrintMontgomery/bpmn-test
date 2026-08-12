@@ -26,7 +26,17 @@ def default_bpmn_name(ir_path: Path) -> str:
     return f"{stem}.bpmn"
 
 
-def _default_documents(ir_paths: list[Path], bundle: ProcessBundle) -> ProcessBundle:
+def _source_bpmn_names(basename: str, count: int) -> list[str]:
+    """Return BPMN filenames derived from a source basename."""
+
+    if count == 1:
+        return [f"{basename}.bpmn"]
+    return [f"{basename}_{index}.bpmn" for index in range(count)]
+
+
+def _default_documents(
+    ir_paths: list[Path], bundle: ProcessBundle, *, output_basename: str | None = None,
+) -> ProcessBundle:
     """Fill in output names without overriding reviewed document metadata."""
 
     if len(ir_paths) != len(bundle.models):
@@ -49,6 +59,12 @@ def _default_documents(ir_paths: list[Path], bundle: ProcessBundle) -> ProcessBu
             )
         )
         known_ids.add(model.process_id)
+    if output_basename is not None:
+        names = _source_bpmn_names(output_basename, len(specs))
+        specs = [
+            DocumentSpec(spec.id, name, spec.role)
+            for spec, name in zip(specs, names)
+        ]
     try:
         validated = validate_document_manifest(bundle.models, specs)
     except IRValidationError as exc:
@@ -82,6 +98,7 @@ def _plane_node_counts(path: Path) -> list[tuple[str, int]]:
 
 def preflight(
     ir_files: list[str | Path], *, repair_layout: bool = False,
+    output_basename: str | None = None,
 ) -> tuple[ProcessBundle, PreparedBundle]:
     """Load, normalize, decompose, and layout a complete BPMN bundle."""
 
@@ -89,7 +106,9 @@ def preflight(
         raise CLIError("at least one IR file is required")
     ir_paths = [Path(path) for path in ir_files]
     try:
-        bundle = _default_documents(ir_paths, load_bundle(ir_paths))
+        bundle = _default_documents(
+            ir_paths, load_bundle(ir_paths), output_basename=output_basename
+        )
         prepared = prepare_bundle_for_build(bundle, repair_layout=repair_layout)
     except (OSError, IRValidationError, ValueError) as exc:
         raise CLIError(str(exc)) from exc
@@ -98,7 +117,7 @@ def preflight(
 
 def planned_output_paths(
     ir_files: list[str | Path], *, output_dir: str | Path | None = None,
-    repair_layout: bool = False,
+    repair_layout: bool = False, output_basename: str | None = None,
 ) -> list[Path]:
     """Return the BPMN paths that :func:`run` would publish.
 
@@ -110,7 +129,11 @@ def planned_output_paths(
     if not ir_files:
         raise CLIError("at least one IR file is required")
     ir_paths = [Path(path) for path in ir_files]
-    bundle, _prepared = preflight(ir_paths, repair_layout=repair_layout)
+    bundle, _prepared = preflight(
+        ir_paths,
+        repair_layout=repair_layout,
+        output_basename=output_basename,
+    )
     directory = Path(output_dir) if output_dir is not None else ir_paths[0].parent
     return [directory / document.file for document in bundle.documents]
 
@@ -119,7 +142,7 @@ def run(
     ir_files: list[str | Path],
     *,
     output_dir: str | Path | None = None,
-    repair_layout: bool = False,
+    repair_layout: bool = False, output_basename: str | None = None,
 ) -> list[Path]:
     """Emit and validate a complete BPMN bundle, returning emitted paths."""
 
@@ -127,7 +150,11 @@ def run(
         raise CLIError("at least one IR file is required")
     ir_paths = [Path(path) for path in ir_files]
     try:
-        bundle, prepared = preflight(ir_paths, repair_layout=repair_layout)
+        bundle, prepared = preflight(
+            ir_paths,
+            repair_layout=repair_layout,
+            output_basename=output_basename,
+        )
         directory = Path(output_dir) if output_dir is not None else ir_paths[0].parent
         directory.mkdir(parents=True, exist_ok=True)
     except (OSError, IRValidationError, ValueError) as exc:

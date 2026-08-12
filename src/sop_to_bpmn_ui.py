@@ -147,6 +147,7 @@ class SOPToBPMNController:
             return ir_to_bpmn.planned_output_paths(
                 [self.ir_path], output_dir=self.source.parent,
                 repair_layout=repair_layout,
+                output_basename=self.source.stem,
             )
         except ir_to_bpmn.CLIError as exc:
             raise WorkflowError(str(exc)) from exc
@@ -161,11 +162,14 @@ class SOPToBPMNController:
         assert self.source is not None and self.ir_path is not None
         try:
             _, prepared = ir_to_bpmn.preflight(
-                [self.ir_path], repair_layout=repair_layout
+                [self.ir_path],
+                repair_layout=repair_layout,
+                output_basename=self.source.stem,
             )
             paths = ir_to_bpmn.run(
                 [self.ir_path], output_dir=self.source.parent,
                 repair_layout=repair_layout,
+                output_basename=self.source.stem,
             )
         except ir_to_bpmn.CLIError as exc:
             raise WorkflowError(str(exc)) from exc

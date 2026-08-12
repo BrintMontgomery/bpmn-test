@@ -197,6 +197,32 @@ class IRToBPMNTests(unittest.TestCase):
             self.assertEqual(["main.bpmn", "global.bpmn"], [path.name for path in paths])
             self.assertTrue(all(path.exists() for path in paths))
 
+    def test_source_basename_numbers_multiple_outputs(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            documents = [
+                {"id": "Process_Main", "file": "reviewed-main.bpmn", "role": "main"},
+                {"id": "Process_Global", "file": "reviewed-global.bpmn", "role": "global"},
+            ]
+            main = self.write_ir(
+                root, "main.ir.json",
+                valid_ir("Process_Main", documents=documents, call_target="Process_Global"),
+            )
+            global_ir = self.write_ir(root, "global.ir.json", valid_ir("Process_Global"))
+
+            with redirect_stdout(io.StringIO()):
+                paths = ir_to_bpmn.run(
+                    [main, global_ir],
+                    output_dir=root / "out",
+                    output_basename="Case Manager.v2 (Draft)",
+                )
+
+            self.assertEqual(
+                ["Case Manager.v2 (Draft)_0.bpmn", "Case Manager.v2 (Draft)_1.bpmn"],
+                [path.name for path in paths],
+            )
+            self.assertTrue(all(path.exists() for path in paths))
+
     def test_validation_failure_returns_cli_error_without_success_message(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
@@ -241,14 +267,14 @@ class ConvenienceWrapperTests(unittest.TestCase):
     def test_existing_ir_skips_semantic_stage(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            source = root / "NotNeeded.md"
+            source = root / "Case Manager.v2 (Draft).md"
             ir_path = root / "NotNeeded.ir.json"
             ir_path.write_text(json.dumps(valid_ir()), encoding="utf-8")
             with patch.object(sop_to_bpmn.sop_to_ir, "run") as semantic_run:
                 with redirect_stdout(io.StringIO()):
-                    paths = sop_to_bpmn.run(source)
+                    paths = sop_to_bpmn.run(source, ir_output=ir_path)
             semantic_run.assert_not_called()
-            self.assertEqual([root / "NotNeeded.bpmn"], paths)
+            self.assertEqual([root / "Case Manager.v2 (Draft).bpmn"], paths)
 
     def test_missing_ir_requires_a_response_and_then_runs_both_stages(self) -> None:
         with TemporaryDirectory() as directory:

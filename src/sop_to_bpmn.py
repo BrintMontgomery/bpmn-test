@@ -36,7 +36,10 @@ def run(
             prompt_stream=prompt_stream,
         )
     return ir_to_bpmn.run(
-        [ir_path], output_dir=output_dir, repair_layout=repair_layout
+        [ir_path],
+        output_dir=output_dir,
+        repair_layout=repair_layout,
+        output_basename=source_path.stem,
     )
 
 

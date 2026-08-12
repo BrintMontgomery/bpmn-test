@@ -209,15 +209,16 @@ class SOPToBPMNControllerTests(unittest.TestCase):
 
     def test_builds_bpmn_beside_markdown_and_requires_output_consent(self) -> None:
         with TemporaryDirectory() as directory:
-            source = self.make_source(Path(directory))
+            source = self.make_source(Path(directory), "Case Manager.v2 (Draft).md")
             controller = SOPToBPMNController()
             controller.prepare_source(source)
             controller.save_semantic_response(json.dumps(valid_ir()))
 
-            self.assertEqual([source.with_name("Process.bpmn")], controller.planned_outputs())
+            expected = source.with_name("Case Manager.v2 (Draft).bpmn")
+            self.assertEqual([expected], controller.planned_outputs())
             with redirect_stdout(io.StringIO()):
                 result = controller.build_bpmn()
-            self.assertEqual((source.with_name("Process.bpmn"),), result.paths)
+            self.assertEqual((expected,), result.paths)
             self.assertTrue(result.paths[0].exists())
             with self.assertRaises(OverwriteRequired):
                 controller.build_bpmn()
