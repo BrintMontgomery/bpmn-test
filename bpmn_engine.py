@@ -1477,9 +1477,11 @@ def build_xml(
                 continue
             nx, ny, nw, nh = child_layout.bounds[node.id]
             ax, ay, aw, ah = child_layout.ann_bounds[node.id]
-            edge_di(f"Assoc_{node.id}", [(nx + nw / 2, ny + nh),
-                                          (ax + aw / 2, ay)],
-                    target_plane=child_plane)
+            if ay < ny:
+                points = [(nx + nw / 2, ny), (ax + aw / 2, ay + ah)]
+            else:
+                points = [(nx + nw / 2, ny + nh), (ax + aw / 2, ay)]
+            edge_di(f"Assoc_{node.id}", points, target_plane=child_plane)
         pending_subprocesses.extend(
             node for node in _scope_nodes(model, child_scope)
             if node.kind == "subprocess" and node.collapsed

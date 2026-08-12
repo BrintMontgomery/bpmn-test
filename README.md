@@ -77,7 +77,8 @@ See [MARKDOWN_AUTHORING.md](MARKDOWN_AUTHORING.md) for the full specification.
 
 | Input | Output |
 |-------|--------|
-| `OFC-004 — Case Manager Intakes Consumer.md` | `OFC-004.bpmn`, `OFC-004.mmd` |
+| `OFC-001.ir.json` | `OFC-001.bpmn` |
+| `OFC-004.ir.json` | `OFC-004.bpmn` |
 | Validated IR JSON | `.bpmn` bundle (+ optional separate called-process files) |
 
 ## Architecture

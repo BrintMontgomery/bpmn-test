@@ -231,7 +231,7 @@ class EngineTests(unittest.TestCase):
         self.assertNotIn("subrow", names)
 
     def test_nested_and_parallel_branches_get_stable_rows(self) -> None:
-        import generate_bpmn_ofc004
+        import ofc004_model
         import ofc001_model
 
         ofc001_layout = engine.compute_layout(
@@ -252,8 +252,8 @@ class EngineTests(unittest.TestCase):
         )
 
         ofc004_layout = engine.compute_layout(
-            generate_bpmn_ofc004.MODEL,
-            engine.Scope.top_level(generate_bpmn_ofc004.MODEL),
+            ofc004_model.MODEL,
+            engine.Scope.top_level(ofc004_model.MODEL),
         )
         self.assertGreater(
             ofc004_layout.placements["Task_InformConsumerDeclined"].subrow,
@@ -262,12 +262,12 @@ class EngineTests(unittest.TestCase):
 
     def test_current_processes_generate_valid_bpmn(self) -> None:
         import ofc001_model
-        import generate_bpmn_ofc004
+        import ofc004_model
 
         with TemporaryDirectory() as temp_dir:
             for model, filename in (
                 (ofc001_model.MODEL, "OFC-001.bpmn"),
-                (generate_bpmn_ofc004.MODEL, "OFC-004.bpmn"),
+                (ofc004_model.MODEL, "OFC-004.bpmn"),
             ):
                 path = Path(temp_dir) / filename
                 scope = engine.Scope.top_level(model)

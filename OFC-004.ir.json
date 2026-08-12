@@ -1,0 +1,850 @@
+{
+  "schema_version": 1,
+  "process_id": "Process_OFC004",
+  "participant_name": "Oklahoma Forensic Center — Case Manager Intakes Consumer",
+  "process_doc": "OFC-004 — Case Manager Intakes Consumer. Oklahoma Forensic Center, Case Management Unit. Version 1.1, 2026-08-11. Standardized case-management admission process to establish emergency and restricted contacts, document the consumer's treatment advocate, verify authorized contacts, and ensure required release documentation is available to staff.",
+  "process_name": "OFC-004 — Case Manager Intakes Consumer",
+  "participant_id": "Participant_OFCCaseManagement",
+  "collaboration_id": "Collaboration_OFC004",
+  "definitions_id": "Definitions_OFC004",
+  "exporter": "ir.json",
+  "exporter_version": "1.0",
+  "target_namespace": "http://oklahoma.gov/odmhsas/ofc/bpmn",
+  "ann_above": [
+    "Lane_CM"
+  ],
+  "lane_classes": {},
+  "mermaid_class_defs": [],
+  "lanes": [
+    {
+      "id": "Lane_CM",
+      "name": "Case Manager"
+    },
+    {
+      "id": "Lane_CON",
+      "name": "Consumer"
+    },
+    {
+      "id": "Lane_SW",
+      "name": "Social Worker"
+    },
+    {
+      "id": "Lane_NS",
+      "name": "Nursing Staff"
+    },
+    {
+      "id": "Lane_FS",
+      "name": "Floor Staff"
+    },
+    {
+      "id": "Lane_PTA",
+      "name": "Prospective Treatment Advocate"
+    },
+    {
+      "id": "Lane_PC",
+      "name": "Prospective Contact"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Trigger"
+    },
+    {
+      "id": "P1",
+      "name": "1. Elopement Form & Protective Order Review"
+    },
+    {
+      "id": "P2",
+      "name": "2. Complete & Distribute Elopement Form"
+    },
+    {
+      "id": "P3",
+      "name": "3. Treatment Advocate Designation"
+    },
+    {
+      "id": "P4",
+      "name": "4. Nursing Handoff"
+    },
+    {
+      "id": "P5",
+      "name": "5. Contact Sheet Review"
+    },
+    {
+      "id": "P6",
+      "name": "6. ROI Filing & Closeout"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "StartEvent_AdmissionNotification",
+      "kind": "start_message",
+      "lane": "Lane_CM",
+      "phase": "P0",
+      "name": "Admission notification email and consumer report received",
+      "doc": [
+        "Receive the admission notification email and associated consumer report."
+      ]
+    },
+    {
+      "id": "Task_BeginElopementForm",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": "Begin the Elopement Form",
+      "ttype": "user",
+      "doc": [
+        "Open and begin the Elopement Form with available information."
+      ]
+    },
+    {
+      "id": "Task_ReviewAdmissionReport",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": "Review the admission report for contacts, attorneys, sheriff information, and victims",
+      "ttype": "user",
+      "doc": [
+        "Search the admission report for emergency contacts, county contacts, attorneys, sheriff information, and victim information."
+      ]
+    },
+    {
+      "id": "Task_SearchOSCN",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": "Search OSCN for protective orders",
+      "ttype": "user",
+      "doc": [
+        "Search the Oklahoma State Courts Network (OSCN) for active protective orders.",
+        "Record applicable contact restrictions on the Elopement Form."
+      ]
+    },
+    {
+      "id": "Gateway_ProtectiveOrder",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": "Protective order restricts contact?",
+      "doc": [
+        "Option B — a protective order involves a proposed or existing contact."
+      ]
+    },
+    {
+      "id": "Task_RecordRestrictedPerson",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": "Record the restricted person on the Elopement Form",
+      "ttype": "user",
+      "note": "[a] Protective orders identified through OSCN restrict contact with the persons named in the order. A restricted person must not be approved for consumer contact."
+    },
+    {
+      "id": "Task_DoNotAuthorizeContact",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": "Do not authorize contact with the restricted person",
+      "ttype": "manual"
+    },
+    {
+      "id": "Gateway_ConsumerRequestsRestricted",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": "Consumer requests prohibited contact?"
+    },
+    {
+      "id": "Task_InformConsumerOfRestriction",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": "Inform the Consumer of the restriction",
+      "ttype": "manual"
+    },
+    {
+      "id": "Gateway_ProtectiveOrderJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P1",
+      "name": ""
+    },
+    {
+      "id": "Task_ObtainRemainingInfo",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P2",
+      "name": "Obtain remaining consumer information after arrival and complete the Elopement Form",
+      "ttype": "user"
+    },
+    {
+      "id": "Task_EmailElopementForm",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P2",
+      "name": "Email the completed Elopement Form to admissions staff",
+      "ttype": "send"
+    },
+    {
+      "id": "Task_ReviewTAFormWithConsumer",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Review the Treatment Advocate Form with the Consumer",
+      "ttype": "user"
+    },
+    {
+      "id": "Gateway_ConsumerAbleToParticipate",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Consumer able to participate?",
+      "doc": [
+        "Option C — the Consumer is too agitated, delusional, or unable to participate effectively."
+      ]
+    },
+    {
+      "id": "Task_PostponeActivity",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Postpone the activity",
+      "ttype": "manual",
+      "note": "[c] Postpone the affected interview or documentation activity. Return when the Consumer is able to participate, including the following day when appropriate. Continue periodic follow-up during the week when needed."
+    },
+    {
+      "id": "Task_ReturnWhenAble",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Return when the Consumer is able to participate",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_PeriodicFollowUp",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Continue periodic follow-up during the week",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_ConsumerIdentifiesAdvocate",
+      "kind": "task",
+      "lane": "Lane_CON",
+      "phase": "P3",
+      "name": "Identify a prospective external Treatment Advocate",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_ContactAdvocate",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Contact the Prospective Treatment Advocate",
+      "ttype": "send",
+      "doc": [
+        "Obtain confirmation that the person is willing to serve in that role."
+      ]
+    },
+    {
+      "id": "Task_AdvocateSignsForm",
+      "kind": "task",
+      "lane": "Lane_PTA",
+      "phase": "P3",
+      "name": "Sign the Treatment Advocate Form",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_ConsumerSignsROI",
+      "kind": "task",
+      "lane": "Lane_CON",
+      "phase": "P3",
+      "name": "Sign the associated Release of Information authorization",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_ScanDocumentation",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Scan a copy of the completed treatment-advocate documentation",
+      "ttype": "user",
+      "note": "[b] Release of information is limited to the information or purposes authorized on the signed ROI. Authorization is not a general release of all consumer information."
+    },
+    {
+      "id": "Task_MailCopyToAdvocate",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Mail a copy to the Treatment Advocate",
+      "ttype": "send"
+    },
+    {
+      "id": "Gateway_AdvocateChangeRequested",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Consumer requests a different Treatment Advocate?",
+      "doc": [
+        "Option D — the Consumer requests a different Treatment Advocate after the initial designation."
+      ]
+    },
+    {
+      "id": "Task_ProcessAdvocateChange",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": "Process the new Treatment Advocate designation",
+      "ttype": "user",
+      "note": "[d] A Consumer may change the designated Treatment Advocate at any time and may request additions or removals from the contact sheet after admission."
+    },
+    {
+      "id": "Gateway_AdvocateChangeJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P3",
+      "name": ""
+    },
+    {
+      "id": "Task_NursingCompletesAdmission",
+      "kind": "task",
+      "lane": "Lane_NS",
+      "phase": "P4",
+      "name": "Nursing Staff completes the nursing portion of the admission",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_CheckAdditionalContacts",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Check with the Social Worker and Consumer for additional persons",
+      "ttype": "user"
+    },
+    {
+      "id": "Gateway_AdditionalContactRequested",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Consumer requests an additional contact?",
+      "doc": [
+        "Option A — the Consumer requests that another person be added to the unit contact sheet."
+      ]
+    },
+    {
+      "id": "Task_CompleteROI",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Complete an ROI with the Consumer",
+      "ttype": "user"
+    },
+    {
+      "id": "Task_RecordROIPurpose",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Record authorized purposes or information categories on the ROI",
+      "ttype": "user",
+      "doc": [
+        "Include applicable contact purposes such as visit, telephone call, or televisit."
+      ]
+    },
+    {
+      "id": "Task_ContactProspectiveContact",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Contact the Prospective Contact",
+      "ttype": "send",
+      "doc": [
+        "Ask whether the person agrees to receive contact from the Consumer."
+      ]
+    },
+    {
+      "id": "Task_ProspectiveContactResponds",
+      "kind": "task",
+      "lane": "Lane_PC",
+      "phase": "P5",
+      "name": "Respond with agreement or decline",
+      "ttype": "manual"
+    },
+    {
+      "id": "Gateway_ContactAgrees",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Prospective Contact agrees?"
+    },
+    {
+      "id": "Task_InformFloorStaffNewContact",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Inform Floor Staff that the contact may be added to the unit contact sheet",
+      "ttype": "send"
+    },
+    {
+      "id": "Task_PlaceROIInChartOptionA",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Place the approved ROI in the consumer chart",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_InformConsumerDeclined",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Inform the Consumer and do not authorize the contact",
+      "ttype": "manual"
+    },
+    {
+      "id": "Gateway_ContactJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": ""
+    },
+    {
+      "id": "Task_ConfirmContactSheet",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Confirm that the unit contact sheet reflects approved contacts",
+      "ttype": "user",
+      "note": "[c] The contact sheet is individualized to the unit and is not a standardized standalone case-management form. Floor Staff maintains the operational contact information."
+    },
+    {
+      "id": "Task_CommunicateVerifiedContacts",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P5",
+      "name": "Communicate verified contact information to Floor Staff",
+      "ttype": "send"
+    },
+    {
+      "id": "Task_FloorStaffMaintainsSheet",
+      "kind": "task",
+      "lane": "Lane_FS",
+      "phase": "P5",
+      "name": "Maintain the operational unit contact sheet",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_FileApprovedROIs",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Ensure each approved ROI is placed in the consumer chart",
+      "ttype": "user"
+    },
+    {
+      "id": "Gateway_ClinicalEventWitnessed",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Event requiring clinical documentation witnessed?",
+      "doc": [
+        "Option F — the Case Manager personally witnesses an event that requires documentation."
+      ]
+    },
+    {
+      "id": "Task_DocumentInAvatar",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Document the event in Avatar",
+      "ttype": "user",
+      "note": "[e] Avatar is not part of the routine case-management admission-document workflow. The Case Manager uses Avatar when an observed event independently requires documentation. Do not enter routine Elopement Forms, Treatment Advocate Forms, or admission ROIs into Avatar solely as part of this intake workflow."
+    },
+    {
+      "id": "Gateway_ClinicalEventJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": ""
+    },
+    {
+      "id": "Gateway_PostAdmissionChange",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Contact-list change requested after admission?",
+      "doc": [
+        "Option E — the Consumer requests that a person be added to or removed from the contact sheet after the initial admission process."
+      ]
+    },
+    {
+      "id": "Task_ProcessContactChange",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Process the requested change",
+      "ttype": "user"
+    },
+    {
+      "id": "Task_VerifyROIForChange",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Complete and verify an ROI when required",
+      "ttype": "user"
+    },
+    {
+      "id": "Task_CommunicateChangeToFloorStaff",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Communicate the approved change to Floor Staff",
+      "ttype": "send"
+    },
+    {
+      "id": "Task_DeliverOngoingIssues",
+      "kind": "task",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Complete the case-management admission workflow",
+      "ttype": "user",
+      "doc": [
+        "Deliver ongoing contact, behavioral, or consumer-support issues to the Social Worker or Floor Staff as appropriate."
+      ]
+    },
+    {
+      "id": "Gateway_HandoffTarget",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Handoff to Floor Staff or Social Worker?"
+    },
+    {
+      "id": "Task_FSReceivesHandoff",
+      "kind": "task",
+      "lane": "Lane_FS",
+      "phase": "P6",
+      "name": "Receive handoff of ongoing issues",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_SWReceivesHandoff",
+      "kind": "task",
+      "lane": "Lane_SW",
+      "phase": "P6",
+      "name": "Receive handoff of ongoing issues",
+      "ttype": "manual"
+    },
+    {
+      "id": "Gateway_HandoffJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": ""
+    },
+    {
+      "id": "EndEvent_Complete",
+      "kind": "end",
+      "lane": "Lane_CM",
+      "phase": "P6",
+      "name": "Case-management admission workflow complete",
+      "doc": [
+        "The consumer's elopement information, protective-order restrictions, treatment advocate status, and approved external contacts are documented and communicated. Required ROI documentation is placed in the chart. Delayed or unresolved admission activity is tracked and handed off to Social Worker or Floor Staff."
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "StartEvent_AdmissionNotification",
+      "target": "Task_BeginElopementForm"
+    },
+    {
+      "source": "Task_BeginElopementForm",
+      "target": "Task_ReviewAdmissionReport"
+    },
+    {
+      "source": "Task_ReviewAdmissionReport",
+      "target": "Task_SearchOSCN"
+    },
+    {
+      "source": "Task_SearchOSCN",
+      "target": "Gateway_ProtectiveOrder"
+    },
+    {
+      "source": "Gateway_ProtectiveOrder",
+      "target": "Gateway_ProtectiveOrderJoin",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_ProtectiveOrder",
+      "target": "Task_RecordRestrictedPerson",
+      "label": "Yes",
+      "condition": "Protective order restricts contact"
+    },
+    {
+      "source": "Task_RecordRestrictedPerson",
+      "target": "Task_DoNotAuthorizeContact"
+    },
+    {
+      "source": "Task_DoNotAuthorizeContact",
+      "target": "Gateway_ConsumerRequestsRestricted"
+    },
+    {
+      "source": "Gateway_ConsumerRequestsRestricted",
+      "target": "Gateway_ProtectiveOrderJoin",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_ConsumerRequestsRestricted",
+      "target": "Task_InformConsumerOfRestriction",
+      "label": "Yes",
+      "condition": "Consumer requests the restricted contact"
+    },
+    {
+      "source": "Task_InformConsumerOfRestriction",
+      "target": "Gateway_ProtectiveOrderJoin"
+    },
+    {
+      "source": "Gateway_ProtectiveOrderJoin",
+      "target": "Task_ObtainRemainingInfo"
+    },
+    {
+      "source": "Task_ObtainRemainingInfo",
+      "target": "Task_EmailElopementForm"
+    },
+    {
+      "source": "Task_EmailElopementForm",
+      "target": "Task_ReviewTAFormWithConsumer"
+    },
+    {
+      "source": "Task_ReviewTAFormWithConsumer",
+      "target": "Gateway_ConsumerAbleToParticipate"
+    },
+    {
+      "source": "Gateway_ConsumerAbleToParticipate",
+      "target": "Task_ConsumerIdentifiesAdvocate",
+      "label": "Yes"
+    },
+    {
+      "source": "Gateway_ConsumerAbleToParticipate",
+      "target": "Task_PostponeActivity",
+      "label": "No",
+      "condition": "Consumer is too agitated, delusional, or unable to participate"
+    },
+    {
+      "source": "Task_PostponeActivity",
+      "target": "Task_ReturnWhenAble"
+    },
+    {
+      "source": "Task_ReturnWhenAble",
+      "target": "Task_PeriodicFollowUp"
+    },
+    {
+      "source": "Task_PeriodicFollowUp",
+      "target": "Task_ReviewTAFormWithConsumer",
+      "loop": true
+    },
+    {
+      "source": "Task_ConsumerIdentifiesAdvocate",
+      "target": "Task_ContactAdvocate"
+    },
+    {
+      "source": "Task_ContactAdvocate",
+      "target": "Task_AdvocateSignsForm"
+    },
+    {
+      "source": "Task_AdvocateSignsForm",
+      "target": "Task_ConsumerSignsROI"
+    },
+    {
+      "source": "Task_ConsumerSignsROI",
+      "target": "Task_ScanDocumentation"
+    },
+    {
+      "source": "Task_ScanDocumentation",
+      "target": "Task_MailCopyToAdvocate"
+    },
+    {
+      "source": "Task_MailCopyToAdvocate",
+      "target": "Gateway_AdvocateChangeRequested"
+    },
+    {
+      "source": "Gateway_AdvocateChangeRequested",
+      "target": "Gateway_AdvocateChangeJoin",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_AdvocateChangeRequested",
+      "target": "Task_ProcessAdvocateChange",
+      "label": "Yes",
+      "condition": "Consumer requests a different Treatment Advocate"
+    },
+    {
+      "source": "Task_ProcessAdvocateChange",
+      "target": "Gateway_AdvocateChangeJoin"
+    },
+    {
+      "source": "Gateway_AdvocateChangeJoin",
+      "target": "Task_NursingCompletesAdmission"
+    },
+    {
+      "source": "Task_NursingCompletesAdmission",
+      "target": "Task_CheckAdditionalContacts"
+    },
+    {
+      "source": "Task_CheckAdditionalContacts",
+      "target": "Gateway_AdditionalContactRequested"
+    },
+    {
+      "source": "Gateway_AdditionalContactRequested",
+      "target": "Gateway_ContactJoin",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_AdditionalContactRequested",
+      "target": "Task_CompleteROI",
+      "label": "Yes",
+      "condition": "Consumer requests an additional contact"
+    },
+    {
+      "source": "Task_CompleteROI",
+      "target": "Task_RecordROIPurpose"
+    },
+    {
+      "source": "Task_RecordROIPurpose",
+      "target": "Task_ContactProspectiveContact"
+    },
+    {
+      "source": "Task_ContactProspectiveContact",
+      "target": "Task_ProspectiveContactResponds"
+    },
+    {
+      "source": "Task_ProspectiveContactResponds",
+      "target": "Gateway_ContactAgrees"
+    },
+    {
+      "source": "Gateway_ContactAgrees",
+      "target": "Task_InformFloorStaffNewContact",
+      "label": "Yes"
+    },
+    {
+      "source": "Gateway_ContactAgrees",
+      "target": "Task_InformConsumerDeclined",
+      "label": "No",
+      "condition": "Prospective Contact declines"
+    },
+    {
+      "source": "Task_InformFloorStaffNewContact",
+      "target": "Task_PlaceROIInChartOptionA"
+    },
+    {
+      "source": "Task_PlaceROIInChartOptionA",
+      "target": "Gateway_ContactJoin"
+    },
+    {
+      "source": "Task_InformConsumerDeclined",
+      "target": "Gateway_ContactJoin"
+    },
+    {
+      "source": "Gateway_ContactJoin",
+      "target": "Task_ConfirmContactSheet"
+    },
+    {
+      "source": "Task_ConfirmContactSheet",
+      "target": "Task_CommunicateVerifiedContacts"
+    },
+    {
+      "source": "Task_CommunicateVerifiedContacts",
+      "target": "Task_FloorStaffMaintainsSheet"
+    },
+    {
+      "source": "Task_FloorStaffMaintainsSheet",
+      "target": "Task_FileApprovedROIs"
+    },
+    {
+      "source": "Task_FileApprovedROIs",
+      "target": "Gateway_ClinicalEventWitnessed"
+    },
+    {
+      "source": "Gateway_ClinicalEventWitnessed",
+      "target": "Gateway_ClinicalEventJoin",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_ClinicalEventWitnessed",
+      "target": "Task_DocumentInAvatar",
+      "label": "Yes",
+      "condition": "Event requires clinical documentation"
+    },
+    {
+      "source": "Task_DocumentInAvatar",
+      "target": "Gateway_ClinicalEventJoin"
+    },
+    {
+      "source": "Gateway_ClinicalEventJoin",
+      "target": "Gateway_PostAdmissionChange"
+    },
+    {
+      "source": "Gateway_PostAdmissionChange",
+      "target": "Task_DeliverOngoingIssues",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_PostAdmissionChange",
+      "target": "Task_ProcessContactChange",
+      "label": "Yes",
+      "condition": "Contact-list change requested after admission"
+    },
+    {
+      "source": "Task_ProcessContactChange",
+      "target": "Task_VerifyROIForChange"
+    },
+    {
+      "source": "Task_VerifyROIForChange",
+      "target": "Task_CommunicateChangeToFloorStaff"
+    },
+    {
+      "source": "Task_CommunicateChangeToFloorStaff",
+      "target": "Gateway_PostAdmissionChange",
+      "loop": true
+    },
+    {
+      "source": "Task_DeliverOngoingIssues",
+      "target": "Gateway_HandoffTarget"
+    },
+    {
+      "source": "Gateway_HandoffTarget",
+      "target": "Task_FSReceivesHandoff",
+      "label": "Floor Staff"
+    },
+    {
+      "source": "Gateway_HandoffTarget",
+      "target": "Task_SWReceivesHandoff",
+      "label": "Social Worker",
+      "condition": "Handoff to Social Worker"
+    },
+    {
+      "source": "Task_FSReceivesHandoff",
+      "target": "Gateway_HandoffJoin"
+    },
+    {
+      "source": "Task_SWReceivesHandoff",
+      "target": "Gateway_HandoffJoin"
+    },
+    {
+      "source": "Gateway_HandoffJoin",
+      "target": "EndEvent_Complete"
+    }
+  ],
+  "external_pools": [],
+  "message_flows": [],
+  "documents": [],
+  "decomposition": {
+    "mode": "off",
+    "max_nodes_per_plane": 50,
+    "max_columns": 14,
+    "max_pool_width": 3200,
+    "collapse_phases": [],
+    "max_lanes_per_collapsed_phase": 3
+  }
+}

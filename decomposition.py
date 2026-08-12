@@ -105,6 +105,18 @@ def _collapse_phase(model: ProcessModel, phase_id: str,
         replace(edge, target=child_end_id) for edge in outgoing
     )
 
+    # Collapsing adjacent phases can turn distinct boundary edges into the
+    # same parent-level connection.  Preserve branch metadata while removing
+    # only exact duplicates; BPMN requires each emitted flow id to be unique.
+    unique_edges: list[Edge] = []
+    seen_edges: set[tuple[str, str, str, str, bool]] = set()
+    for edge in rewritten:
+        key = (edge.source, edge.target, edge.label, edge.condition, edge.loop)
+        if key in seen_edges:
+            continue
+        seen_edges.add(key)
+        unique_edges.append(edge)
+
     updated_nodes: list[Node] = []
     inserted = False
     for node in model.nodes:
@@ -125,7 +137,7 @@ def _collapse_phase(model: ProcessModel, phase_id: str,
         len(updated_nodes),
     )
     updated_nodes[first_child:first_child] = [child_start, child_end]
-    return replace(model, nodes=updated_nodes, edges=rewritten)
+    return replace(model, nodes=updated_nodes, edges=unique_edges)
 
 
 def _eligible_phases(model: ProcessModel, parent_id: str | None,

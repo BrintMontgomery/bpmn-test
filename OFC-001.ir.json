@@ -1,0 +1,1146 @@
+{
+  "schema_version": 1,
+  "process_id": "Process_OFC001",
+  "participant_name": "Oklahoma Forensic Center — Security Intake",
+  "process_doc": "OFC-001 - Security Intakes Consumer. Oklahoma Forensic Center, Security Unit. Version 1.1, 2026-08-11. Controlled process for receiving a consumer from law enforcement, documenting the transfer of custody, completing security screening and identification, establishing electronic tracking, and handing the consumer to nursing staff.",
+  "process_name": "OFC-001 — Security Intakes Consumer",
+  "participant_id": "Participant_OFCSecurityIntake",
+  "collaboration_id": "Collaboration_OFC001",
+  "definitions_id": "Definitions_OFC001",
+  "exporter": "ir.json",
+  "exporter_version": "1.0",
+  "target_namespace": "http://oklahoma.gov/odmhsas/ofc/bpmn",
+  "ann_above": [
+    "Lane_SO"
+  ],
+  "lane_classes": {
+    "Lane_SO": "so",
+    "Lane_LED": "led",
+    "Lane_CON": "con",
+    "Lane_UN": "un",
+    "Lane_MHT": "mht"
+  },
+  "mermaid_class_defs": [
+    "  classDef so fill:#dbeafe,stroke:#1d4ed8,color:#0f172a;",
+    "  classDef led fill:#fee2e2,stroke:#b91c1c,color:#0f172a;",
+    "  classDef con fill:#fef3c7,stroke:#b45309,color:#0f172a;",
+    "  classDef un fill:#dcfce7,stroke:#15803d,color:#0f172a;",
+    "  classDef mht fill:#f3e8ff,stroke:#7e22ce,color:#0f172a;",
+    "  classDef ext fill:#e2e8f0,stroke:#475569,color:#0f172a;"
+  ],
+  "lanes": [
+    {
+      "id": "Lane_SO",
+      "name": "Security Officer"
+    },
+    {
+      "id": "Lane_LED",
+      "name": "Law Enforcement Deputy"
+    },
+    {
+      "id": "Lane_CON",
+      "name": "Consumer"
+    },
+    {
+      "id": "Lane_UN",
+      "name": "Unit Nurse"
+    },
+    {
+      "id": "Lane_MHT",
+      "name": "Mental Health Technician"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Trigger"
+    },
+    {
+      "id": "P1",
+      "name": "1. Prepare for Admission"
+    },
+    {
+      "id": "P2",
+      "name": "2. Receive Consumer from Law Enforcement"
+    },
+    {
+      "id": "P3",
+      "name": "3. Document Transfer of Custody"
+    },
+    {
+      "id": "P4",
+      "name": "4. Establish Initial Electronic Admission Record"
+    },
+    {
+      "id": "P5",
+      "name": "5. Security Search and Property Inventory"
+    },
+    {
+      "id": "P6",
+      "name": "6. ObserveSmart Tracking and Identification"
+    },
+    {
+      "id": "P7",
+      "name": "7. Collect Supplemental Admission Information"
+    },
+    {
+      "id": "P8",
+      "name": "8. Initiate Nursing Handoff"
+    },
+    {
+      "id": "P9",
+      "name": "9. Determine Escort and Nursing Location"
+    },
+    {
+      "id": "P10",
+      "name": "10. Complete Shower and Unit Transfer"
+    },
+    {
+      "id": "P11",
+      "name": "11. Complete Security-to-Nursing Handoff"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "StartEvent_ScheduledAdmission",
+      "kind": "start_message",
+      "lane": "Lane_SO",
+      "phase": "P0",
+      "name": "Scheduled admission email received",
+      "doc": [
+        "Receive the consumer name, identifying number, destination unit, and planned admission date from the Admissions Coordinator."
+      ]
+    },
+    {
+      "id": "Event_DayOfAdmission",
+      "kind": "catch_timer",
+      "lane": "Lane_SO",
+      "phase": "P0",
+      "name": "On the day of admission",
+      "doc": [
+        "The packet is prepared on the day of admission, not on receipt of the scheduling email."
+      ]
+    },
+    {
+      "id": "Task_ReviewSchedule",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P1",
+      "name": "Review admission schedule and confirm admission remains active",
+      "ttype": "user",
+      "doc": [
+        "Review the admission schedule on the day of admission.",
+        "Confirm that the scheduled admission remains active."
+      ]
+    },
+    {
+      "id": "Gateway_InfoChanged",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P1",
+      "name": "Admission information changed?",
+      "doc": [
+        "Option B - the admission date, arrival time, consumer information, or destination unit changed before arrival."
+      ]
+    },
+    {
+      "id": "Task_PreparePacket",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P1",
+      "name": "Prepare the security admission packet",
+      "ttype": "manual",
+      "doc": [
+        "Prepare the security admission packet on the day of admission.",
+        "Enter the consumer name, identifying number, and destination unit on each applicable page."
+      ],
+      "note": "[a] Prepare the packet on the day of admission because admission dates and times are frequently changed. Do not print the final packet solely in response to the initial scheduling email."
+    },
+    {
+      "id": "Task_ReviewLatestEmail",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P1",
+      "name": "Review the most recent admission email",
+      "ttype": "user",
+      "doc": [
+        "Review the most recent admission email.",
+        "Confirm the current admission date, arrival time, consumer information, and destination unit.",
+        "Do not rely on a packet printed from an earlier schedule."
+      ]
+    },
+    {
+      "id": "Task_UpdatePacket",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P1",
+      "name": "Print or update the packet from confirmed information",
+      "ttype": "manual",
+      "doc": [
+        "Print or update the security admission packet using the confirmed information."
+      ]
+    },
+    {
+      "id": "Gateway_InfoChangedJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P1",
+      "name": "",
+      "doc": [
+        "Resume admission preparation using the current confirmed admission information."
+      ]
+    },
+    {
+      "id": "Task_VerifyReadiness",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P1",
+      "name": "Verify packet contents, system access, and staffing",
+      "ttype": "manual",
+      "doc": [
+        "Confirm the packet contains the Vendor Form, the Admission Property Inventory, the Admission Notification Form, and the Security Intake Questionnaire.",
+        "Confirm active Avatar access and active ObserveSmart access.",
+        "Confirm that the tablet is functioning.",
+        "Confirm that an ObserveSmart beacon is available.",
+        "Confirm that the camera and ID-bracelet equipment are available.",
+        "Confirm that at least two Security Officers are available for the security search."
+      ]
+    },
+    {
+      "id": "Task_StageEquipment",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P1",
+      "name": "Stage admission systems and equipment",
+      "ttype": "manual",
+      "doc": [
+        "Stage Avatar, ObserveSmart, the tablet, the beacon, the camera, and the ID-bracelet equipment."
+      ]
+    },
+    {
+      "id": "Task_AnnounceArrival",
+      "kind": "task",
+      "lane": "Lane_LED",
+      "phase": "P2",
+      "name": "Announce arrival through the sally-port intercom",
+      "ttype": "manual"
+    },
+    {
+      "id": "Gateway_UnscheduledArrival",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Arrival unscheduled or outside the expected time?",
+      "doc": [
+        "Option A - the Law Enforcement Deputy arrives without calling ahead or arrives outside the scheduled time."
+      ]
+    },
+    {
+      "id": "Task_VerifyAgainstSchedule",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Verify consumer against the schedule and daily plan",
+      "ttype": "user",
+      "doc": [
+        "Verify the consumer against the scheduled admission email and the daily admission plan.",
+        "Confirm that the admission remains authorized."
+      ]
+    },
+    {
+      "id": "Task_UpdatePacketOnArrival",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Prepare or update the packet and stage equipment",
+      "ttype": "manual",
+      "doc": [
+        "Prepare or update the admission packet after confirming the admission.",
+        "Stage the required admission systems and equipment."
+      ]
+    },
+    {
+      "id": "Gateway_UnscheduledArrivalJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "",
+      "doc": [
+        "Resume the standard arrival process after confirming the admission."
+      ]
+    },
+    {
+      "id": "Task_AdmitVehicle",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Admit the transport vehicle and close the garage door",
+      "ttype": "manual",
+      "doc": [
+        "Admit the transport vehicle into the sally port.",
+        "Close the garage door."
+      ]
+    },
+    {
+      "id": "Task_EscortToHolding",
+      "kind": "task",
+      "lane": "Lane_LED",
+      "phase": "P2",
+      "name": "Remove consumer from the vehicle and escort to the holding room",
+      "ttype": "manual",
+      "doc": [
+        "Remove the consumer from the transport vehicle.",
+        "Escort the consumer to the admissions holding room."
+      ]
+    },
+    {
+      "id": "Task_RemoveShackles",
+      "kind": "task",
+      "lane": "Lane_LED",
+      "phase": "P2",
+      "name": "Remove the consumer's shackles in the holding room",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_ObtainReport",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Obtain the behavioral and transport report from the Deputy",
+      "ttype": "manual",
+      "doc": [
+        "Review conduct at the county facility.",
+        "Review any combative incidents or transport problems.",
+        "Review any reported threats, agitation, or other safety concerns."
+      ],
+      "note": "[b] The behavioral report should address conduct at the county facility, combative incidents, problems during transport, threats, agitation, and other facts that affect staffing or safety precautions."
+    },
+    {
+      "id": "Gateway_SafetyConcern",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Behavioral or safety concern?",
+      "doc": [
+        "Option C - the Deputy reports combative behavior, transport problems, threats, or other safety concerns, or the consumer appears irritable, agitated, or verbally aggressive."
+      ]
+    },
+    {
+      "id": "Task_RecordBehavioralInfo",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Record the behavioral and safety information",
+      "ttype": "user"
+    },
+    {
+      "id": "Task_CallUnitEarly",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Call the destination unit and request a nursing assessment",
+      "ttype": "send",
+      "doc": [
+        "Call the destination unit before continuing routine processing.",
+        "Report the identified behavioral or safety concern.",
+        "Request a nursing assessment."
+      ]
+    },
+    {
+      "id": "Task_NurseAssess",
+      "kind": "task",
+      "lane": "Lane_UN",
+      "phase": "P2",
+      "name": "Report to admissions and assess the consumer",
+      "ttype": "manual",
+      "doc": [
+        "Report to the admissions area.",
+        "Assess the consumer.",
+        "Determine whether clinical intervention is required."
+      ]
+    },
+    {
+      "id": "Gateway_ClinicalIntervention",
+      "kind": "gateway_x",
+      "lane": "Lane_UN",
+      "phase": "P2",
+      "name": "Clinical intervention required?"
+    },
+    {
+      "id": "Task_AdjustPrecautions",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Adjust staffing and movement precautions",
+      "ttype": "manual",
+      "doc": [
+        "Adjust security staffing and movement precautions according to the nursing assessment."
+      ]
+    },
+    {
+      "id": "Event_NurseAuthorizes",
+      "kind": "catch_message",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "Unit Nurse authorizes continuation"
+    },
+    {
+      "id": "Gateway_ClinicalInterventionJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": ""
+    },
+    {
+      "id": "Gateway_SafetyConcernJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P2",
+      "name": "",
+      "doc": [
+        "Resume routine security admission when the Unit Nurse authorizes continuation."
+      ]
+    },
+    {
+      "id": "Task_DeputySignsForm",
+      "kind": "task",
+      "lane": "Lane_LED",
+      "phase": "P3",
+      "name": "Sign the Admission Notification Form before departure",
+      "ttype": "manual",
+      "note": "[f] The Law Enforcement Deputy must sign the Admission Notification Form before departing. Do not release the deputy until the form has been signed, copied, and returned."
+    },
+    {
+      "id": "Task_OfficerSignsAndCopies",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P3",
+      "name": "Sign the Admission Notification Form and make the required copies",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_GiveCopyToDeputy",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P3",
+      "name": "Give one copy of the form to the Law Enforcement Deputy",
+      "ttype": "manual"
+    },
+    {
+      "id": "Gateway_CustodyDocsComplete",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P3",
+      "name": "Form signed, copied, and returned?"
+    },
+    {
+      "id": "Task_ReleaseDeputy",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P3",
+      "name": "Release the Law Enforcement Deputy",
+      "ttype": "manual",
+      "doc": [
+        "Release the Deputy after the transfer-of-custody documentation is complete."
+      ]
+    },
+    {
+      "id": "Task_EnterAvatarInitial",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P4",
+      "name": "Enter known admission information into Avatar",
+      "ttype": "user",
+      "doc": [
+        "Record the consumer's language.",
+        "Record the transporting authority.",
+        "Record the admitting clinician.",
+        "Record the originating county."
+      ]
+    },
+    {
+      "id": "Task_SecuritySearch",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P5",
+      "name": "Conduct the two-officer security search",
+      "ttype": "manual",
+      "doc": [
+        "Assign two Security Officers to conduct the security search.",
+        "Search the consumer for contraband.",
+        "Search the consumer for hidden instruments.",
+        "Identify personal property discovered during the search."
+      ],
+      "note": "[c] Current security practice uses two Security Officers for the search of one consumer. Security staffing should exceed the number of consumers being searched whenever operationally possible."
+    },
+    {
+      "id": "Task_RecordProperty",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P5",
+      "name": "Record the consumer's property on the Admission Property Inventory",
+      "ttype": "user"
+    },
+    {
+      "id": "Task_ConsumerDresses",
+      "kind": "task",
+      "lane": "Lane_CON",
+      "phase": "P5",
+      "name": "Dress after the security search is complete",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_ObserveSmartEntry",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P6",
+      "name": "Enter the consumer into ObserveSmart and pair the beacon",
+      "ttype": "user",
+      "doc": [
+        "Enter the consumer's name into ObserveSmart.",
+        "Enter the consumer's date of birth into ObserveSmart.",
+        "Enter the consumer's destination unit into ObserveSmart.",
+        "Pair the assigned ObserveSmart beacon with the consumer."
+      ],
+      "note": "[d] ObserveSmart is the tracking system used for the consumer's beacon and subsequent observation checks. The beacon must be paired to the correct consumer before it is placed on the consumer."
+    },
+    {
+      "id": "Task_CapturePhoto",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P6",
+      "name": "Capture the consumer's photograph",
+      "ttype": "manual",
+      "doc": [
+        "Capture the consumer's photograph for the facility record.",
+        "Associate the photograph with the ObserveSmart record."
+      ]
+    },
+    {
+      "id": "Gateway_BeaconVerified",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P6",
+      "name": "Beacon paired to the correct consumer?"
+    },
+    {
+      "id": "Task_PlaceBeacon",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P6",
+      "name": "Place the paired beacon on the consumer",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_IntakeQuestionnaire",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P7",
+      "name": "Collect supplemental information using the Security Intake Questionnaire",
+      "ttype": "user",
+      "doc": [
+        "Record military-service status.",
+        "Record allergy information.",
+        "Record state of birth.",
+        "Record marital history.",
+        "Record emergency-contact information."
+      ],
+      "note": "[e] The Security Intake Questionnaire is a local reference document and is not an official OFC form. Use it to collect information required for Avatar, but do not treat it as the official electronic record."
+    },
+    {
+      "id": "Task_SignVendorForm",
+      "kind": "task",
+      "lane": "Lane_CON",
+      "phase": "P7",
+      "name": "Sign the Vendor Form",
+      "ttype": "manual",
+      "note": "[h] The Vendor Form supports the return or payment of consumer funds at discharge, usually by check. It sets the consumer up in the finance system so OFC can pay out any remaining funds when they leave."
+    },
+    {
+      "id": "Task_ReturnToHolding",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P7",
+      "name": "Return the consumer to the holding room",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_CompleteAvatar",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P7",
+      "name": "Complete the remaining Avatar fields",
+      "ttype": "user",
+      "doc": [
+        "Use the best available information from the admission documents and the consumer interview."
+      ]
+    },
+    {
+      "id": "Task_CreateBracelet",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P7",
+      "name": "Create the ID bracelet from the admission photograph",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_PlaceBracelet",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P7",
+      "name": "Place the ID bracelet on the consumer",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_CallUnitReady",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P8",
+      "name": "Call the destination unit and report the consumer is ready",
+      "ttype": "send",
+      "doc": [
+        "Call the destination unit.",
+        "Report that the consumer is ready for the nursing admission process."
+      ]
+    },
+    {
+      "id": "Event_StaffArrive",
+      "kind": "catch_message",
+      "lane": "Lane_SO",
+      "phase": "P8",
+      "name": "Unit Nurse and Mental Health Technician report to admissions",
+      "doc": [
+        "Hold the consumer in the admissions area until the Unit Nurse and Mental Health Technician report."
+      ]
+    },
+    {
+      "id": "Gateway_NursingSplit",
+      "kind": "gateway_p",
+      "lane": "Lane_SO",
+      "phase": "P8",
+      "name": ""
+    },
+    {
+      "id": "Task_LiceTreatment",
+      "kind": "task",
+      "lane": "Lane_UN",
+      "phase": "P8",
+      "name": "Apply the required lice treatment",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_RecordIntakeNeeds",
+      "kind": "task",
+      "lane": "Lane_MHT",
+      "phase": "P8",
+      "name": "Record clothing size, allergies, and immediate food needs",
+      "ttype": "user",
+      "doc": [
+        "Record the consumer's clothing size.",
+        "Record the consumer's allergies.",
+        "Record the consumer's hunger status.",
+        "Record any immediate food needs."
+      ]
+    },
+    {
+      "id": "Gateway_NursingJoin",
+      "kind": "gateway_p",
+      "lane": "Lane_SO",
+      "phase": "P8",
+      "name": ""
+    },
+    {
+      "id": "Gateway_EscortConstraints",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P9",
+      "name": "Multiple admissions or escort constraints?",
+      "doc": [
+        "Option D - Security is processing multiple admissions or the primary Security Officer cannot complete the shower or unit escort."
+      ]
+    },
+    {
+      "id": "Task_StandardEscort",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P9",
+      "name": "Use the standard Security Officer and MHT escort",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_CoordinateEscort",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P9",
+      "name": "Coordinate the escort plan with the Unit Nurse and MHT",
+      "ttype": "manual",
+      "doc": [
+        "Assign a Security Officer to support the escort when staffing permits.",
+        "Assign the Mental Health Technician to perform or assist with the escort according to staffing and unit direction."
+      ]
+    },
+    {
+      "id": "Gateway_EscortConstraintsJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P9",
+      "name": "",
+      "doc": [
+        "Resume consumer movement under the established escort plan."
+      ]
+    },
+    {
+      "id": "Gateway_AltLocation",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P9",
+      "name": "Alternate shower or nursing location required?",
+      "doc": [
+        "Option E - the destination unit directs that the shower or nursing admission activities occur in a secure unit location rather than the admissions-area shower."
+      ]
+    },
+    {
+      "id": "Task_EscortToShower",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P9",
+      "name": "Escort the consumer to the admissions-area shower",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_EscortToAltLocation",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P9",
+      "name": "Escort the consumer to the location designated by the Unit Nurse",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_NursingAtAltLocation",
+      "kind": "task",
+      "lane": "Lane_UN",
+      "phase": "P9",
+      "name": "Complete the required nursing activities at the designated location",
+      "ttype": "manual"
+    },
+    {
+      "id": "Task_Shower",
+      "kind": "task",
+      "lane": "Lane_CON",
+      "phase": "P10",
+      "name": "Complete the shower under required supervision",
+      "ttype": "manual",
+      "doc": [
+        "The shower is completed under the required security and clinical supervision."
+      ]
+    },
+    {
+      "id": "Task_EscortToUnit",
+      "kind": "task",
+      "lane": "Lane_SO",
+      "phase": "P10",
+      "name": "Escort the consumer to the destination unit",
+      "ttype": "manual",
+      "doc": [
+        "The Security Officer and Mental Health Technician escort the consumer from the shower location to the destination unit."
+      ]
+    },
+    {
+      "id": "Gateway_LocationJoin",
+      "kind": "gateway_x",
+      "lane": "Lane_SO",
+      "phase": "P10",
+      "name": "",
+      "doc": [
+        "Resume the common handoff flow when the consumer reaches the location where the Unit Nurse will accept custody."
+      ]
+    },
+    {
+      "id": "Task_NurseAccepts",
+      "kind": "task",
+      "lane": "Lane_UN",
+      "phase": "P11",
+      "name": "Accept the consumer and complete the security-to-nursing handoff",
+      "ttype": "manual",
+      "doc": [
+        "The consumer is presented to the Unit Nurse at the destination unit or authorized alternate location.",
+        "Confirm receipt of the consumer.",
+        "Complete the security-to-nursing handoff."
+      ]
+    },
+    {
+      "id": "EndEvent_Complete",
+      "kind": "end",
+      "lane": "Lane_SO",
+      "phase": "P11",
+      "name": "Security admission complete",
+      "doc": [
+        "The consumer has been accepted from law enforcement.",
+        "The security search and property documentation are complete.",
+        "Required transfer-of-custody forms and signatures are complete.",
+        "The consumer has been entered into Avatar.",
+        "The ObserveSmart beacon has been paired and placed.",
+        "The consumer photograph and ID bracelet are complete.",
+        "The Unit Nurse has accepted the consumer."
+      ],
+      "note": "[g] The security admission process ends when the consumer reaches the destination unit and the Unit Nurse accepts the handoff. Nursing assessment, social-work admission, case-management admission, treatment, and discharge are outside the scope of this OC."
+    }
+  ],
+  "edges": [
+    {
+      "source": "StartEvent_ScheduledAdmission",
+      "target": "Event_DayOfAdmission"
+    },
+    {
+      "source": "Event_DayOfAdmission",
+      "target": "Task_ReviewSchedule"
+    },
+    {
+      "source": "Task_ReviewSchedule",
+      "target": "Gateway_InfoChanged"
+    },
+    {
+      "source": "Gateway_InfoChanged",
+      "target": "Task_PreparePacket",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_InfoChanged",
+      "target": "Task_ReviewLatestEmail",
+      "label": "Yes",
+      "condition": "Admission date, time, consumer information, or destination unit changed"
+    },
+    {
+      "source": "Task_ReviewLatestEmail",
+      "target": "Task_UpdatePacket"
+    },
+    {
+      "source": "Task_PreparePacket",
+      "target": "Gateway_InfoChangedJoin"
+    },
+    {
+      "source": "Task_UpdatePacket",
+      "target": "Gateway_InfoChangedJoin"
+    },
+    {
+      "source": "Gateway_InfoChangedJoin",
+      "target": "Task_VerifyReadiness"
+    },
+    {
+      "source": "Task_VerifyReadiness",
+      "target": "Task_StageEquipment"
+    },
+    {
+      "source": "Task_StageEquipment",
+      "target": "Task_AnnounceArrival"
+    },
+    {
+      "source": "Task_AnnounceArrival",
+      "target": "Gateway_UnscheduledArrival"
+    },
+    {
+      "source": "Gateway_UnscheduledArrival",
+      "target": "Gateway_UnscheduledArrivalJoin",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_UnscheduledArrival",
+      "target": "Task_VerifyAgainstSchedule",
+      "label": "Yes",
+      "condition": "Deputy arrived without calling ahead or outside the scheduled time"
+    },
+    {
+      "source": "Task_VerifyAgainstSchedule",
+      "target": "Task_UpdatePacketOnArrival"
+    },
+    {
+      "source": "Task_UpdatePacketOnArrival",
+      "target": "Gateway_UnscheduledArrivalJoin"
+    },
+    {
+      "source": "Gateway_UnscheduledArrivalJoin",
+      "target": "Task_AdmitVehicle"
+    },
+    {
+      "source": "Task_AdmitVehicle",
+      "target": "Task_EscortToHolding"
+    },
+    {
+      "source": "Task_EscortToHolding",
+      "target": "Task_RemoveShackles"
+    },
+    {
+      "source": "Task_RemoveShackles",
+      "target": "Task_ObtainReport"
+    },
+    {
+      "source": "Task_ObtainReport",
+      "target": "Gateway_SafetyConcern"
+    },
+    {
+      "source": "Gateway_SafetyConcern",
+      "target": "Gateway_SafetyConcernJoin",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_SafetyConcern",
+      "target": "Task_RecordBehavioralInfo",
+      "label": "Yes",
+      "condition": "Combative behavior, transport problems, threats, agitation, or other safety concern reported"
+    },
+    {
+      "source": "Task_RecordBehavioralInfo",
+      "target": "Task_CallUnitEarly"
+    },
+    {
+      "source": "Task_CallUnitEarly",
+      "target": "Task_NurseAssess"
+    },
+    {
+      "source": "Task_NurseAssess",
+      "target": "Gateway_ClinicalIntervention"
+    },
+    {
+      "source": "Gateway_ClinicalIntervention",
+      "target": "Gateway_ClinicalInterventionJoin",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_ClinicalIntervention",
+      "target": "Task_AdjustPrecautions",
+      "label": "Yes",
+      "condition": "Nursing assessment requires clinical intervention"
+    },
+    {
+      "source": "Task_AdjustPrecautions",
+      "target": "Event_NurseAuthorizes"
+    },
+    {
+      "source": "Event_NurseAuthorizes",
+      "target": "Gateway_ClinicalInterventionJoin"
+    },
+    {
+      "source": "Gateway_ClinicalInterventionJoin",
+      "target": "Gateway_SafetyConcernJoin"
+    },
+    {
+      "source": "Gateway_SafetyConcernJoin",
+      "target": "Task_DeputySignsForm"
+    },
+    {
+      "source": "Task_DeputySignsForm",
+      "target": "Task_OfficerSignsAndCopies"
+    },
+    {
+      "source": "Task_OfficerSignsAndCopies",
+      "target": "Task_GiveCopyToDeputy"
+    },
+    {
+      "source": "Task_GiveCopyToDeputy",
+      "target": "Gateway_CustodyDocsComplete"
+    },
+    {
+      "source": "Gateway_CustodyDocsComplete",
+      "target": "Task_ReleaseDeputy",
+      "label": "Yes"
+    },
+    {
+      "source": "Gateway_CustodyDocsComplete",
+      "target": "Task_OfficerSignsAndCopies",
+      "label": "No",
+      "condition": "Form not yet signed, copied, and returned",
+      "loop": true
+    },
+    {
+      "source": "Task_ReleaseDeputy",
+      "target": "Task_EnterAvatarInitial"
+    },
+    {
+      "source": "Task_EnterAvatarInitial",
+      "target": "Task_SecuritySearch"
+    },
+    {
+      "source": "Task_SecuritySearch",
+      "target": "Task_RecordProperty"
+    },
+    {
+      "source": "Task_RecordProperty",
+      "target": "Task_ConsumerDresses"
+    },
+    {
+      "source": "Task_ConsumerDresses",
+      "target": "Task_ObserveSmartEntry"
+    },
+    {
+      "source": "Task_ObserveSmartEntry",
+      "target": "Task_CapturePhoto"
+    },
+    {
+      "source": "Task_CapturePhoto",
+      "target": "Gateway_BeaconVerified"
+    },
+    {
+      "source": "Gateway_BeaconVerified",
+      "target": "Task_PlaceBeacon",
+      "label": "Yes"
+    },
+    {
+      "source": "Gateway_BeaconVerified",
+      "target": "Task_ObserveSmartEntry",
+      "label": "No",
+      "condition": "Beacon is not paired to the correct consumer",
+      "loop": true
+    },
+    {
+      "source": "Task_PlaceBeacon",
+      "target": "Task_IntakeQuestionnaire"
+    },
+    {
+      "source": "Task_IntakeQuestionnaire",
+      "target": "Task_SignVendorForm"
+    },
+    {
+      "source": "Task_SignVendorForm",
+      "target": "Task_ReturnToHolding"
+    },
+    {
+      "source": "Task_ReturnToHolding",
+      "target": "Task_CompleteAvatar"
+    },
+    {
+      "source": "Task_CompleteAvatar",
+      "target": "Task_CreateBracelet"
+    },
+    {
+      "source": "Task_CreateBracelet",
+      "target": "Task_PlaceBracelet"
+    },
+    {
+      "source": "Task_PlaceBracelet",
+      "target": "Task_CallUnitReady"
+    },
+    {
+      "source": "Task_CallUnitReady",
+      "target": "Event_StaffArrive"
+    },
+    {
+      "source": "Event_StaffArrive",
+      "target": "Gateway_NursingSplit"
+    },
+    {
+      "source": "Gateway_NursingSplit",
+      "target": "Task_LiceTreatment"
+    },
+    {
+      "source": "Gateway_NursingSplit",
+      "target": "Task_RecordIntakeNeeds"
+    },
+    {
+      "source": "Task_LiceTreatment",
+      "target": "Gateway_NursingJoin"
+    },
+    {
+      "source": "Task_RecordIntakeNeeds",
+      "target": "Gateway_NursingJoin"
+    },
+    {
+      "source": "Gateway_NursingJoin",
+      "target": "Gateway_EscortConstraints"
+    },
+    {
+      "source": "Gateway_EscortConstraints",
+      "target": "Task_StandardEscort",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_EscortConstraints",
+      "target": "Task_CoordinateEscort",
+      "label": "Yes",
+      "condition": "Multiple admissions in progress or the primary officer cannot complete the escort"
+    },
+    {
+      "source": "Task_StandardEscort",
+      "target": "Gateway_EscortConstraintsJoin"
+    },
+    {
+      "source": "Task_CoordinateEscort",
+      "target": "Gateway_EscortConstraintsJoin"
+    },
+    {
+      "source": "Gateway_EscortConstraintsJoin",
+      "target": "Gateway_AltLocation"
+    },
+    {
+      "source": "Gateway_AltLocation",
+      "target": "Task_EscortToShower",
+      "label": "No"
+    },
+    {
+      "source": "Gateway_AltLocation",
+      "target": "Task_EscortToAltLocation",
+      "label": "Yes",
+      "condition": "Destination unit directs a secure unit location instead of the admissions-area shower"
+    },
+    {
+      "source": "Task_EscortToAltLocation",
+      "target": "Task_NursingAtAltLocation"
+    },
+    {
+      "source": "Task_NursingAtAltLocation",
+      "target": "Gateway_LocationJoin"
+    },
+    {
+      "source": "Task_EscortToShower",
+      "target": "Task_Shower"
+    },
+    {
+      "source": "Task_Shower",
+      "target": "Task_EscortToUnit"
+    },
+    {
+      "source": "Task_EscortToUnit",
+      "target": "Gateway_LocationJoin"
+    },
+    {
+      "source": "Gateway_LocationJoin",
+      "target": "Task_NurseAccepts"
+    },
+    {
+      "source": "Task_NurseAccepts",
+      "target": "EndEvent_Complete"
+    }
+  ],
+  "external_pools": [
+    {
+      "id": "Participant_AdmissionsCoordinator",
+      "name": "Admissions Coordinator",
+      "anchor": "StartEvent_ScheduledAdmission",
+      "width": 320,
+      "height": 60,
+      "gap_above": 110,
+      "mermaid_id": "AC"
+    }
+  ],
+  "message_flows": [
+    {
+      "id": "MessageFlow_ScheduledAdmission",
+      "source": "Participant_AdmissionsCoordinator",
+      "target": "StartEvent_ScheduledAdmission",
+      "name": "Scheduled admission email",
+      "mermaid_name": "scheduled admission email",
+      "label_width": 140,
+      "label_height": 27,
+      "label_dx": 6,
+      "label_dy": 22
+    }
+  ],
+  "documents": [],
+  "decomposition": {
+    "mode": "off",
+    "max_nodes_per_plane": 50,
+    "max_columns": 14,
+    "max_pool_width": 3200,
+    "collapse_phases": [],
+    "max_lanes_per_collapsed_phase": 3
+  }
+}

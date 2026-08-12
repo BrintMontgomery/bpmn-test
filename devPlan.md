@@ -616,19 +616,35 @@ Steps:
   deterministic output naming, multi-file bundles, per-plane reporting,
   validation failures, and convenience-wrapper IR reuse.
 
-## Phase 6 — Migrate existing processes
+## Phase 6 — Migrate existing processes [x]
+
+- [x] **Phase 6 — Migrate existing processes.**
+- [x] Add canonical `OFC-001.ir.json` and `OFC-004.ir.json` artifacts and
+  generate both processes through `ir_to_bpmn.py`.
+- [x] Compare generated BPMN against the checked-in legacy outputs for node,
+  edge, documentation, annotation, lane, participant, message-flow, and
+  element-type semantic equivalence while ignoring DI geometry.
+- [x] Validate both migrated BPMN files and preserve loop metadata in IR.
+- [x] Perform the OFC-001 visual preview spot-check and add a preview
+  regression covering migrated output.
+- [x] Exercise all authored OFC-001 phase collapse requests with deterministic,
+  scope-local, validator-clean nested planes.
+- [x] Retire `generate_bpmn.py` and `generate_bpmn_ofc004.py` and update the
+  golden/regression path to use the canonical IR artifacts.
+- [x] Add unit and regression coverage for migration semantics, decomposition,
+  deterministic output, and future decomposition boundary/annotation bugs.
 
 Re-express OFC-001 and OFC-004 as IR JSON files and generate through the new
 pipeline. **Change the acceptance criterion here:** byte-identity was the
 Phase 1 gate and is no longer achievable once Phase 2 computes coordinates
 itself. Phase 6 asks for *semantic* equivalence instead:
 
-- identical sets of node ids, edge (source, target, label, condition,
+- [x] identical sets of node ids, edge (source, target, label, condition,
   loop) tuples, annotations, documentation strings, lane assignments, and
   element types — compare parsed BPMN trees, ignoring DI geometry, and
   compare across the whole emitted bundle rather than one file;
-- `validate_bpmn.py` passes on both;
-- a visual spot-check through `build_preview.py` before retiring anything,
+- [x] `validate_bpmn.py` passes on both;
+- [x] a visual spot-check through `build_preview.py` before retiring anything,
   since auto-layout can be collision-free and still read worse than the
   hand-tuned version.
 

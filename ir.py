@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -555,6 +556,91 @@ def load_ir(path_or_mapping: str | Path | Mapping[str, Any]) -> ProcessModel:
         ),
         documents=tuple(DocumentSpec(**item) for item in document["documents"]),
     )
+
+
+def model_to_document(model: ProcessModel) -> dict[str, Any]:
+    """Return a deterministic IR document for an in-memory process model.
+
+    This is intentionally the inverse of :func:`load_ir` for migration and
+    fixture-authoring workflows.  Presentation-only fields such as preview
+    metadata and options are not part of the versioned IR contract.
+    """
+
+    nodes: list[dict[str, Any]] = []
+    for node in model.nodes:
+        item: dict[str, Any] = {
+            "id": node.id,
+            "kind": node.kind,
+            "lane": node.lane,
+            "phase": node.phase,
+            "name": node.name,
+        }
+        if node.kind == "task":
+            item["ttype"] = node.ttype
+        if node.doc:
+            item["doc"] = list(node.doc)
+        if node.note is not None:
+            item["note"] = node.note
+        if node.parent is not None:
+            item["parent"] = node.parent
+        if node.collapsed:
+            item["collapsed"] = True
+        if node.called_element is not None:
+            item["called_element"] = node.called_element
+        if node.link_name is not None:
+            item["link_name"] = node.link_name
+        nodes.append(item)
+
+    edges: list[dict[str, Any]] = []
+    for edge in model.edges:
+        item: dict[str, Any] = {"source": edge.source, "target": edge.target}
+        if edge.label:
+            item["label"] = edge.label
+        if edge.condition:
+            item["condition"] = edge.condition
+        if edge.loop:
+            item["loop"] = True
+        edges.append(item)
+
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "process_id": model.process_id,
+        "participant_name": model.participant_name,
+        "process_doc": model.process_doc,
+        "process_name": model.process_name,
+        "participant_id": model.participant_id,
+        "collaboration_id": model.collaboration_id,
+        "definitions_id": model.definitions_id,
+        "exporter": "ir.json",
+        "exporter_version": model.exporter_version,
+        "target_namespace": model.target_namespace,
+        "ann_above": sorted(model.ann_above),
+        "lane_classes": dict(model.lane_classes),
+        "mermaid_class_defs": list(model.mermaid_class_defs),
+        "lanes": [
+            {"id": lane_id, "name": lane_name}
+            for lane_id, lane_name in model.lanes
+        ],
+        "phases": [
+            {"id": phase_id, "name": phase_name}
+            for phase_id, phase_name in model.phases
+        ],
+        "nodes": nodes,
+        "edges": edges,
+        "external_pools": [asdict(pool) for pool in model.external_pools],
+        "message_flows": [asdict(flow) for flow in model.message_flows],
+        "documents": [asdict(document) for document in model.documents],
+        "decomposition": {
+            "mode": model.decomposition.mode,
+            "max_nodes_per_plane": model.decomposition.max_nodes_per_plane,
+            "max_columns": model.decomposition.max_columns,
+            "max_pool_width": model.decomposition.max_pool_width,
+            "collapse_phases": list(model.decomposition.collapse_phases),
+            "max_lanes_per_collapsed_phase": (
+                model.decomposition.max_lanes_per_collapsed_phase
+            ),
+        },
+    }
 
 
 def validate_ir(path_or_mapping: str | Path | Mapping[str, Any]) -> None:
