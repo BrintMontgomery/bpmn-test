@@ -353,7 +353,7 @@ This is the same modeling judgment applied to build OFC-004 (which actor
 owns which step, where each lettered Option's gateway belongs, which notes
 attach where) — just captured as data instead of Python source.
 
-## Phase 3b — Decomposition: splitting a large SOP across diagrams
+## Phase 3b — Decomposition: splitting a large SOP across diagrams [x]
 
 OFC-004 is 55 flow nodes on one sheet and still reads. The next SOP may not.
 This phase adds the three standard BPMN breakdown mechanisms, in a defined
@@ -477,6 +477,25 @@ spread across more than ~3 lanes.
   `build_mermaid()` already does with phases. Keep them consistent or drop
   the Mermaid path for decomposed processes rather than letting the two
   representations disagree.
+
+### Phase 3b completion checklist
+
+- [x] Extend the IR schema and loader with subprocess, call-activity, and link
+  event vocabularies, document metadata, and decomposition thresholds.
+- [x] Add deterministic threshold-driven phase selection with explicit
+  `collapse_phases` overrides and the three-lane fallback.
+- [x] Synthesize child start/end events, move phase nodes into subprocess
+  scopes, and rewire every flow crossing the scope boundary.
+- [x] Emit nested subprocess XML, child lane sets, collapsed DI markers, and a
+  separate BPMN plane for every collapsed scope.
+- [x] Emit reusable call activities and write separate called-process files
+  through the bundle API.
+- [x] Emit named link throw/catch events and keep layout aware of their paired
+  reachability without creating illegal sequence flows.
+- [x] Keep Mermaid decomposition consistent with nested subprocess subgraphs.
+- [x] Add regression tests for IR validation, decomposition rewiring, lane
+  fallback, scope-local layout, multi-plane DI, bundles, call resolution,
+  links, Mermaid output, determinism, and flat golden compatibility.
 
 ## Phase 4 — Markdown → IR conversion
 

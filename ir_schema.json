@@ -65,6 +65,13 @@
     "message_flows": {
       "type": "array",
       "items": {"$ref": "#/$defs/message_flow"}
+    },
+    "documents": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/document"}
+    },
+    "decomposition": {
+      "$ref": "#/$defs/decomposition"
     }
   },
   "$defs": {
@@ -101,7 +108,11 @@
             "start_message",
             "catch_timer",
             "catch_message",
-            "end"
+            "end",
+            "subprocess",
+            "call_activity",
+            "link_throw",
+            "link_catch"
           ]
         },
         "lane": {"type": "string", "minLength": 1},
@@ -113,7 +124,10 @@
           "items": {"type": "string"}
         },
         "note": {"type": ["string", "null"]},
-        "parent": {"type": ["string", "null"], "minLength": 1}
+        "parent": {"type": ["string", "null"], "minLength": 1},
+        "collapsed": {"type": "boolean"},
+        "called_element": {"type": "string", "minLength": 1},
+        "link_name": {"type": "string", "minLength": 1}
       },
       "oneOf": [
         {
@@ -128,7 +142,11 @@
                 "start_message",
                 "catch_timer",
                 "catch_message",
-                "end"
+                "end",
+                "subprocess",
+                "call_activity",
+                "link_throw",
+                "link_catch"
               ]
             }
           },
@@ -176,6 +194,35 @@
         "label_height": {"type": "number", "exclusiveMinimum": 0},
         "label_dx": {"type": "number"},
         "label_dy": {"type": "number"}
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "file"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "file": {"type": "string", "minLength": 1},
+        "role": {"enum": ["main", "global"]}
+      }
+    },
+    "decomposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"enum": ["off", "auto"]},
+        "max_nodes_per_plane": {"type": "integer", "minimum": 1},
+        "max_columns": {"type": "integer", "minimum": 1},
+        "max_pool_width": {"type": "number", "exclusiveMinimum": 0},
+        "collapse_phases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "max_lanes_per_collapsed_phase": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     }
   }

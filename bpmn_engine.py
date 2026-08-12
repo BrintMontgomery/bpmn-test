@@ -56,7 +56,8 @@ LBL_W, LBL_H = 30, 18
 class Node:
     id: str
     kind: str  # task | gateway_x | gateway_p | start_message
-               # | catch_timer | catch_message | end
+               # | catch_timer | catch_message | end | subprocess
+               # | call_activity | link_throw | link_catch
     lane: str
     name: str
     phase: str
@@ -64,6 +65,9 @@ class Node:
     doc: list[str] = field(default_factory=list)
     note: str | None = None
     parent: str | None = None  # containing subprocess id; None -> top level
+    collapsed: bool = False
+    called_element: str | None = None
+    link_name: str | None = None
 
 
 @dataclass
@@ -101,6 +105,41 @@ class MessageFlow:
     label_height: float = MESSAGE_LABEL_H
     label_dx: float = MESSAGE_LABEL_DX
     label_dy: float = MESSAGE_LABEL_DY
+
+
+@dataclass(frozen=True)
+class DecompositionConfig:
+    """Opt-in policy for splitting a process into BPMN scopes."""
+
+    mode: str = "off"
+    max_nodes_per_plane: int = 50
+    max_columns: int = 14
+    max_pool_width: float = 3200
+    collapse_phases: tuple[str, ...] = ()
+    max_lanes_per_collapsed_phase: int = 3
+
+
+@dataclass(frozen=True)
+class DocumentSpec:
+    """A process document emitted as part of a bundle."""
+
+    id: str
+    file: str
+    role: str = "main"
+
+
+@dataclass
+class ProcessBundle:
+    """One main process and any separately emitted called processes."""
+
+    models: list["ProcessModel"]
+    documents: tuple[DocumentSpec, ...] = ()
+
+    @property
+    def main(self) -> "ProcessModel":
+        if not self.models:
+            raise ValueError("process bundle must contain a model")
+        return self.models[0]
 
 
 @dataclass(frozen=True)
@@ -165,6 +204,8 @@ class ProcessModel:
     plane_id: str | None = None
     options: list[ProcessOption] = field(default_factory=list)
     preview: PreviewMetadata | None = None
+    decomposition: DecompositionConfig = field(default_factory=DecompositionConfig)
+    documents: tuple[DocumentSpec, ...] = ()
 
     def by_id(self) -> dict[str, Node]:
         return {node.id: node for node in self.nodes}
@@ -195,14 +236,45 @@ class Scope:
     node_ids: tuple[str, ...]
     lane_ids: tuple[str, ...]
     include_pool: bool = True
+    parent_id: str | None = None
 
     @classmethod
     def top_level(cls, model: ProcessModel) -> "Scope":
+        subprocess_ids = {
+            node.id for node in model.nodes if node.kind == "subprocess"
+        }
+        if subprocess_ids:
+            node_ids = tuple(
+                node.id for node in model.nodes
+                if node.parent is None or node.parent not in subprocess_ids
+            )
+        else:
+            # Preserve the Phase 3 IR compatibility behavior for flat models
+            # that used ``parent`` as metadata before subprocesses existed.
+            node_ids = tuple(node.id for node in model.nodes)
         return cls(
             id=model.process_id,
-            node_ids=tuple(node.id for node in model.nodes),
+            node_ids=node_ids,
             lane_ids=tuple(lane_id for lane_id, _ in model.lanes),
             include_pool=True,
+        )
+
+    @classmethod
+    def child(cls, model: ProcessModel, subprocess: Node) -> "Scope":
+        node_ids = tuple(
+            node.id for node in model.nodes if node.parent == subprocess.id
+        )
+        child_lanes = {node.lane for node in model.nodes if node.id in node_ids}
+        lane_ids = tuple(
+            lane_id for lane_id, _ in model.lanes
+            if lane_id in child_lanes
+        )
+        return cls(
+            id=subprocess.id,
+            node_ids=node_ids,
+            lane_ids=lane_ids,
+            include_pool=False,
+            parent_id=subprocess.id,
         )
 
 
@@ -261,13 +333,37 @@ def _scope_lanes(model: ProcessModel, scope: Scope) -> list[tuple[str, str]]:
     return [lane for lane in model.lanes if lane[0] in allowed]
 
 
+def scope_lane_xml_id(scope: Scope, lane_id: str) -> str:
+    """Return a globally unique lane id for nested BPMN scopes."""
+    return lane_id if scope.parent_id is None else f"{scope.id}__{lane_id}"
+
+
+def _topology_edges(model: ProcessModel, scope: Scope) -> list[Edge]:
+    """Add virtual layout links so link catches occupy reachable columns."""
+    edges = list(_scope_edges(model, scope))
+    nodes = _scope_nodes(model, scope)
+    throws: dict[str, Node] = {
+        node.link_name or node.name: node for node in nodes
+        if node.kind == "link_throw"
+    }
+    catches: dict[str, Node] = {
+        node.link_name or node.name: node for node in nodes
+        if node.kind == "link_catch"
+    }
+    for name, throw in throws.items():
+        catch = catches.get(name)
+        if catch is not None:
+            edges.append(Edge(throw.id, catch.id, label="", condition=""))
+    return edges
+
+
 # --------------------------------------------------------------------------
 # Layout
 # --------------------------------------------------------------------------
 
 
 def node_size(node: Node) -> tuple[int, int]:
-    if node.kind == "task":
+    if node.kind in ("task", "subprocess", "call_activity"):
         return TASK_W, TASK_H
     if node.kind.startswith("gateway"):
         return GW_W, GW_H
@@ -289,7 +385,7 @@ def _topological_layout_data(
         raise LayoutError(f"scope {scope.id} contains no nodes")
 
     by_id = {node.id: node for node in nodes}
-    forward = [edge for edge in _scope_edges(model, scope) if not edge.loop]
+    forward = [edge for edge in _topology_edges(model, scope) if not edge.loop]
     adjacency: dict[str, list[str]] = {node.id: [] for node in nodes}
     incoming: dict[str, list[Edge]] = {node.id: [] for node in nodes}
     indegree = {node.id: 0 for node in nodes}
@@ -389,7 +485,7 @@ def _auto_placements(model: ProcessModel, scope: Scope) -> dict[str, Placement]:
     columns, order = _topological_layout_data(model, scope)
     nodes = _scope_nodes(model, scope)
     by_id = {node.id: node for node in nodes}
-    forward = [edge for edge in _scope_edges(model, scope) if not edge.loop]
+    forward = [edge for edge in _topology_edges(model, scope) if not edge.loop]
     adjacency: dict[str, list[str]] = {node.id: [] for node in nodes}
     incoming: dict[str, list[Edge]] = {node.id: [] for node in nodes}
     for edge in forward:
@@ -996,6 +1092,14 @@ def element_tag(node: Node) -> str:
         return "startEvent"
     if node.kind == "end":
         return "endEvent"
+    if node.kind == "subprocess":
+        return "subProcess"
+    if node.kind == "call_activity":
+        return "callActivity"
+    if node.kind == "link_throw":
+        return "intermediateThrowEvent"
+    if node.kind == "link_catch":
+        return "intermediateCatchEvent"
     return "intermediateCatchEvent"
 
 
@@ -1045,25 +1149,26 @@ def _emit_collaboration(
         })
 
 
-def _emit_process(
-    defs: ET.Element, model: ProcessModel, scope: Scope
+def _emit_scope_contents(
+    container: ET.Element, model: ProcessModel, scope: Scope,
+    *, include_lane_set: bool,
 ) -> None:
-    proc = ET.SubElement(defs, q("bpmn", "process"), {
-        "id": model.process_id,
-        "name": model.process_name,
-        "isExecutable": "false",
-    })
-    add_doc(proc, [model.process_doc])
-
     nodes = _scope_nodes(model, scope)
     edges = _scope_edges(model, scope)
     lanes = _scope_lanes(model, scope)
 
-    lane_set = ET.SubElement(proc, q("bpmn", "laneSet"),
-                             {"id": model.resolved_lane_set_id})
+    if include_lane_set:
+        lane_set_id = (
+            model.resolved_lane_set_id if scope.id == model.process_id
+            else f"LaneSet_{scope.id}"
+        )
+        lane_set = ET.SubElement(container, q("bpmn", "laneSet"),
+                                 {"id": lane_set_id})
+    else:
+        lane_set = None
     for lane_id, lane_name in lanes:
         lane = ET.SubElement(lane_set, q("bpmn", "lane"), {
-            "id": lane_id,
+            "id": scope_lane_xml_id(scope, lane_id),
             "name": lane_name,
         })
         for node in nodes:
@@ -1091,7 +1196,11 @@ def _emit_process(
             attrs["name"] = node.name
         if node.id in defaults:
             attrs["default"] = defaults[node.id]
-        element = ET.SubElement(proc, q("bpmn", element_tag(node)), attrs)
+        if node.kind == "subprocess":
+            attrs["triggeredByEvent"] = "false"
+        if node.kind == "call_activity" and node.called_element:
+            attrs["calledElement"] = node.called_element
+        element = ET.SubElement(container, q("bpmn", element_tag(node)), attrs)
         add_doc(element, node.doc)
         for fid in incoming[node.id]:
             ET.SubElement(element, q("bpmn", "incoming")).text = fid
@@ -1105,6 +1214,15 @@ def _emit_process(
                                   {"id": f"TimerDef_{node.id}"})
             date = ET.SubElement(timer, q("bpmn", "timeDate"))
             date.text = "Day of the scheduled admission"
+        elif node.kind in ("link_throw", "link_catch"):
+            ET.SubElement(element, q("bpmn", "linkEventDefinition"), {
+                "id": f"LinkDef_{node.id}",
+                "name": node.link_name or node.name,
+            })
+        if node.kind == "subprocess":
+            child_scope = Scope.child(model, node)
+            _emit_scope_contents(element, model, child_scope,
+                                 include_lane_set=True)
 
     for edge in edges:
         attrs = {
@@ -1114,7 +1232,7 @@ def _emit_process(
         }
         if edge.label:
             attrs["name"] = edge.label
-        flow = ET.SubElement(proc, q("bpmn", "sequenceFlow"), attrs)
+        flow = ET.SubElement(container, q("bpmn", "sequenceFlow"), attrs)
         if edge.condition:
             cond = ET.SubElement(flow, q("bpmn", "conditionExpression"))
             cond.text = edge.condition
@@ -1122,18 +1240,31 @@ def _emit_process(
     for node in nodes:
         if not node.note:
             continue
-        ann = ET.SubElement(proc, q("bpmn", "textAnnotation"),
+        ann = ET.SubElement(container, q("bpmn", "textAnnotation"),
                             {"id": f"Ann_{node.id}"})
         ET.SubElement(ann, q("bpmn", "text")).text = node.note
-        ET.SubElement(proc, q("bpmn", "association"), {
+        ET.SubElement(container, q("bpmn", "association"), {
             "id": f"Assoc_{node.id}",
             "sourceRef": node.id,
             "targetRef": f"Ann_{node.id}",
         })
 
 
+def _emit_process(
+    defs: ET.Element, model: ProcessModel, scope: Scope
+) -> None:
+    proc = ET.SubElement(defs, q("bpmn", "process"), {
+        "id": model.process_id,
+        "name": model.process_name,
+        "isExecutable": "false",
+    })
+    add_doc(proc, [model.process_doc])
+    _emit_scope_contents(proc, model, scope, include_lane_set=True)
+
+
 def build_xml(
-    model: ProcessModel, lay: Layout, scope: Scope | None = None
+    model: ProcessModel, lay: Layout, scope: Scope | None = None,
+    *, layouts: dict[str, Layout] | None = None,
 ) -> ET.Element:
     """Build BPMN definitions for one process scope."""
     scope = scope or Scope.top_level(model)
@@ -1166,6 +1297,8 @@ def build_xml(
         horizontal: bool | None = None,
         marker: bool = False,
         label: tuple[float, float, float, float] | None = None,
+        expanded: bool | None = None,
+        target_plane: ET.Element | None = None,
     ) -> None:
         attrs = {
             "id": f"Shape_{bpmn_element}",
@@ -1175,7 +1308,10 @@ def build_xml(
             attrs["isHorizontal"] = "true" if horizontal else "false"
         if marker:
             attrs["isMarkerVisible"] = "true"
-        sh = ET.SubElement(plane, q("bpmndi", "BPMNShape"), attrs)
+        if expanded is not None:
+            attrs["isExpanded"] = "true" if expanded else "false"
+        destination = plane if target_plane is None else target_plane
+        sh = ET.SubElement(destination, q("bpmndi", "BPMNShape"), attrs)
         ET.SubElement(sh, q("dc", "Bounds"), {
             "x": f"{x:.0f}",
             "y": f"{y:.0f}",
@@ -1219,7 +1355,8 @@ def build_xml(
             gh = lines * 13 + 4
             label = (x + w / 2 - GW_LBL_W / 2, y - gh - 8, GW_LBL_W, gh)
         shape(node.id, x, y, w, h,
-              marker=(node.kind == "gateway_x"), label=label)
+              marker=(node.kind == "gateway_x"), label=label,
+              expanded=(node.collapsed is False if node.kind == "subprocess" else None))
 
     for node in nodes:
         if node.note:
@@ -1230,8 +1367,10 @@ def build_xml(
         bpmn_element: str,
         points: list[tuple[float, float]],
         label: tuple[float, float, float, float] | None = None,
+        target_plane: ET.Element | None = None,
     ) -> None:
-        edge = ET.SubElement(plane, q("bpmndi", "BPMNEdge"), {
+        destination = plane if target_plane is None else target_plane
+        edge = ET.SubElement(destination, q("bpmndi", "BPMNEdge"), {
             "id": f"Edge_{bpmn_element}",
             "bpmnElement": bpmn_element,
         })
@@ -1289,13 +1428,70 @@ def build_xml(
             edge_di(f"Assoc_{node.id}", [(nx + nw / 2, ny + nh),
                                           (ax + aw / 2, ay)])
 
+    # Collapsed subprocesses get independent coordinate spaces and planes.
+    # The process content was emitted recursively above; this is its DI.
+    layouts = layouts or {scope.id: lay}
+    pending_subprocesses = [
+        node for node in _scope_nodes(model, scope)
+        if node.kind == "subprocess" and node.collapsed
+    ]
+    while pending_subprocesses:
+        subprocess = pending_subprocesses.pop(0)
+        if subprocess.kind != "subprocess" or not subprocess.collapsed:
+            continue
+        child_scope = Scope.child(model, subprocess)
+        child_layout = layouts.get(child_scope.id) or compute_layout(model, child_scope)
+        child_plane = ET.SubElement(diagram, q("bpmndi", "BPMNPlane"), {
+            "id": f"BPMNPlane_{child_scope.id}",
+            "bpmnElement": child_scope.id,
+        })
+        for lane_id, _ in _scope_lanes(model, child_scope):
+            top, height = child_layout.lane_box[lane_id]
+            shape(scope_lane_xml_id(child_scope, lane_id), POOL_X + POOL_HEADER, top,
+                  (child_layout.pool[2] if child_layout.pool else 1000) - POOL_HEADER,
+                  height, horizontal=True, target_plane=child_plane)
+        for node in _scope_nodes(model, child_scope):
+            x, y, w, h = child_layout.bounds[node.id]
+            label = None
+            if node.name and node.kind in (
+                "start_message", "end", "catch_timer", "catch_message",
+            ):
+                label = event_label_bounds(node, x, y, w, h, child_layout)
+            elif node.name and node.kind.startswith("gateway"):
+                lines = max(1, -(-len(node.name) // 21))
+                gh = lines * 13 + 4
+                label = (x + w / 2 - GW_LBL_W / 2, y - gh - 8, GW_LBL_W, gh)
+            shape(node.id, x, y, w, h, marker=(node.kind == "gateway_x"),
+                  label=label, target_plane=child_plane)
+            if node.note:
+                ax, ay, aw, ah = child_layout.ann_bounds[node.id]
+                shape(f"Ann_{node.id}", ax, ay, aw, ah,
+                      target_plane=child_plane)
+        for edge in _scope_edges(model, child_scope):
+            points = edge_waypoints(model, edge, child_layout)
+            label = (edge_label_bounds(model, edge, points, child_layout)
+                     if edge.label else None)
+            edge_di(flow_id(edge), points, label, target_plane=child_plane)
+        for node in _scope_nodes(model, child_scope):
+            if not node.note:
+                continue
+            nx, ny, nw, nh = child_layout.bounds[node.id]
+            ax, ay, aw, ah = child_layout.ann_bounds[node.id]
+            edge_di(f"Assoc_{node.id}", [(nx + nw / 2, ny + nh),
+                                          (ax + aw / 2, ay)],
+                    target_plane=child_plane)
+        pending_subprocesses.extend(
+            node for node in _scope_nodes(model, child_scope)
+            if node.kind == "subprocess" and node.collapsed
+        )
     return defs
 
 
 def write_bpmn(
-    path: Path, model: ProcessModel, lay: Layout, scope: Scope | None = None
+    path: Path, model: ProcessModel, lay: Layout, scope: Scope | None = None,
+    *, layouts: dict[str, Layout] | None = None,
 ) -> None:
-    raw = ET.tostring(build_xml(model, lay, scope), encoding="utf-8")
+    raw = ET.tostring(build_xml(model, lay, scope, layouts=layouts), encoding="utf-8")
     pretty = minidom.parseString(raw).toprettyxml(indent="  ", encoding="UTF-8")
     text = pretty.decode("utf-8")
     text = "\n".join(line for line in text.splitlines() if line.strip())
@@ -1330,7 +1526,10 @@ def mermaid_node(node: Node) -> str:
     if node.kind.startswith("gateway"):
         label = node.name or ("Merge" if node.kind == "gateway_x" else "Join")
         return f'{node.id}{{"{wrap(mermaid_label(label), 20)}"}}'
-    if node.kind in ("start_message", "end", "catch_timer", "catch_message"):
+    if node.kind in (
+        "start_message", "end", "catch_timer", "catch_message",
+        "link_throw", "link_catch",
+    ):
         return f'{node.id}(["{wrap(mermaid_label(node.name), 24)}"])'
     return f'{node.id}["{wrap(mermaid_label(node.name))}"]'
 
@@ -1352,7 +1551,20 @@ def build_mermaid(
         out.append(f'  subgraph {phase_id}["{phase_names[phase_id]}"]')
         out.append("    direction LR")
         for node in members:
-            out.append(f"    {mermaid_node(node)}")
+            if node.kind == "subprocess":
+                out.append(f'    subgraph {node.id}["{mermaid_label(node.name)}"]')
+                children = [child for child in model.nodes
+                            if child.parent == node.id]
+                for child in children:
+                    out.append(f"      {mermaid_node(child)}")
+                for edge in _scope_edges(model, Scope.child(model, node)):
+                    if edge.label:
+                        out.append(f"      {edge.source} -->|{mermaid_label(edge.label)}| {edge.target}")
+                    else:
+                        out.append(f"      {edge.source} --> {edge.target}")
+                out.append("    end")
+            else:
+                out.append(f"    {mermaid_node(node)}")
         out.append("  end")
 
     for pool in model.external_pools:
@@ -1380,3 +1592,15 @@ def build_mermaid(
         if ids:
             out.append(f"  class {','.join(ids)} {class_name};")
     return "\n".join(out)
+
+
+def decompose_model(model: ProcessModel) -> ProcessModel:
+    """Lazy public wrapper for the decomposition module."""
+    from decomposition import decompose_model as _decompose_model
+    return _decompose_model(model)
+
+
+def write_bundle(directory: Path, bundle: ProcessBundle) -> list[Path]:
+    """Lazy public wrapper for multi-document bundle emission."""
+    from decomposition import write_bundle as _write_bundle
+    return _write_bundle(directory, bundle)

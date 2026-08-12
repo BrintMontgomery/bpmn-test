@@ -27,6 +27,9 @@ from bpmn_engine import (
     MessageFlow,
     Node,
     ProcessModel,
+    DecompositionConfig,
+    DocumentSpec,
+    ProcessBundle,
 )
 
 
@@ -40,6 +43,10 @@ NODE_KINDS = frozenset({
     "catch_timer",
     "catch_message",
     "end",
+    "subprocess",
+    "call_activity",
+    "link_throw",
+    "link_catch",
 })
 TASK_TYPES = frozenset({"manual", "user", "send", "receive"})
 
@@ -130,7 +137,8 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         "process_name", "participant_id", "collaboration_id", "definitions_id",
         "exporter", "exporter_version", "target_namespace", "ann_above",
         "lane_classes", "mermaid_class_defs", "lanes", "phases", "nodes",
-        "edges", "external_pools", "message_flows",
+        "edges", "external_pools", "message_flows", "documents",
+        "decomposition",
     }
     required = {
         "schema_version", "process_id", "participant_name", "process_doc",
@@ -145,6 +153,50 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         _string(document[field], field, allow_empty=False)
     _string(document["process_doc"], "process_doc")
 
+    documents_raw = _array(document.get("documents", []), "documents")
+    documents: list[dict[str, str]] = []
+    document_ids: list[str] = []
+    for index, raw_document in enumerate(documents_raw):
+        path = f"documents[{index}]"
+        item = _object(raw_document, path)
+        _keys(item, {"id", "file", "role"}, path)
+        _required(item, {"id", "file"}, path)
+        document_id = _string(item["id"], f"{path}.id", allow_empty=False)
+        filename = _string(item["file"], f"{path}.file", allow_empty=False)
+        role = _string(item.get("role", "main"), f"{path}.role", allow_empty=False)
+        if role not in {"main", "global"}:
+            _fail(f"{path}.role", "must be one of ['global', 'main']")
+        documents.append({"id": document_id, "file": filename, "role": role})
+        document_ids.append(document_id)
+    _unique(document_ids, "documents")
+
+    decomposition_raw = _object(
+        document.get("decomposition", {}), "decomposition"
+    )
+    _keys(decomposition_raw, {
+        "mode", "max_nodes_per_plane", "max_columns", "max_pool_width",
+        "collapse_phases", "max_lanes_per_collapsed_phase",
+    }, "decomposition")
+    mode = decomposition_raw.get("mode", "off")
+    if mode not in {"off", "auto"}:
+        _fail("decomposition.mode", "must be one of ['auto', 'off']")
+    max_nodes = decomposition_raw.get("max_nodes_per_plane", 50)
+    if isinstance(max_nodes, bool) or not isinstance(max_nodes, int) or max_nodes < 1:
+        _fail("decomposition.max_nodes_per_plane", "must be a positive integer")
+    max_columns = decomposition_raw.get("max_columns", 14)
+    if isinstance(max_columns, bool) or not isinstance(max_columns, int) or max_columns < 1:
+        _fail("decomposition.max_columns", "must be a positive integer")
+    max_width = decomposition_raw.get("max_pool_width", 3200)
+    _number(max_width, "decomposition.max_pool_width", minimum=1)
+    max_lanes = decomposition_raw.get("max_lanes_per_collapsed_phase", 3)
+    if isinstance(max_lanes, bool) or not isinstance(max_lanes, int) or max_lanes < 1:
+        _fail("decomposition.max_lanes_per_collapsed_phase", "must be a positive integer")
+    collapse_phases = _array(
+        decomposition_raw.get("collapse_phases", []),
+        "decomposition.collapse_phases",
+    )
+    for index, phase_id in enumerate(collapse_phases):
+        _string(phase_id, f"decomposition.collapse_phases[{index}]", allow_empty=False)
     for field in (
         "process_name", "participant_id", "collaboration_id", "definitions_id",
         "exporter", "exporter_version", "target_namespace",
@@ -185,6 +237,10 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         phases.append({"id": phase_id, "name": name})
         phase_ids.append(phase_id)
     _unique(phase_ids, "phases")
+    phase_id_set_for_config = set(phase_ids)
+    for index, phase_id in enumerate(collapse_phases):
+        if phase_id not in phase_id_set_for_config:
+            _fail(f"decomposition.collapse_phases[{index}]", f"unknown phase {phase_id!r}")
 
     nodes_raw = _array(document["nodes"], "nodes")
     if not nodes_raw:
@@ -194,7 +250,10 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
     for index, raw_node in enumerate(nodes_raw):
         path = f"nodes[{index}]"
         node = _object(raw_node, path)
-        _keys(node, {"id", "kind", "lane", "phase", "name", "ttype", "doc", "note", "parent"}, path)
+        _keys(node, {
+            "id", "kind", "lane", "phase", "name", "ttype", "doc", "note",
+            "parent", "collapsed", "called_element", "link_name",
+        }, path)
         _required(node, {"id", "kind", "lane", "phase", "name"}, path)
         node_id = _string(node["id"], f"{path}.id", allow_empty=False)
         kind = _string(node["kind"], f"{path}.kind")
@@ -225,10 +284,33 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         if parent is not None:
             _string(parent, f"{path}.parent", allow_empty=False)
 
+        collapsed = node.get("collapsed", False)
+        _bool(collapsed, f"{path}.collapsed")
+        called_element = node.get("called_element")
+        link_name = node.get("link_name")
+        if kind == "subprocess":
+            if called_element is not None or link_name is not None:
+                _fail(path, "subprocess cannot have called_element or link_name")
+        elif collapsed:
+            _fail(f"{path}.collapsed", "is only valid for subprocess nodes")
+        if kind == "call_activity":
+            if called_element is None:
+                _fail(f"{path}.called_element", "is required for call_activity nodes")
+            _string(called_element, f"{path}.called_element", allow_empty=False)
+        elif called_element is not None:
+            _fail(f"{path}.called_element", "is only valid for call_activity nodes")
+        if kind in {"link_throw", "link_catch"}:
+            if link_name is None:
+                _fail(f"{path}.link_name", "is required for link events")
+            _string(link_name, f"{path}.link_name", allow_empty=False)
+        elif link_name is not None:
+            _fail(f"{path}.link_name", "is only valid for link events")
+
         normalized = {
             "id": node_id, "kind": kind, "lane": lane, "phase": phase,
             "name": name, "ttype": ttype, "doc": list(doc), "note": note,
-            "parent": parent,
+            "parent": parent, "collapsed": collapsed,
+            "called_element": called_element, "link_name": link_name,
         }
         nodes.append(normalized)
         node_ids.append(node_id)
@@ -244,6 +326,12 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
             _fail(f"{path}.phase", f"unknown phase {node['phase']!r}")
         if node["parent"] is not None and node["parent"] not in node_id_set:
             _fail(f"{path}.parent", f"unknown parent {node['parent']!r}")
+        if node["called_element"] is not None and documents:
+            if node["called_element"] not in document_ids:
+                _fail(
+                    f"{path}.called_element",
+                    f"unknown document {node['called_element']!r}",
+                )
 
     parent_by_id = {node["id"]: node["parent"] for node in nodes}
     for node_id in node_ids:
@@ -398,6 +486,15 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         "ann_above": list(ann_above),
         "lane_classes": lane_classes,
         "mermaid_class_defs": list(mermaid_class_defs),
+        "documents": documents,
+        "decomposition": {
+            "mode": mode,
+            "max_nodes_per_plane": max_nodes,
+            "max_columns": max_columns,
+            "max_pool_width": max_width,
+            "collapse_phases": list(collapse_phases),
+            "max_lanes_per_collapsed_phase": max_lanes,
+        },
     })
     return normalized
 
@@ -416,6 +513,8 @@ def load_ir(path_or_mapping: str | Path | Mapping[str, Any]) -> ProcessModel:
             id=node["id"], kind=node["kind"], lane=node["lane"],
             name=node["name"], phase=node["phase"], ttype=node["ttype"],
             doc=node["doc"], note=node["note"], parent=node["parent"],
+            collapsed=node["collapsed"], called_element=node["called_element"],
+            link_name=node["link_name"],
         )
         for node in document["nodes"]
     ]
@@ -444,6 +543,17 @@ def load_ir(path_or_mapping: str | Path | Mapping[str, Any]) -> ProcessModel:
         target_namespace=document.get(
             "target_namespace", "http://oklahoma.gov/odmhsas/ofc/bpmn"
         ),
+        decomposition=DecompositionConfig(
+            mode=document["decomposition"]["mode"],
+            max_nodes_per_plane=document["decomposition"]["max_nodes_per_plane"],
+            max_columns=document["decomposition"]["max_columns"],
+            max_pool_width=document["decomposition"]["max_pool_width"],
+            collapse_phases=tuple(document["decomposition"]["collapse_phases"]),
+            max_lanes_per_collapsed_phase=document["decomposition"][
+                "max_lanes_per_collapsed_phase"
+            ],
+        ),
+        documents=tuple(DocumentSpec(**item) for item in document["documents"]),
     )
 
 
@@ -451,3 +561,23 @@ def validate_ir(path_or_mapping: str | Path | Mapping[str, Any]) -> None:
     """Validate an IR document without constructing an engine model."""
 
     _validate_and_normalize(_read_document(path_or_mapping))
+
+
+def load_bundle(
+    documents: list[str | Path | Mapping[str, Any]],
+) -> ProcessBundle:
+    """Load a main IR document and any separately modeled global processes."""
+    if not documents:
+        raise IRValidationError("bundle must contain at least one IR document")
+    models = [load_ir(document) for document in documents]
+    specs = models[0].documents
+    if not specs:
+        specs = tuple(
+            DocumentSpec(
+                model.process_id,
+                f"{model.process_id}.bpmn",
+                "main" if index == 0 else "global",
+            )
+            for index, model in enumerate(models)
+        )
+    return ProcessBundle(models=models, documents=specs)
