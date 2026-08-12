@@ -101,6 +101,38 @@ class MessageFlow:
     label_dy: float = MESSAGE_LABEL_DY
 
 
+@dataclass(frozen=True)
+class ProcessOption:
+    """Structured option metadata shared by generators and previews."""
+
+    key: str
+    title: str
+    trigger: str
+    gateway: str
+    effect: str
+
+
+@dataclass(frozen=True)
+class PreviewMetadata:
+    """Presentation copy that belongs to a process, not the renderer."""
+
+    title: str
+    heading: str
+    eyebrow: str
+    lede: str
+    owner: str
+    version: str
+    issued: str
+    notation: str = "BPMN 2.0"
+    structure_title: str = "Process structure"
+    structure_intro: str = ""
+    variation_title: str = "Options and gateways"
+    variation_intro: str = ""
+    constraints_title: str = "Notes carried onto the diagram"
+    constraints_intro: str = ""
+    footer: str = ""
+
+
 @dataclass
 class ProcessModel:
     """All process-specific input consumed by the shared engine."""
@@ -129,6 +161,8 @@ class ProcessModel:
     lane_set_id: str | None = None
     diagram_id: str | None = None
     plane_id: str | None = None
+    options: list[ProcessOption] = field(default_factory=list)
+    preview: PreviewMetadata | None = None
 
     def by_id(self) -> dict[str, Node]:
         return {node.id: node for node in self.nodes}

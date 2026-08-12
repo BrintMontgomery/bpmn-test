@@ -156,21 +156,20 @@ achievable, so do not let it slip past.
 - [x] Unit and regression tests cover the shared engine, external message
   flows, scope-aware layout, Mermaid output, and preview compatibility.
 
-## Phase 1b — Unbreak `build_preview.py`
+## Phase 1b — Unbreak `build_preview.py` [x]
 
-`build_preview.py` imports `generate_bpmn` as a module and reads its
-module-level constants. Once the model moves into data, give it the same
-data bundle instead of a Python module, and move its hand-written `OPTIONS`
-table into the model (it duplicates the SOP's Option A–F metadata, which
-the IR will carry anyway — see Phase 3). Without this step, Phase 6's
-"retire `generate_bpmn.py`" silently breaks the preview page.
-
-Decomposition also lands here, cheaply: collapsed-subprocess drill-down
-needs no vendor change (bpmn-js v17.11.1 already ships it), but the page
-should enable the drilldown breadcrumbs and stop hardcoding
-`OFC-001.bpmn` in the download link. If a process ever emits multiple
-*files* (Phase 3b call activities), the page needs a document switcher —
-one viewer per file, or one viewer and a selector.
+- [x] `build_preview.py` consumes reusable process/model bundles instead of
+  importing `generate_bpmn` and reading module-level process constants.
+- [x] Move option metadata and process-specific preview copy into the model
+  bundle so the renderer has no hand-written OFC-001 `OPTIONS` table.
+- [x] Extract OFC-001 data into a dedicated provider while retaining
+  `generate_bpmn.py` as a compatibility generator wrapper.
+- [x] Support multiple emitted BPMN files with one lazily-created viewer per
+  file, an accessible document switcher, and dynamic download filenames.
+- [x] Enable the vendored bpmn-js v17.11.1 drill-down breadcrumbs without
+  changing vendor files.
+- [x] Add unit and regression coverage for model consumption, options,
+  dynamic documents/downloads, and bundle validation.
 
 ## Phase 2 — Auto layout (remove hand-tuned columns/subrows)
 

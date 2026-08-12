@@ -1,84 +1,154 @@
-"""Assemble OFC-001-preview.html -- a self-contained review page.
+"""Assemble self-contained BPMN review pages from process data bundles.
 
-The page embeds the real bpmn-js viewer and the generated .bpmn file, so the
-reader sees the actual BPMN diagram (pan, zoom, task-type markers) rather
-than a redrawing of it. Everything is inlined: published Artifacts run under
-a CSP that blocks every external host.
-
-    py generate_bpmn.py && py build_preview.py
+The preview consumes process models and emitted document paths, not generator
+module globals. Each document gets its own lazily-created navigated viewer so
+collapsed subprocesses can use bpmn-js drill-down and breadcrumbs.
 """
 
 from __future__ import annotations
 
 import base64
 import json
+import re
+from dataclasses import dataclass
 from pathlib import Path
 
-import generate_bpmn as model
+from bpmn_engine import ProcessModel, PreviewMetadata
+from ofc001_model import MODEL as OFC001_MODEL
 
 HERE = Path(__file__).parent
 VENDOR = HERE / "vendor"
 
-LANE_SLUG = {
-    model.SO: "so",
-    model.LED: "led",
-    model.CON: "con",
-    model.UN: "un",
-    model.MHT: "mht",
-}
-
-OPTIONS = [
-    ("A", "Arrival Without Advance Notice",
-     "The Deputy arrives without calling ahead or outside the scheduled "
-     "time.",
-     "Gateway_UnscheduledArrival",
-     "Verify the consumer against the admission email and daily plan, "
-     "update the packet, then rejoin at the sally-port admission."),
-    ("B", "Changed or Rescheduled Admission",
-     "The admission date, arrival time, consumer information, or "
-     "destination unit changes before arrival.",
-     "Gateway_InfoChanged",
-     "Work from the most recent email rather than a packet printed from an "
-     "earlier schedule, then rejoin before equipment staging."),
-    ("C", "Behavioral or Safety Concern",
-     "The Deputy reports combative behavior, transport problems, or "
-     "threats, or the consumer presents as agitated.",
-     "Gateway_SafetyConcern",
-     "Record the report, call the unit early, and hold for a nursing "
-     "assessment; a second gateway decides whether precautions change "
-     "before the Unit Nurse authorizes continuation."),
-    ("D", "Multiple Admissions or Escort Constraints",
-     "Security is processing multiple admissions, or the primary Officer "
-     "cannot complete the shower or unit escort.",
-     "Gateway_EscortConstraints",
-     "Coordinate an alternate escort plan with the Unit Nurse and Mental "
-     "Health Technician instead of the standard pairing."),
-    ("E", "Alternate Shower or Nursing Location",
-     "The destination unit directs that the shower or nursing activities "
-     "happen in a secure unit location.",
-     "Gateway_AltLocation",
-     "Escort to the designated location and complete nursing activities "
-     "there, bypassing the admissions-area shower entirely."),
-]
+_PALETTE = (
+    ("#1f5f8b", "#e3eef7"),
+    ("#8a4a26", "#f7e9e0"),
+    ("#7a6010", "#f7f0da"),
+    ("#1c6b4c", "#dff0e8"),
+    ("#574a8c", "#eae7f6"),
+    ("#126782", "#dceff5"),
+    ("#7d3f98", "#f0e4f4"),
+    ("#41644a", "#e4f0e5"),
+)
 
 
-def phase_summary() -> list[tuple[str, str, list[str]]]:
-    """(number, title, lane slugs present) for each phase, in order."""
-    out = []
-    for phase_id, phase_name in model.PHASES:
-        members = [n for n in model.NODES if n.phase == phase_id]
+@dataclass(frozen=True)
+class PreviewDocument:
+    """One emitted BPMN document and the model used to annotate its viewer."""
+
+    id: str
+    filename: str
+    model: ProcessModel
+    xml: str | None = None
+    path: Path | None = None
+    label: str | None = None
+
+    def read_xml(self) -> str:
+        if self.xml is not None:
+            return self.xml
+        if self.path is None:
+            raise ValueError(f"preview document {self.id!r} has no XML or path")
+        return self.path.read_text(encoding="utf-8")
+
+
+@dataclass(frozen=True)
+class PreviewBundle:
+    """The complete input to the generic preview renderer."""
+
+    documents: tuple[PreviewDocument, ...]
+    primary_id: str | None = None
+
+    def __post_init__(self) -> None:
+        documents = tuple(self.documents)
+        if not documents:
+            raise ValueError("preview bundle requires at least one document")
+        ids = [document.id for document in documents]
+        if len(ids) != len(set(ids)):
+            raise ValueError("preview document ids must be unique")
+        primary_id = self.primary_id or documents[0].id
+        if primary_id not in ids:
+            raise ValueError(f"unknown primary preview document: {primary_id}")
+        object.__setattr__(self, "documents", documents)
+        object.__setattr__(self, "primary_id", primary_id)
+
+    @property
+    def primary(self) -> PreviewDocument:
+        return next(document for document in self.documents
+                    if document.id == self.primary_id)
+
+
+DEFAULT_MODEL = OFC001_MODEL
+DEFAULT_BUNDLE = PreviewBundle((
+    PreviewDocument(
+        id="ofc001",
+        filename="OFC-001.bpmn",
+        model=DEFAULT_MODEL,
+        path=HERE / "OFC-001.bpmn",
+    ),
+))
+
+
+def _slug(text: str, fallback: str) -> str:
+    result = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    return result or fallback
+
+
+def lane_slugs(process_model: ProcessModel) -> dict[str, str]:
+    """Return stable CSS-safe lane keys for one process model."""
+    used: set[str] = set()
+    result: dict[str, str] = {}
+    for index, (lane_id, lane_name) in enumerate(process_model.lanes):
+        requested = process_model.lane_classes.get(lane_id, lane_name)
+        slug = _slug(requested, f"lane-{index}")
+        base = slug
+        suffix = 2
+        while slug in used:
+            slug = f"{base}-{suffix}"
+            suffix += 1
+        used.add(slug)
+        result[lane_id] = slug
+    return result
+
+
+def lane_style_css(process_model: ProcessModel) -> str:
+    styles = []
+    for index, (lane_id, _) in enumerate(process_model.lanes):
+        slug = lane_slugs(process_model)[lane_id]
+        stroke, tint = _PALETTE[index % len(_PALETTE)]
+        styles.append(
+            f".sw-{slug} {{ color:{stroke}; background:{tint}; }}\n"
+            f".lane-{slug} > .djs-visual > rect {{ "
+            f"fill:{tint} !important; stroke:{stroke} !important; }}"
+        )
+    return "\n".join(styles)
+
+
+def phase_summary(process_model: ProcessModel = DEFAULT_MODEL
+                  ) -> list[tuple[str, str, list[str]]]:
+    """Return (number, title, lane slugs) for populated phases."""
+    slugs = lane_slugs(process_model)
+    out: list[tuple[str, str, list[str]]] = []
+    for phase_id, phase_name in process_model.phases:
+        members = [node for node in process_model.nodes
+                   if node.phase == phase_id]
         if not members:
             continue
-        num, _, title = phase_name.partition(". ")
+        number, _, title = phase_name.partition(". ")
         if not title:
-            num, title = "", phase_name
-        lanes = []
-        for n in members:
-            slug = LANE_SLUG[n.lane]
+            number, title = "", phase_name
+        lanes: list[str] = []
+        for node in members:
+            slug = slugs[node.lane]
             if slug not in lanes:
                 lanes.append(slug)
-        out.append((num, title, lanes))
+        out.append((number, title, lanes))
     return out
+
+
+def _note_parts(note: str) -> tuple[str, str]:
+    match = re.match(r"^\[([^]]+)\]\s*(.*)$", note, re.S)
+    if match:
+        return match.group(1), match.group(2).strip()
+    return "", note.strip()
 
 
 def esc(text: str) -> str:
@@ -86,75 +156,152 @@ def esc(text: str) -> str:
                 .replace(">", "&gt;").replace('"', "&quot;"))
 
 
-def build() -> str:
-    bpmn_xml = (HERE / "OFC-001.bpmn").read_text(encoding="utf-8")
-    viewer_js = (VENDOR / "bpmn-navigated-viewer.production.min.js").read_text(
-        encoding="utf-8")
-    diagram_css = (VENDOR / "diagram-js.css").read_text(encoding="utf-8")
-    bpmn_css = (VENDOR / "bpmn-js.css").read_text(encoding="utf-8")
+def _script_json(value: object) -> str:
+    return (json.dumps(value, ensure_ascii=False)
+            .replace("<", "\\u003c")
+            .replace(">", "\\u003e")
+            .replace("&", "\\u0026"))
 
-    lane_of = {n.id: LANE_SLUG[n.lane] for n in model.NODES
-               if n.kind == "task"}
-    download = ("data:application/xml;base64,"
-                + base64.b64encode(bpmn_xml.encode("utf-8")).decode("ascii"))
 
-    tasks = sum(1 for n in model.NODES if n.kind == "task")
-    gateways = sum(1 for n in model.NODES if n.kind.startswith("gateway"))
-    decisions = sum(1 for n in model.NODES
-                    if n.kind == "gateway_x" and n.name)
+def _metadata(process_model: ProcessModel) -> PreviewMetadata:
+    if process_model.preview is not None:
+        return process_model.preview
+    return PreviewMetadata(
+        title=process_model.process_name,
+        heading=process_model.process_name,
+        eyebrow="BPMN process",
+        lede=process_model.process_doc,
+        owner=process_model.participant_name,
+        version="",
+        issued="",
+    )
 
-    notes = [(n.note[1], n.note[4:].strip(), n.name)
-             for n in model.NODES if n.note]
-    notes.sort(key=lambda t: t[0])
+
+def build(bundle: PreviewBundle = DEFAULT_BUNDLE) -> str:
+    primary = bundle.primary
+    process_model = primary.model
+    metadata = _metadata(process_model)
+    document_ids = [_slug(document.id, "document")
+                    for document in bundle.documents]
+    if len(document_ids) != len(set(document_ids)):
+        raise ValueError("preview document ids must be unique after slugging")
+    primary_slug = document_ids[bundle.documents.index(primary)]
+    primary_lanes = lane_slugs(process_model)
+
+    documents = []
+    document_tabs = []
+    document_canvases = []
+    for document, document_id in zip(bundle.documents, document_ids):
+        xml = document.read_xml()
+        model_lanes = lane_slugs(document.model)
+        lane_of = {node.id: model_lanes[node.lane]
+                   for node in document.model.nodes if node.kind == "task"}
+        download = ("data:application/xml;base64,"
+                    + base64.b64encode(xml.encode("utf-8")).decode("ascii"))
+        label = document.label or document.model.process_name
+        documents.append({
+            "id": document_id,
+            "filename": document.filename,
+            "xml": xml,
+            "laneOf": lane_of,
+            "download": download,
+        })
+        selected = "true" if document_id == primary_slug else "false"
+        document_tabs.append(
+            f'<button type="button" class="document-tab" '
+            f'data-document-tab="{esc(document_id)}" '
+            f'aria-selected="{selected}">{esc(label)}</button>'
+        )
+        active = " active" if document_id == primary_slug else ""
+        document_canvases.append(
+            f'<div id="canvas-{esc(document_id)}" '
+            f'class="doc-viewer{active}" data-document-canvas="'
+            f'{esc(document_id)}" role="img" aria-label="BPMN diagram of '
+            f'{esc(label)}"></div>'
+        )
+
+    tasks = sum(1 for node in process_model.nodes if node.kind == "task")
+    gateways = sum(1 for node in process_model.nodes
+                   if node.kind.startswith("gateway"))
+    decisions = sum(1 for node in process_model.nodes
+                    if node.kind == "gateway_x" and node.name)
+
+    notes = []
+    for node in process_model.nodes:
+        if node.note:
+            key, text = _note_parts(node.note)
+            notes.append((key, text, node.name))
+    notes.sort(key=lambda item: item[0])
 
     lane_legend = "".join(
-        f'<li class="legend-item"><span class="swatch sw-{LANE_SLUG[lid]}">'
+        f'<li class="legend-item"><span class="swatch sw-{primary_lanes[lane_id]}">'
         f'</span>{esc(name)}</li>'
-        for lid, name in model.LANES)
-
+        for lane_id, name in process_model.lanes
+    )
     phase_rows = "".join(
-        f'<li class="phase"><span class="phase-num">{num or "&mdash;"}</span>'
+        f'<li class="phase"><span class="phase-num">{number or "&mdash;"}</span>'
         f'<span class="phase-title">{esc(title)}</span>'
         f'<span class="phase-lanes">'
-        + "".join(f'<i class="dot sw-{s}" aria-hidden="true"></i>'
-                  for s in lanes)
+        + "".join(f'<i class="dot sw-{slug}" aria-hidden="true"></i>'
+                  for slug in lanes)
         + "</span></li>"
-        for num, title, lanes in phase_summary())
-
+        for number, title, lanes in phase_summary(process_model)
+    )
     option_rows = "".join(
-        f"<tr><th scope=\"row\"><span class=\"opt-key\">{k}</span></th>"
-        f"<td><strong>{esc(title)}</strong><p>{esc(trigger)}</p></td>"
-        f"<td><code>{esc(gw)}</code></td>"
-        f"<td>{esc(effect)}</td></tr>"
-        for k, title, trigger, gw, effect in OPTIONS)
-
+        f'<tr><th scope="row"><span class="opt-key">{esc(option.key)}</span></th>'
+        f'<td><strong>{esc(option.title)}</strong><p>{esc(option.trigger)}</p></td>'
+        f'<td><code>{esc(option.gateway)}</code></td>'
+        f'<td>{esc(option.effect)}</td></tr>'
+        for option in process_model.options
+    )
     note_rows = "".join(
-        f'<div class="note"><span class="note-key">{k}</span>'
+        f'<div class="note"><span class="note-key">{esc(key)}</span>'
         f'<div><p class="note-text">{esc(text)}</p>'
         f'<p class="note-anchor">{esc(anchor)}</p></div></div>'
-        for k, text, anchor in notes)
+        for key, text, anchor in notes
+    )
 
     return TEMPLATE.format(
-        diagram_css=diagram_css,
-        bpmn_css=bpmn_css,
-        viewer_js=viewer_js,
-        bpmn_xml=json.dumps(bpmn_xml),
-        lane_of=json.dumps(lane_of),
-        download=download,
-        nodes=len(model.NODES),
+        page_title=esc(metadata.title),
+        heading=esc(metadata.heading),
+        eyebrow=esc(metadata.eyebrow),
+        lede=esc(metadata.lede),
+        owner=esc(metadata.owner),
+        version=esc(metadata.version),
+        issued=esc(metadata.issued),
+        notation=esc(metadata.notation),
+        structure_title=esc(metadata.structure_title),
+        structure_intro=esc(metadata.structure_intro),
+        variation_title=esc(metadata.variation_title),
+        variation_intro=esc(metadata.variation_intro),
+        constraints_title=esc(metadata.constraints_title),
+        constraints_intro=esc(metadata.constraints_intro),
+        footer=esc(metadata.footer),
+        diagram_css=(VENDOR / "diagram-js.css").read_text(encoding="utf-8"),
+        bpmn_css=(VENDOR / "bpmn-js.css").read_text(encoding="utf-8"),
+        viewer_js=(VENDOR / "bpmn-navigated-viewer.production.min.js")
+            .read_text(encoding="utf-8"),
+        documents=_script_json(documents),
+        primary_id=_script_json(primary_slug),
+        download=documents[0]["download"],
+        download_filename=esc(primary.filename),
+        switcher_class="" if len(documents) > 1 else " single",
+        document_tabs="".join(document_tabs),
+        document_canvases="".join(document_canvases),
+        lane_styles=lane_style_css(process_model),
+        nodes=len(process_model.nodes),
         tasks=tasks,
         gateways=gateways,
         decisions=decisions,
-        flows=len(model.EDGES),
-        lanes=len(model.LANES),
+        flows=len(process_model.edges),
+        lanes=len(process_model.lanes),
         lane_legend=lane_legend,
         phase_rows=phase_rows,
         option_rows=option_rows,
         note_rows=note_rows,
     )
 
-
-TEMPLATE = """<title>OFC-001 Security Intake</title>
+TEMPLATE = """<title>{page_title}</title>
 <style>
 {diagram_css}
 {bpmn_css}
@@ -298,7 +445,7 @@ button:focus-visible, .dl:focus-visible {{
 .dl {{ background:var(--accent-soft); border-color:transparent;
        color:var(--accent-ink); }}
 
-#canvas {{
+  .doc-viewer {{
   height:min(76vh,780px); background:var(--dg-canvas);
   border:1px solid var(--rule); border-radius:8px; box-shadow:var(--shadow);
   overflow:hidden;
@@ -392,24 +539,22 @@ footer {{ border-top:1px solid var(--rule); background:var(--surface);
 @media (prefers-reduced-motion: reduce) {{
   * {{ animation:none !important; transition:none !important; }}
 }}
+{lane_styles}
 </style>
 
 <header class="mast">
   <div class="wrap">
     <div class="mast-grid">
       <div>
-        <p class="eyebrow">Operating Checklist &middot; OFC-001</p>
-        <h1>Security Intakes Consumer</h1>
-        <p class="lede">The controlled process for receiving a consumer from
-          law enforcement at the Oklahoma Forensic Center &mdash; transfer of
-          custody, security search, electronic tracking and identification,
-          and the handoff to nursing staff.</p>
+        <p class="eyebrow">{eyebrow}</p>
+        <h1>{heading}</h1>
+        <p class="lede">{lede}</p>
       </div>
       <div class="docmeta">
-        <div>Owner<b>OFC Security Unit</b></div>
-        <div>Version<b>1.1</b></div>
-        <div>Issued<b>2026-08-11</b></div>
-        <div>Notation<b>BPMN 2.0</b></div>
+        <div>Owner<b>{owner}</b></div>
+        <div>Version<b>{version}</b></div>
+        <div>Issued<b>{issued}</b></div>
+        <div>Notation<b>{notation}</b></div>
       </div>
     </div>
     <div class="stats">
@@ -438,15 +583,16 @@ footer {{ border-top:1px solid var(--rule); background:var(--surface);
         <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
         <button type="button" id="start">Start</button>
         <button type="button" id="overview">Overview</button>
-        <a class="dl" id="download" download="OFC-001.bpmn"
+        <a class="dl" id="download" download="{download_filename}"
            href="{download}">Download .bpmn</a>
       </div>
     </div>
-    <div id="canvas" role="img"
-         aria-label="BPMN 2.0 collaboration diagram of the OFC-001 security
-         intake process"></div>
+    <div class="document-switcher{switcher_class}" role="tablist"
+         aria-label="BPMN documents">{document_tabs}</div>
+    <div class="viewer-stack">{document_canvases}</div>
     <p class="hint">Drag to pan &middot; scroll or ctrl+scroll to zoom
-      &middot; the file opens in Camunda Modeler, bpmn.io, or Signavio</p>
+      &middot; click a collapsed subprocess to drill down; the file opens in
+      Camunda Modeler, bpmn.io, or Signavio</p>
   </div>
 </div>
 
@@ -454,11 +600,8 @@ footer {{ border-top:1px solid var(--rule); background:var(--surface);
   <section>
     <div class="col">
       <p class="eyebrow">Structure</p>
-      <h2>Eleven phases, five lanes</h2>
-      <p class="sec-intro">The process runs left to right in a single pool.
-        Admissions Coordinator sits outside it as a collapsed participant,
-        sending the scheduled admission email that starts the process. Dots
-        mark which actors appear in each phase.</p>
+      <h2>{structure_title}</h2>
+      <p class="sec-intro">{structure_intro}</p>
     </div>
     <ol class="phases">{phase_rows}</ol>
   </section>
@@ -466,11 +609,8 @@ footer {{ border-top:1px solid var(--rule); background:var(--surface);
   <section>
     <div class="col">
       <p class="eyebrow">Variation</p>
-      <h2>The five options are gateways, not footnotes</h2>
-      <p class="sec-intro">Options A&ndash;E in the checklist describe
-        departures from the main path. Each one is modeled where it actually
-        occurs, as a labeled exclusive gateway with a condition on the
-        non-default branch.</p>
+      <h2>{variation_title}</h2>
+      <p class="sec-intro">{variation_intro}</p>
     </div>
     <div class="tablewrap">
       <table>
@@ -484,66 +624,130 @@ footer {{ border-top:1px solid var(--rule); background:var(--surface);
   <section>
     <div class="col">
       <p class="eyebrow">Constraints</p>
-      <h2>Notes carried onto the diagram</h2>
-      <p class="sec-intro">Each note from the checklist is attached to the
-        task it governs as a BPMN text annotation, so the constraint travels
-        with the model rather than living in a separate document.</p>
+      <h2>{constraints_title}</h2>
+      <p class="sec-intro">{constraints_intro}</p>
     </div>
     <div class="notes">{note_rows}</div>
   </section>
 </main>
 
-<footer><div class="wrap">Oklahoma Forensic Center &middot; Security Unit
-  &middot; OFC-001 v1.1 &middot; generated from the operating checklist by
-  generate_bpmn.py</div></footer>
+<footer><div class="wrap">{footer}</div></footer>
 
 <script>{viewer_js}</script>
 <script>
 (function () {{
-  var xml = {bpmn_xml};
-  var laneOf = {lane_of};
-  var viewer = new BpmnJS({{ container: '#canvas' }});
+  var documents = {documents};
+  var viewers = {{}};
+  var currentId = {primary_id};
+  var download = document.getElementById('download');
 
-  viewer.importXML(xml).then(function () {{
-    var canvas = viewer.get('canvas');
-    var registry = viewer.get('elementRegistry');
+  function findDocument(id) {{
+    return documents.filter(function (doc) {{ return doc.id === id; }})[0];
+  }}
 
-    Object.keys(laneOf).forEach(function (id) {{
-      var el = registry.get(id);
-      if (el) canvas.addMarker(el, 'lane-' + laneOf[id]);
+  function toStart(canvas) {{
+    var vp = canvas.getSize();
+    var box = canvas.viewbox().inner;
+    if (!vp.height || !box.height) {{
+      canvas.zoom('fit-viewport', 'auto');
+      return;
+    }}
+    var scale = Math.min((vp.height - 24) / box.height, 1.15);
+    canvas.viewbox({{
+      x: box.x - 20,
+      y: box.y - (vp.height / scale - box.height) / 2,
+      width: vp.width / scale,
+      height: vp.height / scale
     }});
+  }}
 
-    // The pool is ~8x wider than it is tall. Fitting the whole thing into
-    // the frame shrinks it past legibility, so the default view fits the
-    // lanes vertically and parks at the start of the process; the reader
-    // pans right through it.
-    function toStart() {{
-      var vp = canvas.getSize();
-      var box = canvas.viewbox().inner;
-      var scale = Math.min((vp.height - 24) / box.height, 1.15);
-      canvas.viewbox({{
-        x: box.x - 20,
-        y: box.y - (vp.height / scale - box.height) / 2,
-        width: vp.width / scale,
-        height: vp.height / scale
-      }});
+  function importDocument(id) {{
+    if (viewers[id]) {{
+      return Promise.resolve(viewers[id]);
     }}
 
-    toStart();
-    document.getElementById('start').onclick = toStart;
-    document.getElementById('overview').onclick = function () {{
-      canvas.zoom('fit-viewport', 'auto');
+    var doc = findDocument(id);
+    var viewer = new BpmnJS({{ container: '#canvas-' + id }});
+    viewers[id] = viewer;
+
+    // The vendored BpmnJS is the navigated viewer. Its existing navigation
+    // module supplies drill-down buttons and breadcrumbs for child planes.
+    return viewer.importXML(doc.xml).then(function () {{
+      var canvas = viewer.get('canvas');
+      var registry = viewer.get('elementRegistry');
+
+      Object.keys(doc.laneOf).forEach(function (nodeId) {{
+        var element = registry.get(nodeId);
+        if (element) {{
+          canvas.addMarker(element, 'lane-' + doc.laneOf[nodeId]);
+        }}
+      }});
+
+      canvas.resized();
+      if (id === currentId) {{
+        toStart(canvas);
+      }}
+      return viewer;
+    }}).catch(function (err) {{
+      document.getElementById('canvas-' + id).textContent =
+        'The diagram could not be rendered: ' + err.message;
+      throw err;
+    }});
+  }}
+
+  function selectDocument(id) {{
+    var doc = findDocument(id);
+    currentId = id;
+
+    document.querySelectorAll('[data-document-tab]').forEach(function (tab) {{
+      var selected = tab.getAttribute('data-document-tab') === id;
+      tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+    }});
+    document.querySelectorAll('[data-document-canvas]').forEach(
+      function (canvas) {{
+        canvas.classList.toggle('active',
+          canvas.getAttribute('data-document-canvas') === id);
+      }}
+    );
+
+    download.download = doc.filename;
+    download.href = doc.download;
+
+    return importDocument(id).then(function (viewer) {{
+      var canvas = viewer.get('canvas');
+      canvas.resized();
+      toStart(canvas);
+    }});
+  }}
+
+  document.querySelectorAll('[data-document-tab]').forEach(function (tab) {{
+    tab.onclick = function () {{
+      selectDocument(tab.getAttribute('data-document-tab'));
     }};
-    document.getElementById('zoom-in').onclick = function () {{
-      canvas.zoom(canvas.zoom() * 1.3);
-    }};
-    document.getElementById('zoom-out').onclick = function () {{
-      canvas.zoom(canvas.zoom() / 1.3);
-    }};
-  }}).catch(function (err) {{
-    document.getElementById('canvas').textContent =
-      'The diagram could not be rendered: ' + err.message;
   }});
+
+  document.getElementById('start').onclick = function () {{
+    if (viewers[currentId]) toStart(viewers[currentId].get('canvas'));
+  }};
+  document.getElementById('overview').onclick = function () {{
+    if (viewers[currentId]) {{
+      viewers[currentId].get('canvas').zoom('fit-viewport', 'auto');
+    }}
+  }};
+  document.getElementById('zoom-in').onclick = function () {{
+    if (viewers[currentId]) {{
+      var canvas = viewers[currentId].get('canvas');
+      canvas.zoom(canvas.zoom() * 1.3);
+    }}
+  }};
+  document.getElementById('zoom-out').onclick = function () {{
+    if (viewers[currentId]) {{
+      var canvas = viewers[currentId].get('canvas');
+      canvas.zoom(canvas.zoom() / 1.3);
+    }}
+  }};
+
+  selectDocument(currentId);
 }})();
 </script>
 """

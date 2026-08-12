@@ -179,13 +179,78 @@ class EngineTests(unittest.TestCase):
         )
         self.assertIn("classDef b fill:#eeeeee", mermaid)
 
-    def test_preview_keeps_generator_compatibility_aliases(self) -> None:
-        import build_preview
-        import generate_bpmn
 
-        self.assertIs(build_preview.model.NODES, generate_bpmn.NODES)
-        self.assertEqual(66, len(build_preview.model.NODES))
+
+class PreviewTests(unittest.TestCase):
+    def test_preview_consumes_model_bundle_and_options(self) -> None:
+        import build_preview
+        import ofc001_model
+
+        self.assertIs(build_preview.DEFAULT_MODEL, ofc001_model.MODEL)
+        self.assertEqual(66, len(build_preview.DEFAULT_MODEL.nodes))
+        self.assertEqual(5, len(build_preview.DEFAULT_MODEL.options))
         self.assertEqual(12, len(build_preview.phase_summary()))
+        self.assertFalse(hasattr(build_preview, "OPTIONS"))
+
+        html = build_preview.build()
+        for option in ofc001_model.MODEL.options:
+            self.assertIn(option.title, html)
+            self.assertIn(option.gateway, html)
+            self.assertIn(option.effect, html)
+
+        self.assertIn("Security Intakes Consumer", html)
+        self.assertIn("bjs-breadcrumbs", html)
+        self.assertIn(".doc-viewer {", html)
+        self.assertIn("click a collapsed subprocess to drill down", html)
+
+    def test_preview_supports_multiple_documents_and_dynamic_downloads(self) -> None:
+        import build_preview
+        import ofc001_model
+
+        xml = (build_preview.HERE / "OFC-001.bpmn").read_text(encoding="utf-8")
+        bundle = build_preview.PreviewBundle((
+            build_preview.PreviewDocument(
+                id="main-process",
+                filename="main-process.bpmn",
+                model=ofc001_model.MODEL,
+                xml=xml,
+                label="Main process",
+            ),
+            build_preview.PreviewDocument(
+                id="called-process",
+                filename="called-process.bpmn",
+                model=ofc001_model.MODEL,
+                xml=xml,
+                label="Called process",
+            ),
+        ))
+
+        html = build_preview.build(bundle)
+
+        self.assertIn('data-document-tab="main-process"', html)
+        self.assertIn('data-document-tab="called-process"', html)
+        self.assertIn('id="canvas-main-process"', html)
+        self.assertIn('id="canvas-called-process"', html)
+        self.assertIn('download="main-process.bpmn"', html)
+        self.assertIn('called-process.bpmn', html)
+        self.assertNotIn('download="OFC-001.bpmn"', html)
+        self.assertIn("var documents =", html)
+        self.assertIn("selectDocument", html)
+
+    def test_preview_bundle_rejects_duplicate_or_unknown_documents(self) -> None:
+        import build_preview
+        import ofc001_model
+
+        document = build_preview.PreviewDocument(
+            id="same",
+            filename="same.bpmn",
+            model=ofc001_model.MODEL,
+            xml="<xml />",
+        )
+        with self.assertRaises(ValueError):
+            build_preview.PreviewBundle((document, document))
+        with self.assertRaises(ValueError):
+            build_preview.PreviewBundle((document,), primary_id="missing")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,9 @@ GENERATORS = {
     "generate_bpmn.py": ("OFC-001.bpmn", "OFC-001.mmd"),
     "generate_bpmn_ofc004.py": ("OFC-004.bpmn",),
 }
+SHARED_MODEL_FILES = {
+    "ofc001_model.py",
+}
 
 
 def main() -> int:
@@ -22,6 +25,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="bpmn-golden-") as temp_dir:
         work = Path(temp_dir)
         shutil.copy2(ROOT / "bpmn_engine.py", work / "bpmn_engine.py")
+        for model_file in SHARED_MODEL_FILES:
+            shutil.copy2(ROOT / model_file, work / model_file)
         for generator, outputs in GENERATORS.items():
             shutil.copy2(ROOT / generator, work / generator)
             subprocess.run(
