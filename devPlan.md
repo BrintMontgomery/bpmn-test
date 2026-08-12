@@ -86,22 +86,22 @@ Facts that matter specifically for decomposition:
   with the download link hardcoded to `OFC-001.bpmn`. Multi-*file* output
   needs a document switcher there; multi-*plane* output does not.
 
-## Phase 0 — Make the refactor reversible (do this first)
+## Phase 0 — Make the refactor reversible (do this first) [x]
 
 Everything below is a refactor whose success criterion is "the output didn't
 change." That criterion is unenforceable right now.
 
-1. `git init`; commit the current tree as-is. Nothing else starts until
+1. [x] `git init`; commit the current tree as-is. Nothing else starts until
    this is done.
-2. Locate the OFC-001 source markdown and its generated `OFC-001.bpmn` /
+2. [x] Locate the OFC-001 source markdown and its generated `OFC-001.bpmn` /
    `OFC-001.mmd`, or regenerate them with `py generate_bpmn.py`. Commit the
    outputs as **golden files**.
-3. Confirm both goldens pass: `py validate_bpmn.py OFC-001.bpmn` and
+3. [x] Confirm both goldens pass: `py validate_bpmn.py OFC-001.bpmn` and
    `py validate_bpmn.py OFC-004.bpmn`.
-4. Add a one-line regression check (`check_golden.py` or a `Makefile`
+4. [x] Add a one-line regression check (`check_golden.py` or a `Makefile`
    target) that regenerates both diagrams and byte-diffs them against the
    goldens. This is the gate that every phase below runs against.
-5. Add `__pycache__/` to `.gitignore`.
+5. [x] Add `__pycache__/` to `.gitignore`.
 
 ## Phase 1 — Extract the shared engine
 

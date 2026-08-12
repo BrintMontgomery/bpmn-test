@@ -1,0 +1,190 @@
+flowchart TB
+  subgraph P0["Trigger"]
+    direction LR
+    StartEvent_ScheduledAdmission(["Scheduled admission<br/>email received"])
+    Event_DayOfAdmission(["On the day of admission"])
+  end
+  subgraph P1["1. Prepare for Admission"]
+    direction LR
+    Task_ReviewSchedule["Review admission schedule<br/>and confirm admission<br/>remains active"]
+    Gateway_InfoChanged{"Admission<br/>information changed?"}
+    Task_PreparePacket["Prepare the security<br/>admission packet"]
+    Task_ReviewLatestEmail["Review the most recent<br/>admission email"]
+    Task_UpdatePacket["Print or update the packet<br/>from confirmed information"]
+    Gateway_InfoChangedJoin{"Merge"}
+    Task_VerifyReadiness["Verify packet contents,<br/>system access, and<br/>staffing"]
+    Task_StageEquipment["Stage admission systems<br/>and equipment"]
+  end
+  subgraph P2["2. Receive Consumer from Law Enforcement"]
+    direction LR
+    Task_AnnounceArrival["Announce arrival through<br/>the sally-port intercom"]
+    Gateway_UnscheduledArrival{"Arrival unscheduled<br/>or outside the<br/>expected time?"}
+    Task_VerifyAgainstSchedule["Verify consumer against<br/>the schedule and daily<br/>plan"]
+    Task_UpdatePacketOnArrival["Prepare or update the<br/>packet and stage equipment"]
+    Gateway_UnscheduledArrivalJoin{"Merge"}
+    Task_AdmitVehicle["Admit the transport<br/>vehicle and close the<br/>garage door"]
+    Task_EscortToHolding["Remove consumer from the<br/>vehicle and escort to the<br/>holding room"]
+    Task_RemoveShackles["Remove the consumer's<br/>shackles in the holding<br/>room"]
+    Task_ObtainReport["Obtain the behavioral and<br/>transport report from the<br/>Deputy"]
+    Gateway_SafetyConcern{"Behavioral or safety<br/>concern?"}
+    Task_RecordBehavioralInfo["Record the behavioral and<br/>safety information"]
+    Task_CallUnitEarly["Call the destination unit<br/>and request a nursing<br/>assessment"]
+    Task_NurseAssess["Report to admissions and<br/>assess the consumer"]
+    Gateway_ClinicalIntervention{"Clinical<br/>intervention<br/>required?"}
+    Task_AdjustPrecautions["Adjust staffing and<br/>movement precautions"]
+    Event_NurseAuthorizes(["Unit Nurse authorizes<br/>continuation"])
+    Gateway_ClinicalInterventionJoin{"Merge"}
+    Gateway_SafetyConcernJoin{"Merge"}
+  end
+  subgraph P3["3. Document Transfer of Custody"]
+    direction LR
+    Task_DeputySignsForm["Sign the Admission<br/>Notification Form before<br/>departure"]
+    Task_OfficerSignsAndCopies["Sign the Admission<br/>Notification Form and make<br/>the required copies"]
+    Task_GiveCopyToDeputy["Give one copy of the form<br/>to the Law Enforcement<br/>Deputy"]
+    Gateway_CustodyDocsComplete{"Form signed, copied,<br/>and returned?"}
+    Task_ReleaseDeputy["Release the Law<br/>Enforcement Deputy"]
+  end
+  subgraph P4["4. Establish Initial Electronic Admission Record"]
+    direction LR
+    Task_EnterAvatarInitial["Enter known admission<br/>information into Avatar"]
+  end
+  subgraph P5["5. Security Search and Property Inventory"]
+    direction LR
+    Task_SecuritySearch["Conduct the two-officer<br/>security search"]
+    Task_RecordProperty["Record the consumer's<br/>property on the Admission<br/>Property Inventory"]
+    Task_ConsumerDresses["Dress after the security<br/>search is complete"]
+  end
+  subgraph P6["6. ObserveSmart Tracking and Identification"]
+    direction LR
+    Task_ObserveSmartEntry["Enter the consumer into<br/>ObserveSmart and pair the<br/>beacon"]
+    Task_CapturePhoto["Capture the consumer's<br/>photograph"]
+    Gateway_BeaconVerified{"Beacon paired to the<br/>correct consumer?"}
+    Task_PlaceBeacon["Place the paired beacon on<br/>the consumer"]
+  end
+  subgraph P7["7. Collect Supplemental Admission Information"]
+    direction LR
+    Task_IntakeQuestionnaire["Collect supplemental<br/>information using the<br/>Security Intake<br/>Questionnaire"]
+    Task_SignVendorForm["Sign the Vendor Form"]
+    Task_ReturnToHolding["Return the consumer to the<br/>holding room"]
+    Task_CompleteAvatar["Complete the remaining<br/>Avatar fields"]
+    Task_CreateBracelet["Create the ID bracelet<br/>from the admission<br/>photograph"]
+    Task_PlaceBracelet["Place the ID bracelet on<br/>the consumer"]
+  end
+  subgraph P8["8. Initiate Nursing Handoff"]
+    direction LR
+    Task_CallUnitReady["Call the destination unit<br/>and report the consumer is<br/>ready"]
+    Event_StaffArrive(["Unit Nurse and Mental<br/>Health Technician report<br/>to admissions"])
+    Gateway_NursingSplit{"Join"}
+    Task_LiceTreatment["Apply the required lice<br/>treatment"]
+    Task_RecordIntakeNeeds["Record clothing size,<br/>allergies, and immediate<br/>food needs"]
+    Gateway_NursingJoin{"Join"}
+  end
+  subgraph P9["9. Determine Escort and Nursing Location"]
+    direction LR
+    Gateway_EscortConstraints{"Multiple admissions<br/>or escort<br/>constraints?"}
+    Task_StandardEscort["Use the standard Security<br/>Officer and MHT escort"]
+    Task_CoordinateEscort["Coordinate the escort plan<br/>with the Unit Nurse and<br/>MHT"]
+    Gateway_EscortConstraintsJoin{"Merge"}
+    Gateway_AltLocation{"Alternate shower or<br/>nursing location<br/>required?"}
+    Task_EscortToShower["Escort the consumer to the<br/>admissions-area shower"]
+    Task_EscortToAltLocation["Escort the consumer to the<br/>location designated by the<br/>Unit Nurse"]
+    Task_NursingAtAltLocation["Complete the required<br/>nursing activities at the<br/>designated location"]
+  end
+  subgraph P10["10. Complete Shower and Unit Transfer"]
+    direction LR
+    Task_Shower["Complete the shower under<br/>required supervision"]
+    Task_EscortToUnit["Escort the consumer to the<br/>destination unit"]
+    Gateway_LocationJoin{"Merge"}
+  end
+  subgraph P11["11. Complete Security-to-Nursing Handoff"]
+    direction LR
+    Task_NurseAccepts["Accept the consumer and<br/>complete the<br/>security-to-nursing<br/>handoff"]
+    EndEvent_Complete(["Security admission<br/>complete"])
+  end
+  AC([Admissions Coordinator]):::ext
+  AC -. scheduled admission email .-> StartEvent_ScheduledAdmission
+  StartEvent_ScheduledAdmission --> Event_DayOfAdmission
+  Event_DayOfAdmission --> Task_ReviewSchedule
+  Task_ReviewSchedule --> Gateway_InfoChanged
+  Gateway_InfoChanged -->|No| Task_PreparePacket
+  Gateway_InfoChanged -->|Yes| Task_ReviewLatestEmail
+  Task_ReviewLatestEmail --> Task_UpdatePacket
+  Task_PreparePacket --> Gateway_InfoChangedJoin
+  Task_UpdatePacket --> Gateway_InfoChangedJoin
+  Gateway_InfoChangedJoin --> Task_VerifyReadiness
+  Task_VerifyReadiness --> Task_StageEquipment
+  Task_StageEquipment --> Task_AnnounceArrival
+  Task_AnnounceArrival --> Gateway_UnscheduledArrival
+  Gateway_UnscheduledArrival -->|No| Gateway_UnscheduledArrivalJoin
+  Gateway_UnscheduledArrival -->|Yes| Task_VerifyAgainstSchedule
+  Task_VerifyAgainstSchedule --> Task_UpdatePacketOnArrival
+  Task_UpdatePacketOnArrival --> Gateway_UnscheduledArrivalJoin
+  Gateway_UnscheduledArrivalJoin --> Task_AdmitVehicle
+  Task_AdmitVehicle --> Task_EscortToHolding
+  Task_EscortToHolding --> Task_RemoveShackles
+  Task_RemoveShackles --> Task_ObtainReport
+  Task_ObtainReport --> Gateway_SafetyConcern
+  Gateway_SafetyConcern -->|No| Gateway_SafetyConcernJoin
+  Gateway_SafetyConcern -->|Yes| Task_RecordBehavioralInfo
+  Task_RecordBehavioralInfo --> Task_CallUnitEarly
+  Task_CallUnitEarly --> Task_NurseAssess
+  Task_NurseAssess --> Gateway_ClinicalIntervention
+  Gateway_ClinicalIntervention -->|No| Gateway_ClinicalInterventionJoin
+  Gateway_ClinicalIntervention -->|Yes| Task_AdjustPrecautions
+  Task_AdjustPrecautions --> Event_NurseAuthorizes
+  Event_NurseAuthorizes --> Gateway_ClinicalInterventionJoin
+  Gateway_ClinicalInterventionJoin --> Gateway_SafetyConcernJoin
+  Gateway_SafetyConcernJoin --> Task_DeputySignsForm
+  Task_DeputySignsForm --> Task_OfficerSignsAndCopies
+  Task_OfficerSignsAndCopies --> Task_GiveCopyToDeputy
+  Task_GiveCopyToDeputy --> Gateway_CustodyDocsComplete
+  Gateway_CustodyDocsComplete -->|Yes| Task_ReleaseDeputy
+  Gateway_CustodyDocsComplete -->|No| Task_OfficerSignsAndCopies
+  Task_ReleaseDeputy --> Task_EnterAvatarInitial
+  Task_EnterAvatarInitial --> Task_SecuritySearch
+  Task_SecuritySearch --> Task_RecordProperty
+  Task_RecordProperty --> Task_ConsumerDresses
+  Task_ConsumerDresses --> Task_ObserveSmartEntry
+  Task_ObserveSmartEntry --> Task_CapturePhoto
+  Task_CapturePhoto --> Gateway_BeaconVerified
+  Gateway_BeaconVerified -->|Yes| Task_PlaceBeacon
+  Gateway_BeaconVerified -->|No| Task_ObserveSmartEntry
+  Task_PlaceBeacon --> Task_IntakeQuestionnaire
+  Task_IntakeQuestionnaire --> Task_SignVendorForm
+  Task_SignVendorForm --> Task_ReturnToHolding
+  Task_ReturnToHolding --> Task_CompleteAvatar
+  Task_CompleteAvatar --> Task_CreateBracelet
+  Task_CreateBracelet --> Task_PlaceBracelet
+  Task_PlaceBracelet --> Task_CallUnitReady
+  Task_CallUnitReady --> Event_StaffArrive
+  Event_StaffArrive --> Gateway_NursingSplit
+  Gateway_NursingSplit --> Task_LiceTreatment
+  Gateway_NursingSplit --> Task_RecordIntakeNeeds
+  Task_LiceTreatment --> Gateway_NursingJoin
+  Task_RecordIntakeNeeds --> Gateway_NursingJoin
+  Gateway_NursingJoin --> Gateway_EscortConstraints
+  Gateway_EscortConstraints -->|No| Task_StandardEscort
+  Gateway_EscortConstraints -->|Yes| Task_CoordinateEscort
+  Task_StandardEscort --> Gateway_EscortConstraintsJoin
+  Task_CoordinateEscort --> Gateway_EscortConstraintsJoin
+  Gateway_EscortConstraintsJoin --> Gateway_AltLocation
+  Gateway_AltLocation -->|No| Task_EscortToShower
+  Gateway_AltLocation -->|Yes| Task_EscortToAltLocation
+  Task_EscortToAltLocation --> Task_NursingAtAltLocation
+  Task_NursingAtAltLocation --> Gateway_LocationJoin
+  Task_EscortToShower --> Task_Shower
+  Task_Shower --> Task_EscortToUnit
+  Task_EscortToUnit --> Gateway_LocationJoin
+  Gateway_LocationJoin --> Task_NurseAccepts
+  Task_NurseAccepts --> EndEvent_Complete
+  classDef so fill:#dbeafe,stroke:#1d4ed8,color:#0f172a;
+  classDef led fill:#fee2e2,stroke:#b91c1c,color:#0f172a;
+  classDef con fill:#fef3c7,stroke:#b45309,color:#0f172a;
+  classDef un fill:#dcfce7,stroke:#15803d,color:#0f172a;
+  classDef mht fill:#f3e8ff,stroke:#7e22ce,color:#0f172a;
+  classDef ext fill:#e2e8f0,stroke:#475569,color:#0f172a;
+  class StartEvent_ScheduledAdmission,Event_DayOfAdmission,Task_ReviewSchedule,Gateway_InfoChanged,Task_PreparePacket,Task_ReviewLatestEmail,Task_UpdatePacket,Gateway_InfoChangedJoin,Task_VerifyReadiness,Task_StageEquipment,Gateway_UnscheduledArrival,Task_VerifyAgainstSchedule,Task_UpdatePacketOnArrival,Gateway_UnscheduledArrivalJoin,Task_AdmitVehicle,Task_ObtainReport,Gateway_SafetyConcern,Task_RecordBehavioralInfo,Task_CallUnitEarly,Task_AdjustPrecautions,Event_NurseAuthorizes,Gateway_ClinicalInterventionJoin,Gateway_SafetyConcernJoin,Task_OfficerSignsAndCopies,Task_GiveCopyToDeputy,Gateway_CustodyDocsComplete,Task_ReleaseDeputy,Task_EnterAvatarInitial,Task_SecuritySearch,Task_RecordProperty,Task_ObserveSmartEntry,Task_CapturePhoto,Gateway_BeaconVerified,Task_PlaceBeacon,Task_IntakeQuestionnaire,Task_ReturnToHolding,Task_CompleteAvatar,Task_CreateBracelet,Task_PlaceBracelet,Task_CallUnitReady,Event_StaffArrive,Gateway_NursingSplit,Gateway_NursingJoin,Gateway_EscortConstraints,Task_StandardEscort,Task_CoordinateEscort,Gateway_EscortConstraintsJoin,Gateway_AltLocation,Task_EscortToShower,Task_EscortToAltLocation,Task_EscortToUnit,Gateway_LocationJoin,EndEvent_Complete so;
+  class Task_AnnounceArrival,Task_EscortToHolding,Task_RemoveShackles,Task_DeputySignsForm led;
+  class Task_ConsumerDresses,Task_SignVendorForm,Task_Shower con;
+  class Task_NurseAssess,Gateway_ClinicalIntervention,Task_LiceTreatment,Task_NursingAtAltLocation,Task_NurseAccepts un;
+  class Task_RecordIntakeNeeds mht;

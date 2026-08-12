@@ -1,0 +1,1321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_OFC001" targetNamespace="http://oklahoma.gov/odmhsas/ofc/bpmn" exporter="generate_bpmn.py" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_OFC001">
+    <bpmn:participant id="Participant_AdmissionsCoordinator" name="Admissions Coordinator"/>
+    <bpmn:participant id="Participant_OFCSecurityIntake" name="Oklahoma Forensic Center — Security Intake" processRef="Process_OFC001"/>
+    <bpmn:messageFlow id="MessageFlow_ScheduledAdmission" name="Scheduled admission email" sourceRef="Participant_AdmissionsCoordinator" targetRef="StartEvent_ScheduledAdmission"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Process_OFC001" name="OFC-001 — Security Intakes Consumer" isExecutable="false">
+    <bpmn:documentation>- OFC-001 - Security Intakes Consumer. Oklahoma Forensic Center, Security Unit. Version 1.1, 2026-08-11. Controlled process for receiving a consumer from law enforcement, documenting the transfer of custody, completing security screening and identification, establishing electronic tracking, and handing the consumer to nursing staff.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_OFC001">
+      <bpmn:lane id="Lane_SO" name="Security Officer">
+        <bpmn:flowNodeRef>StartEvent_ScheduledAdmission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_DayOfAdmission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewSchedule</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_InfoChanged</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PreparePacket</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewLatestEmail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdatePacket</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_InfoChangedJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerifyReadiness</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_StageEquipment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_UnscheduledArrival</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerifyAgainstSchedule</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdatePacketOnArrival</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_UnscheduledArrivalJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AdmitVehicle</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ObtainReport</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_SafetyConcern</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecordBehavioralInfo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CallUnitEarly</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AdjustPrecautions</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_NurseAuthorizes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ClinicalInterventionJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_SafetyConcernJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_OfficerSignsAndCopies</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GiveCopyToDeputy</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CustodyDocsComplete</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReleaseDeputy</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnterAvatarInitial</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SecuritySearch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecordProperty</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ObserveSmartEntry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CapturePhoto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_BeaconVerified</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PlaceBeacon</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IntakeQuestionnaire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReturnToHolding</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteAvatar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreateBracelet</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PlaceBracelet</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CallUnitReady</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_StaffArrive</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_NursingSplit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_NursingJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EscortConstraints</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_StandardEscort</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CoordinateEscort</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EscortConstraintsJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AltLocation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EscortToShower</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EscortToAltLocation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EscortToUnit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_LocationJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Complete</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_LED" name="Law Enforcement Deputy">
+        <bpmn:flowNodeRef>Task_AnnounceArrival</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EscortToHolding</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RemoveShackles</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DeputySignsForm</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_CON" name="Consumer">
+        <bpmn:flowNodeRef>Task_ConsumerDresses</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SignVendorForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Shower</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_UN" name="Unit Nurse">
+        <bpmn:flowNodeRef>Task_NurseAssess</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ClinicalIntervention</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LiceTreatment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NursingAtAltLocation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NurseAccepts</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_MHT" name="Mental Health Technician">
+        <bpmn:flowNodeRef>Task_RecordIntakeNeeds</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_ScheduledAdmission" name="Scheduled admission email received">
+      <bpmn:documentation>- Receive the consumer name, identifying number, destination unit, and planned admission date from the Admissions Coordinator.</bpmn:documentation>
+      <bpmn:outgoing>Flow_StartEvent_ScheduledAdmission__Event_DayOfAdmission</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MsgDef_StartEvent_ScheduledAdmission"/>
+    </bpmn:startEvent>
+    <bpmn:intermediateCatchEvent id="Event_DayOfAdmission" name="On the day of admission">
+      <bpmn:documentation>- The packet is prepared on the day of admission, not on receipt of the scheduling email.</bpmn:documentation>
+      <bpmn:incoming>Flow_StartEvent_ScheduledAdmission__Event_DayOfAdmission</bpmn:incoming>
+      <bpmn:outgoing>Flow_Event_DayOfAdmission__Task_ReviewSchedule</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_Event_DayOfAdmission">
+        <bpmn:timeDate>Day of the scheduled admission</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="Task_ReviewSchedule" name="Review admission schedule and confirm admission remains active">
+      <bpmn:documentation>- Review the admission schedule on the day of admission.
+- Confirm that the scheduled admission remains active.</bpmn:documentation>
+      <bpmn:incoming>Flow_Event_DayOfAdmission__Task_ReviewSchedule</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReviewSchedule__Gateway_InfoChanged</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_InfoChanged" name="Admission information changed?" default="Flow_Gateway_InfoChanged__Task_PreparePacket">
+      <bpmn:documentation>- Option B - the admission date, arrival time, consumer information, or destination unit changed before arrival.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ReviewSchedule__Gateway_InfoChanged</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_InfoChanged__Task_PreparePacket</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_InfoChanged__Task_ReviewLatestEmail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_PreparePacket" name="Prepare the security admission packet">
+      <bpmn:documentation>- Prepare the security admission packet on the day of admission.
+- Enter the consumer name, identifying number, and destination unit on each applicable page.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_InfoChanged__Task_PreparePacket</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PreparePacket__Gateway_InfoChangedJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_ReviewLatestEmail" name="Review the most recent admission email">
+      <bpmn:documentation>- Review the most recent admission email.
+- Confirm the current admission date, arrival time, consumer information, and destination unit.
+- Do not rely on a packet printed from an earlier schedule.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_InfoChanged__Task_ReviewLatestEmail</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReviewLatestEmail__Task_UpdatePacket</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_UpdatePacket" name="Print or update the packet from confirmed information">
+      <bpmn:documentation>- Print or update the security admission packet using the confirmed information.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ReviewLatestEmail__Task_UpdatePacket</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_UpdatePacket__Gateway_InfoChangedJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_InfoChangedJoin">
+      <bpmn:documentation>- Resume admission preparation using the current confirmed admission information.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_PreparePacket__Gateway_InfoChangedJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_UpdatePacket__Gateway_InfoChangedJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_InfoChangedJoin__Task_VerifyReadiness</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_VerifyReadiness" name="Verify packet contents, system access, and staffing">
+      <bpmn:documentation>- Confirm the packet contains the Vendor Form, the Admission Property Inventory, the Admission Notification Form, and the Security Intake Questionnaire.
+- Confirm active Avatar access and active ObserveSmart access.
+- Confirm that the tablet is functioning.
+- Confirm that an ObserveSmart beacon is available.
+- Confirm that the camera and ID-bracelet equipment are available.
+- Confirm that at least two Security Officers are available for the security search.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_InfoChangedJoin__Task_VerifyReadiness</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_VerifyReadiness__Task_StageEquipment</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_StageEquipment" name="Stage admission systems and equipment">
+      <bpmn:documentation>- Stage Avatar, ObserveSmart, the tablet, the beacon, the camera, and the ID-bracelet equipment.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_VerifyReadiness__Task_StageEquipment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_StageEquipment__Task_AnnounceArrival</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_AnnounceArrival" name="Announce arrival through the sally-port intercom">
+      <bpmn:incoming>Flow_Task_StageEquipment__Task_AnnounceArrival</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_AnnounceArrival__Gateway_UnscheduledArrival</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_UnscheduledArrival" name="Arrival unscheduled or outside the expected time?" default="Flow_Gateway_UnscheduledArrival__Gateway_UnscheduledArrivalJoin">
+      <bpmn:documentation>- Option A - the Law Enforcement Deputy arrives without calling ahead or arrives outside the scheduled time.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_AnnounceArrival__Gateway_UnscheduledArrival</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_UnscheduledArrival__Gateway_UnscheduledArrivalJoin</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_UnscheduledArrival__Task_VerifyAgainstSchedule</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_VerifyAgainstSchedule" name="Verify consumer against the schedule and daily plan">
+      <bpmn:documentation>- Verify the consumer against the scheduled admission email and the daily admission plan.
+- Confirm that the admission remains authorized.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_UnscheduledArrival__Task_VerifyAgainstSchedule</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_VerifyAgainstSchedule__Task_UpdatePacketOnArrival</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_UpdatePacketOnArrival" name="Prepare or update the packet and stage equipment">
+      <bpmn:documentation>- Prepare or update the admission packet after confirming the admission.
+- Stage the required admission systems and equipment.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_VerifyAgainstSchedule__Task_UpdatePacketOnArrival</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_UpdatePacketOnArrival__Gateway_UnscheduledArrivalJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_UnscheduledArrivalJoin">
+      <bpmn:documentation>- Resume the standard arrival process after confirming the admission.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_UnscheduledArrival__Gateway_UnscheduledArrivalJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_UpdatePacketOnArrival__Gateway_UnscheduledArrivalJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_UnscheduledArrivalJoin__Task_AdmitVehicle</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_AdmitVehicle" name="Admit the transport vehicle and close the garage door">
+      <bpmn:documentation>- Admit the transport vehicle into the sally port.
+- Close the garage door.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_UnscheduledArrivalJoin__Task_AdmitVehicle</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_AdmitVehicle__Task_EscortToHolding</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_EscortToHolding" name="Remove consumer from the vehicle and escort to the holding room">
+      <bpmn:documentation>- Remove the consumer from the transport vehicle.
+- Escort the consumer to the admissions holding room.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_AdmitVehicle__Task_EscortToHolding</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_EscortToHolding__Task_RemoveShackles</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_RemoveShackles" name="Remove the consumer's shackles in the holding room">
+      <bpmn:incoming>Flow_Task_EscortToHolding__Task_RemoveShackles</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RemoveShackles__Task_ObtainReport</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ObtainReport" name="Obtain the behavioral and transport report from the Deputy">
+      <bpmn:documentation>- Review conduct at the county facility.
+- Review any combative incidents or transport problems.
+- Review any reported threats, agitation, or other safety concerns.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_RemoveShackles__Task_ObtainReport</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ObtainReport__Gateway_SafetyConcern</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_SafetyConcern" name="Behavioral or safety concern?" default="Flow_Gateway_SafetyConcern__Gateway_SafetyConcernJoin">
+      <bpmn:documentation>- Option C - the Deputy reports combative behavior, transport problems, threats, or other safety concerns, or the consumer appears irritable, agitated, or verbally aggressive.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ObtainReport__Gateway_SafetyConcern</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_SafetyConcern__Gateway_SafetyConcernJoin</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_SafetyConcern__Task_RecordBehavioralInfo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_RecordBehavioralInfo" name="Record the behavioral and safety information">
+      <bpmn:incoming>Flow_Gateway_SafetyConcern__Task_RecordBehavioralInfo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RecordBehavioralInfo__Task_CallUnitEarly</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_CallUnitEarly" name="Call the destination unit and request a nursing assessment">
+      <bpmn:documentation>- Call the destination unit before continuing routine processing.
+- Report the identified behavioral or safety concern.
+- Request a nursing assessment.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_RecordBehavioralInfo__Task_CallUnitEarly</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CallUnitEarly__Task_NurseAssess</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:manualTask id="Task_NurseAssess" name="Report to admissions and assess the consumer">
+      <bpmn:documentation>- Report to the admissions area.
+- Assess the consumer.
+- Determine whether clinical intervention is required.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_CallUnitEarly__Task_NurseAssess</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_NurseAssess__Gateway_ClinicalIntervention</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_ClinicalIntervention" name="Clinical intervention required?" default="Flow_Gateway_ClinicalIntervention__Gateway_ClinicalInterventionJoin">
+      <bpmn:incoming>Flow_Task_NurseAssess__Gateway_ClinicalIntervention</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ClinicalIntervention__Gateway_ClinicalInterventionJoin</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_ClinicalIntervention__Task_AdjustPrecautions</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_AdjustPrecautions" name="Adjust staffing and movement precautions">
+      <bpmn:documentation>- Adjust security staffing and movement precautions according to the nursing assessment.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_ClinicalIntervention__Task_AdjustPrecautions</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_AdjustPrecautions__Event_NurseAuthorizes</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:intermediateCatchEvent id="Event_NurseAuthorizes" name="Unit Nurse authorizes continuation">
+      <bpmn:incoming>Flow_Task_AdjustPrecautions__Event_NurseAuthorizes</bpmn:incoming>
+      <bpmn:outgoing>Flow_Event_NurseAuthorizes__Gateway_ClinicalInterventionJoin</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MsgDef_Event_NurseAuthorizes"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="Gateway_ClinicalInterventionJoin">
+      <bpmn:incoming>Flow_Gateway_ClinicalIntervention__Gateway_ClinicalInterventionJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Event_NurseAuthorizes__Gateway_ClinicalInterventionJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ClinicalInterventionJoin__Gateway_SafetyConcernJoin</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_SafetyConcernJoin">
+      <bpmn:documentation>- Resume routine security admission when the Unit Nurse authorizes continuation.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_SafetyConcern__Gateway_SafetyConcernJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_ClinicalInterventionJoin__Gateway_SafetyConcernJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_SafetyConcernJoin__Task_DeputySignsForm</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_DeputySignsForm" name="Sign the Admission Notification Form before departure">
+      <bpmn:incoming>Flow_Gateway_SafetyConcernJoin__Task_DeputySignsForm</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_DeputySignsForm__Task_OfficerSignsAndCopies</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_OfficerSignsAndCopies" name="Sign the Admission Notification Form and make the required copies">
+      <bpmn:incoming>Flow_Task_DeputySignsForm__Task_OfficerSignsAndCopies</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_CustodyDocsComplete__Task_OfficerSignsAndCopies</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_OfficerSignsAndCopies__Task_GiveCopyToDeputy</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_GiveCopyToDeputy" name="Give one copy of the form to the Law Enforcement Deputy">
+      <bpmn:incoming>Flow_Task_OfficerSignsAndCopies__Task_GiveCopyToDeputy</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_GiveCopyToDeputy__Gateway_CustodyDocsComplete</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_CustodyDocsComplete" name="Form signed, copied, and returned?" default="Flow_Gateway_CustodyDocsComplete__Task_ReleaseDeputy">
+      <bpmn:incoming>Flow_Task_GiveCopyToDeputy__Gateway_CustodyDocsComplete</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_CustodyDocsComplete__Task_ReleaseDeputy</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_CustodyDocsComplete__Task_OfficerSignsAndCopies</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_ReleaseDeputy" name="Release the Law Enforcement Deputy">
+      <bpmn:documentation>- Release the Deputy after the transfer-of-custody documentation is complete.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_CustodyDocsComplete__Task_ReleaseDeputy</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReleaseDeputy__Task_EnterAvatarInitial</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_EnterAvatarInitial" name="Enter known admission information into Avatar">
+      <bpmn:documentation>- Record the consumer's language.
+- Record the transporting authority.
+- Record the admitting clinician.
+- Record the originating county.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ReleaseDeputy__Task_EnterAvatarInitial</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_EnterAvatarInitial__Task_SecuritySearch</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_SecuritySearch" name="Conduct the two-officer security search">
+      <bpmn:documentation>- Assign two Security Officers to conduct the security search.
+- Search the consumer for contraband.
+- Search the consumer for hidden instruments.
+- Identify personal property discovered during the search.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_EnterAvatarInitial__Task_SecuritySearch</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_SecuritySearch__Task_RecordProperty</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_RecordProperty" name="Record the consumer's property on the Admission Property Inventory">
+      <bpmn:incoming>Flow_Task_SecuritySearch__Task_RecordProperty</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RecordProperty__Task_ConsumerDresses</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_ConsumerDresses" name="Dress after the security search is complete">
+      <bpmn:incoming>Flow_Task_RecordProperty__Task_ConsumerDresses</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ConsumerDresses__Task_ObserveSmartEntry</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_ObserveSmartEntry" name="Enter the consumer into ObserveSmart and pair the beacon">
+      <bpmn:documentation>- Enter the consumer's name into ObserveSmart.
+- Enter the consumer's date of birth into ObserveSmart.
+- Enter the consumer's destination unit into ObserveSmart.
+- Pair the assigned ObserveSmart beacon with the consumer.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ConsumerDresses__Task_ObserveSmartEntry</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_BeaconVerified__Task_ObserveSmartEntry</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ObserveSmartEntry__Task_CapturePhoto</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_CapturePhoto" name="Capture the consumer's photograph">
+      <bpmn:documentation>- Capture the consumer's photograph for the facility record.
+- Associate the photograph with the ObserveSmart record.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ObserveSmartEntry__Task_CapturePhoto</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CapturePhoto__Gateway_BeaconVerified</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_BeaconVerified" name="Beacon paired to the correct consumer?" default="Flow_Gateway_BeaconVerified__Task_PlaceBeacon">
+      <bpmn:incoming>Flow_Task_CapturePhoto__Gateway_BeaconVerified</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_BeaconVerified__Task_PlaceBeacon</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_BeaconVerified__Task_ObserveSmartEntry</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_PlaceBeacon" name="Place the paired beacon on the consumer">
+      <bpmn:incoming>Flow_Gateway_BeaconVerified__Task_PlaceBeacon</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PlaceBeacon__Task_IntakeQuestionnaire</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_IntakeQuestionnaire" name="Collect supplemental information using the Security Intake Questionnaire">
+      <bpmn:documentation>- Record military-service status.
+- Record allergy information.
+- Record state of birth.
+- Record marital history.
+- Record emergency-contact information.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_PlaceBeacon__Task_IntakeQuestionnaire</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_IntakeQuestionnaire__Task_SignVendorForm</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_SignVendorForm" name="Sign the Vendor Form">
+      <bpmn:incoming>Flow_Task_IntakeQuestionnaire__Task_SignVendorForm</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_SignVendorForm__Task_ReturnToHolding</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ReturnToHolding" name="Return the consumer to the holding room">
+      <bpmn:incoming>Flow_Task_SignVendorForm__Task_ReturnToHolding</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReturnToHolding__Task_CompleteAvatar</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_CompleteAvatar" name="Complete the remaining Avatar fields">
+      <bpmn:documentation>- Use the best available information from the admission documents and the consumer interview.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ReturnToHolding__Task_CompleteAvatar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteAvatar__Task_CreateBracelet</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_CreateBracelet" name="Create the ID bracelet from the admission photograph">
+      <bpmn:incoming>Flow_Task_CompleteAvatar__Task_CreateBracelet</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CreateBracelet__Task_PlaceBracelet</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_PlaceBracelet" name="Place the ID bracelet on the consumer">
+      <bpmn:incoming>Flow_Task_CreateBracelet__Task_PlaceBracelet</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PlaceBracelet__Task_CallUnitReady</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sendTask id="Task_CallUnitReady" name="Call the destination unit and report the consumer is ready">
+      <bpmn:documentation>- Call the destination unit.
+- Report that the consumer is ready for the nursing admission process.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_PlaceBracelet__Task_CallUnitReady</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CallUnitReady__Event_StaffArrive</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="Event_StaffArrive" name="Unit Nurse and Mental Health Technician report to admissions">
+      <bpmn:documentation>- Hold the consumer in the admissions area until the Unit Nurse and Mental Health Technician report.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_CallUnitReady__Event_StaffArrive</bpmn:incoming>
+      <bpmn:outgoing>Flow_Event_StaffArrive__Gateway_NursingSplit</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MsgDef_Event_StaffArrive"/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:parallelGateway id="Gateway_NursingSplit">
+      <bpmn:incoming>Flow_Event_StaffArrive__Gateway_NursingSplit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_NursingSplit__Task_LiceTreatment</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_NursingSplit__Task_RecordIntakeNeeds</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:manualTask id="Task_LiceTreatment" name="Apply the required lice treatment">
+      <bpmn:incoming>Flow_Gateway_NursingSplit__Task_LiceTreatment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_LiceTreatment__Gateway_NursingJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_RecordIntakeNeeds" name="Record clothing size, allergies, and immediate food needs">
+      <bpmn:documentation>- Record the consumer's clothing size.
+- Record the consumer's allergies.
+- Record the consumer's hunger status.
+- Record any immediate food needs.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_NursingSplit__Task_RecordIntakeNeeds</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RecordIntakeNeeds__Gateway_NursingJoin</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="Gateway_NursingJoin">
+      <bpmn:incoming>Flow_Task_LiceTreatment__Gateway_NursingJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_RecordIntakeNeeds__Gateway_NursingJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_NursingJoin__Gateway_EscortConstraints</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:exclusiveGateway id="Gateway_EscortConstraints" name="Multiple admissions or escort constraints?" default="Flow_Gateway_EscortConstraints__Task_StandardEscort">
+      <bpmn:documentation>- Option D - Security is processing multiple admissions or the primary Security Officer cannot complete the shower or unit escort.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_NursingJoin__Gateway_EscortConstraints</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_EscortConstraints__Task_StandardEscort</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_EscortConstraints__Task_CoordinateEscort</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_StandardEscort" name="Use the standard Security Officer and MHT escort">
+      <bpmn:incoming>Flow_Gateway_EscortConstraints__Task_StandardEscort</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_StandardEscort__Gateway_EscortConstraintsJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CoordinateEscort" name="Coordinate the escort plan with the Unit Nurse and MHT">
+      <bpmn:documentation>- Assign a Security Officer to support the escort when staffing permits.
+- Assign the Mental Health Technician to perform or assist with the escort according to staffing and unit direction.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_EscortConstraints__Task_CoordinateEscort</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CoordinateEscort__Gateway_EscortConstraintsJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_EscortConstraintsJoin">
+      <bpmn:documentation>- Resume consumer movement under the established escort plan.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_StandardEscort__Gateway_EscortConstraintsJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_CoordinateEscort__Gateway_EscortConstraintsJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_EscortConstraintsJoin__Gateway_AltLocation</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_AltLocation" name="Alternate shower or nursing location required?" default="Flow_Gateway_AltLocation__Task_EscortToShower">
+      <bpmn:documentation>- Option E - the destination unit directs that the shower or nursing admission activities occur in a secure unit location rather than the admissions-area shower.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_EscortConstraintsJoin__Gateway_AltLocation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_AltLocation__Task_EscortToShower</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_AltLocation__Task_EscortToAltLocation</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_EscortToShower" name="Escort the consumer to the admissions-area shower">
+      <bpmn:incoming>Flow_Gateway_AltLocation__Task_EscortToShower</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_EscortToShower__Task_Shower</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_EscortToAltLocation" name="Escort the consumer to the location designated by the Unit Nurse">
+      <bpmn:incoming>Flow_Gateway_AltLocation__Task_EscortToAltLocation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_EscortToAltLocation__Task_NursingAtAltLocation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_NursingAtAltLocation" name="Complete the required nursing activities at the designated location">
+      <bpmn:incoming>Flow_Task_EscortToAltLocation__Task_NursingAtAltLocation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_NursingAtAltLocation__Gateway_LocationJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_Shower" name="Complete the shower under required supervision">
+      <bpmn:documentation>- The shower is completed under the required security and clinical supervision.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_EscortToShower__Task_Shower</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_Shower__Task_EscortToUnit</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_EscortToUnit" name="Escort the consumer to the destination unit">
+      <bpmn:documentation>- The Security Officer and Mental Health Technician escort the consumer from the shower location to the destination unit.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_Shower__Task_EscortToUnit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_EscortToUnit__Gateway_LocationJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_LocationJoin">
+      <bpmn:documentation>- Resume the common handoff flow when the consumer reaches the location where the Unit Nurse will accept custody.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_NursingAtAltLocation__Gateway_LocationJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_EscortToUnit__Gateway_LocationJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_LocationJoin__Task_NurseAccepts</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_NurseAccepts" name="Accept the consumer and complete the security-to-nursing handoff">
+      <bpmn:documentation>- The consumer is presented to the Unit Nurse at the destination unit or authorized alternate location.
+- Confirm receipt of the consumer.
+- Complete the security-to-nursing handoff.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_LocationJoin__Task_NurseAccepts</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_NurseAccepts__EndEvent_Complete</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="EndEvent_Complete" name="Security admission complete">
+      <bpmn:documentation>- The consumer has been accepted from law enforcement.
+- The security search and property documentation are complete.
+- Required transfer-of-custody forms and signatures are complete.
+- The consumer has been entered into Avatar.
+- The ObserveSmart beacon has been paired and placed.
+- The consumer photograph and ID bracelet are complete.
+- The Unit Nurse has accepted the consumer.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_NurseAccepts__EndEvent_Complete</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_StartEvent_ScheduledAdmission__Event_DayOfAdmission" sourceRef="StartEvent_ScheduledAdmission" targetRef="Event_DayOfAdmission"/>
+    <bpmn:sequenceFlow id="Flow_Event_DayOfAdmission__Task_ReviewSchedule" sourceRef="Event_DayOfAdmission" targetRef="Task_ReviewSchedule"/>
+    <bpmn:sequenceFlow id="Flow_Task_ReviewSchedule__Gateway_InfoChanged" sourceRef="Task_ReviewSchedule" targetRef="Gateway_InfoChanged"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_InfoChanged__Task_PreparePacket" sourceRef="Gateway_InfoChanged" targetRef="Task_PreparePacket" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_InfoChanged__Task_ReviewLatestEmail" sourceRef="Gateway_InfoChanged" targetRef="Task_ReviewLatestEmail" name="Yes">
+      <bpmn:conditionExpression>Admission date, time, consumer information, or destination unit changed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_ReviewLatestEmail__Task_UpdatePacket" sourceRef="Task_ReviewLatestEmail" targetRef="Task_UpdatePacket"/>
+    <bpmn:sequenceFlow id="Flow_Task_PreparePacket__Gateway_InfoChangedJoin" sourceRef="Task_PreparePacket" targetRef="Gateway_InfoChangedJoin"/>
+    <bpmn:sequenceFlow id="Flow_Task_UpdatePacket__Gateway_InfoChangedJoin" sourceRef="Task_UpdatePacket" targetRef="Gateway_InfoChangedJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_InfoChangedJoin__Task_VerifyReadiness" sourceRef="Gateway_InfoChangedJoin" targetRef="Task_VerifyReadiness"/>
+    <bpmn:sequenceFlow id="Flow_Task_VerifyReadiness__Task_StageEquipment" sourceRef="Task_VerifyReadiness" targetRef="Task_StageEquipment"/>
+    <bpmn:sequenceFlow id="Flow_Task_StageEquipment__Task_AnnounceArrival" sourceRef="Task_StageEquipment" targetRef="Task_AnnounceArrival"/>
+    <bpmn:sequenceFlow id="Flow_Task_AnnounceArrival__Gateway_UnscheduledArrival" sourceRef="Task_AnnounceArrival" targetRef="Gateway_UnscheduledArrival"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_UnscheduledArrival__Gateway_UnscheduledArrivalJoin" sourceRef="Gateway_UnscheduledArrival" targetRef="Gateway_UnscheduledArrivalJoin" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_UnscheduledArrival__Task_VerifyAgainstSchedule" sourceRef="Gateway_UnscheduledArrival" targetRef="Task_VerifyAgainstSchedule" name="Yes">
+      <bpmn:conditionExpression>Deputy arrived without calling ahead or outside the scheduled time</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_VerifyAgainstSchedule__Task_UpdatePacketOnArrival" sourceRef="Task_VerifyAgainstSchedule" targetRef="Task_UpdatePacketOnArrival"/>
+    <bpmn:sequenceFlow id="Flow_Task_UpdatePacketOnArrival__Gateway_UnscheduledArrivalJoin" sourceRef="Task_UpdatePacketOnArrival" targetRef="Gateway_UnscheduledArrivalJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_UnscheduledArrivalJoin__Task_AdmitVehicle" sourceRef="Gateway_UnscheduledArrivalJoin" targetRef="Task_AdmitVehicle"/>
+    <bpmn:sequenceFlow id="Flow_Task_AdmitVehicle__Task_EscortToHolding" sourceRef="Task_AdmitVehicle" targetRef="Task_EscortToHolding"/>
+    <bpmn:sequenceFlow id="Flow_Task_EscortToHolding__Task_RemoveShackles" sourceRef="Task_EscortToHolding" targetRef="Task_RemoveShackles"/>
+    <bpmn:sequenceFlow id="Flow_Task_RemoveShackles__Task_ObtainReport" sourceRef="Task_RemoveShackles" targetRef="Task_ObtainReport"/>
+    <bpmn:sequenceFlow id="Flow_Task_ObtainReport__Gateway_SafetyConcern" sourceRef="Task_ObtainReport" targetRef="Gateway_SafetyConcern"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_SafetyConcern__Gateway_SafetyConcernJoin" sourceRef="Gateway_SafetyConcern" targetRef="Gateway_SafetyConcernJoin" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_SafetyConcern__Task_RecordBehavioralInfo" sourceRef="Gateway_SafetyConcern" targetRef="Task_RecordBehavioralInfo" name="Yes">
+      <bpmn:conditionExpression>Combative behavior, transport problems, threats, agitation, or other safety concern reported</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_RecordBehavioralInfo__Task_CallUnitEarly" sourceRef="Task_RecordBehavioralInfo" targetRef="Task_CallUnitEarly"/>
+    <bpmn:sequenceFlow id="Flow_Task_CallUnitEarly__Task_NurseAssess" sourceRef="Task_CallUnitEarly" targetRef="Task_NurseAssess"/>
+    <bpmn:sequenceFlow id="Flow_Task_NurseAssess__Gateway_ClinicalIntervention" sourceRef="Task_NurseAssess" targetRef="Gateway_ClinicalIntervention"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ClinicalIntervention__Gateway_ClinicalInterventionJoin" sourceRef="Gateway_ClinicalIntervention" targetRef="Gateway_ClinicalInterventionJoin" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ClinicalIntervention__Task_AdjustPrecautions" sourceRef="Gateway_ClinicalIntervention" targetRef="Task_AdjustPrecautions" name="Yes">
+      <bpmn:conditionExpression>Nursing assessment requires clinical intervention</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_AdjustPrecautions__Event_NurseAuthorizes" sourceRef="Task_AdjustPrecautions" targetRef="Event_NurseAuthorizes"/>
+    <bpmn:sequenceFlow id="Flow_Event_NurseAuthorizes__Gateway_ClinicalInterventionJoin" sourceRef="Event_NurseAuthorizes" targetRef="Gateway_ClinicalInterventionJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ClinicalInterventionJoin__Gateway_SafetyConcernJoin" sourceRef="Gateway_ClinicalInterventionJoin" targetRef="Gateway_SafetyConcernJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_SafetyConcernJoin__Task_DeputySignsForm" sourceRef="Gateway_SafetyConcernJoin" targetRef="Task_DeputySignsForm"/>
+    <bpmn:sequenceFlow id="Flow_Task_DeputySignsForm__Task_OfficerSignsAndCopies" sourceRef="Task_DeputySignsForm" targetRef="Task_OfficerSignsAndCopies"/>
+    <bpmn:sequenceFlow id="Flow_Task_OfficerSignsAndCopies__Task_GiveCopyToDeputy" sourceRef="Task_OfficerSignsAndCopies" targetRef="Task_GiveCopyToDeputy"/>
+    <bpmn:sequenceFlow id="Flow_Task_GiveCopyToDeputy__Gateway_CustodyDocsComplete" sourceRef="Task_GiveCopyToDeputy" targetRef="Gateway_CustodyDocsComplete"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_CustodyDocsComplete__Task_ReleaseDeputy" sourceRef="Gateway_CustodyDocsComplete" targetRef="Task_ReleaseDeputy" name="Yes"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_CustodyDocsComplete__Task_OfficerSignsAndCopies" sourceRef="Gateway_CustodyDocsComplete" targetRef="Task_OfficerSignsAndCopies" name="No">
+      <bpmn:conditionExpression>Form not yet signed, copied, and returned</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_ReleaseDeputy__Task_EnterAvatarInitial" sourceRef="Task_ReleaseDeputy" targetRef="Task_EnterAvatarInitial"/>
+    <bpmn:sequenceFlow id="Flow_Task_EnterAvatarInitial__Task_SecuritySearch" sourceRef="Task_EnterAvatarInitial" targetRef="Task_SecuritySearch"/>
+    <bpmn:sequenceFlow id="Flow_Task_SecuritySearch__Task_RecordProperty" sourceRef="Task_SecuritySearch" targetRef="Task_RecordProperty"/>
+    <bpmn:sequenceFlow id="Flow_Task_RecordProperty__Task_ConsumerDresses" sourceRef="Task_RecordProperty" targetRef="Task_ConsumerDresses"/>
+    <bpmn:sequenceFlow id="Flow_Task_ConsumerDresses__Task_ObserveSmartEntry" sourceRef="Task_ConsumerDresses" targetRef="Task_ObserveSmartEntry"/>
+    <bpmn:sequenceFlow id="Flow_Task_ObserveSmartEntry__Task_CapturePhoto" sourceRef="Task_ObserveSmartEntry" targetRef="Task_CapturePhoto"/>
+    <bpmn:sequenceFlow id="Flow_Task_CapturePhoto__Gateway_BeaconVerified" sourceRef="Task_CapturePhoto" targetRef="Gateway_BeaconVerified"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_BeaconVerified__Task_PlaceBeacon" sourceRef="Gateway_BeaconVerified" targetRef="Task_PlaceBeacon" name="Yes"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_BeaconVerified__Task_ObserveSmartEntry" sourceRef="Gateway_BeaconVerified" targetRef="Task_ObserveSmartEntry" name="No">
+      <bpmn:conditionExpression>Beacon is not paired to the correct consumer</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_PlaceBeacon__Task_IntakeQuestionnaire" sourceRef="Task_PlaceBeacon" targetRef="Task_IntakeQuestionnaire"/>
+    <bpmn:sequenceFlow id="Flow_Task_IntakeQuestionnaire__Task_SignVendorForm" sourceRef="Task_IntakeQuestionnaire" targetRef="Task_SignVendorForm"/>
+    <bpmn:sequenceFlow id="Flow_Task_SignVendorForm__Task_ReturnToHolding" sourceRef="Task_SignVendorForm" targetRef="Task_ReturnToHolding"/>
+    <bpmn:sequenceFlow id="Flow_Task_ReturnToHolding__Task_CompleteAvatar" sourceRef="Task_ReturnToHolding" targetRef="Task_CompleteAvatar"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteAvatar__Task_CreateBracelet" sourceRef="Task_CompleteAvatar" targetRef="Task_CreateBracelet"/>
+    <bpmn:sequenceFlow id="Flow_Task_CreateBracelet__Task_PlaceBracelet" sourceRef="Task_CreateBracelet" targetRef="Task_PlaceBracelet"/>
+    <bpmn:sequenceFlow id="Flow_Task_PlaceBracelet__Task_CallUnitReady" sourceRef="Task_PlaceBracelet" targetRef="Task_CallUnitReady"/>
+    <bpmn:sequenceFlow id="Flow_Task_CallUnitReady__Event_StaffArrive" sourceRef="Task_CallUnitReady" targetRef="Event_StaffArrive"/>
+    <bpmn:sequenceFlow id="Flow_Event_StaffArrive__Gateway_NursingSplit" sourceRef="Event_StaffArrive" targetRef="Gateway_NursingSplit"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_NursingSplit__Task_LiceTreatment" sourceRef="Gateway_NursingSplit" targetRef="Task_LiceTreatment"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_NursingSplit__Task_RecordIntakeNeeds" sourceRef="Gateway_NursingSplit" targetRef="Task_RecordIntakeNeeds"/>
+    <bpmn:sequenceFlow id="Flow_Task_LiceTreatment__Gateway_NursingJoin" sourceRef="Task_LiceTreatment" targetRef="Gateway_NursingJoin"/>
+    <bpmn:sequenceFlow id="Flow_Task_RecordIntakeNeeds__Gateway_NursingJoin" sourceRef="Task_RecordIntakeNeeds" targetRef="Gateway_NursingJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_NursingJoin__Gateway_EscortConstraints" sourceRef="Gateway_NursingJoin" targetRef="Gateway_EscortConstraints"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_EscortConstraints__Task_StandardEscort" sourceRef="Gateway_EscortConstraints" targetRef="Task_StandardEscort" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_EscortConstraints__Task_CoordinateEscort" sourceRef="Gateway_EscortConstraints" targetRef="Task_CoordinateEscort" name="Yes">
+      <bpmn:conditionExpression>Multiple admissions in progress or the primary officer cannot complete the escort</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_StandardEscort__Gateway_EscortConstraintsJoin" sourceRef="Task_StandardEscort" targetRef="Gateway_EscortConstraintsJoin"/>
+    <bpmn:sequenceFlow id="Flow_Task_CoordinateEscort__Gateway_EscortConstraintsJoin" sourceRef="Task_CoordinateEscort" targetRef="Gateway_EscortConstraintsJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_EscortConstraintsJoin__Gateway_AltLocation" sourceRef="Gateway_EscortConstraintsJoin" targetRef="Gateway_AltLocation"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AltLocation__Task_EscortToShower" sourceRef="Gateway_AltLocation" targetRef="Task_EscortToShower" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AltLocation__Task_EscortToAltLocation" sourceRef="Gateway_AltLocation" targetRef="Task_EscortToAltLocation" name="Yes">
+      <bpmn:conditionExpression>Destination unit directs a secure unit location instead of the admissions-area shower</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_EscortToAltLocation__Task_NursingAtAltLocation" sourceRef="Task_EscortToAltLocation" targetRef="Task_NursingAtAltLocation"/>
+    <bpmn:sequenceFlow id="Flow_Task_NursingAtAltLocation__Gateway_LocationJoin" sourceRef="Task_NursingAtAltLocation" targetRef="Gateway_LocationJoin"/>
+    <bpmn:sequenceFlow id="Flow_Task_EscortToShower__Task_Shower" sourceRef="Task_EscortToShower" targetRef="Task_Shower"/>
+    <bpmn:sequenceFlow id="Flow_Task_Shower__Task_EscortToUnit" sourceRef="Task_Shower" targetRef="Task_EscortToUnit"/>
+    <bpmn:sequenceFlow id="Flow_Task_EscortToUnit__Gateway_LocationJoin" sourceRef="Task_EscortToUnit" targetRef="Gateway_LocationJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_LocationJoin__Task_NurseAccepts" sourceRef="Gateway_LocationJoin" targetRef="Task_NurseAccepts"/>
+    <bpmn:sequenceFlow id="Flow_Task_NurseAccepts__EndEvent_Complete" sourceRef="Task_NurseAccepts" targetRef="EndEvent_Complete"/>
+    <bpmn:textAnnotation id="Ann_Task_PreparePacket">
+      <bpmn:text>[a] Prepare the packet on the day of admission because admission dates and times are frequently changed. Do not print the final packet solely in response to the initial scheduling email.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_PreparePacket" sourceRef="Task_PreparePacket" targetRef="Ann_Task_PreparePacket"/>
+    <bpmn:textAnnotation id="Ann_Task_ObtainReport">
+      <bpmn:text>[b] The behavioral report should address conduct at the county facility, combative incidents, problems during transport, threats, agitation, and other facts that affect staffing or safety precautions.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_ObtainReport" sourceRef="Task_ObtainReport" targetRef="Ann_Task_ObtainReport"/>
+    <bpmn:textAnnotation id="Ann_Task_DeputySignsForm">
+      <bpmn:text>[f] The Law Enforcement Deputy must sign the Admission Notification Form before departing. Do not release the deputy until the form has been signed, copied, and returned.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_DeputySignsForm" sourceRef="Task_DeputySignsForm" targetRef="Ann_Task_DeputySignsForm"/>
+    <bpmn:textAnnotation id="Ann_Task_SecuritySearch">
+      <bpmn:text>[c] Current security practice uses two Security Officers for the search of one consumer. Security staffing should exceed the number of consumers being searched whenever operationally possible.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_SecuritySearch" sourceRef="Task_SecuritySearch" targetRef="Ann_Task_SecuritySearch"/>
+    <bpmn:textAnnotation id="Ann_Task_ObserveSmartEntry">
+      <bpmn:text>[d] ObserveSmart is the tracking system used for the consumer's beacon and subsequent observation checks. The beacon must be paired to the correct consumer before it is placed on the consumer.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_ObserveSmartEntry" sourceRef="Task_ObserveSmartEntry" targetRef="Ann_Task_ObserveSmartEntry"/>
+    <bpmn:textAnnotation id="Ann_Task_IntakeQuestionnaire">
+      <bpmn:text>[e] The Security Intake Questionnaire is a local reference document and is not an official OFC form. Use it to collect information required for Avatar, but do not treat it as the official electronic record.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_IntakeQuestionnaire" sourceRef="Task_IntakeQuestionnaire" targetRef="Ann_Task_IntakeQuestionnaire"/>
+    <bpmn:textAnnotation id="Ann_Task_SignVendorForm">
+      <bpmn:text>[h] The Vendor Form supports the return or payment of consumer funds at discharge, usually by check. It sets the consumer up in the finance system so OFC can pay out any remaining funds when they leave.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_SignVendorForm" sourceRef="Task_SignVendorForm" targetRef="Ann_Task_SignVendorForm"/>
+    <bpmn:textAnnotation id="Ann_EndEvent_Complete">
+      <bpmn:text>[g] The security admission process ends when the consumer reaches the destination unit and the Unit Nurse accepts the handoff. Nursing assessment, social-work admission, case-management admission, treatment, and discharge are outside the scope of this OC.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_EndEvent_Complete" sourceRef="EndEvent_Complete" targetRef="Ann_EndEvent_Complete"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_OFC001">
+    <bpmndi:BPMNPlane id="BPMNPlane_OFC001" bpmnElement="Collaboration_OFC001">
+      <bpmndi:BPMNShape id="Shape_Participant_AdmissionsCoordinator" bpmnElement="Participant_AdmissionsCoordinator" isHorizontal="true">
+        <dc:Bounds x="166" y="90" width="320" height="60"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Participant_OFCSecurityIntake" bpmnElement="Participant_OFCSecurityIntake" isHorizontal="true">
+        <dc:Bounds x="200" y="260" width="11568" height="1407"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_SO" bpmnElement="Lane_SO" isHorizontal="true">
+        <dc:Bounds x="230" y="260" width="11538" height="464"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_LED" bpmnElement="Lane_LED" isHorizontal="true">
+        <dc:Bounds x="230" y="724" width="11538" height="284"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_CON" bpmnElement="Lane_CON" isHorizontal="true">
+        <dc:Bounds x="230" y="1008" width="11538" height="299"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_UN" bpmnElement="Lane_UN" isHorizontal="true">
+        <dc:Bounds x="230" y="1307" width="11538" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_MHT" bpmnElement="Lane_MHT" isHorizontal="true">
+        <dc:Bounds x="230" y="1487" width="11538" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_StartEvent_ScheduledAdmission" bpmnElement="StartEvent_ScheduledAdmission">
+        <dc:Bounds x="308" y="466" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="273" y="507" width="106" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Event_DayOfAdmission" bpmnElement="Event_DayOfAdmission">
+        <dc:Bounds x="422" y="466" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="387" y="507" width="106" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReviewSchedule" bpmnElement="Task_ReviewSchedule">
+        <dc:Bounds x="536" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_InfoChanged" bpmnElement="Gateway_InfoChanged" isMarkerVisible="true">
+        <dc:Bounds x="754" y="459" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="709" y="421" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PreparePacket" bpmnElement="Task_PreparePacket">
+        <dc:Bounds x="882" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReviewLatestEmail" bpmnElement="Task_ReviewLatestEmail">
+        <dc:Bounds x="882" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_UpdatePacket" bpmnElement="Task_UpdatePacket">
+        <dc:Bounds x="1100" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_InfoChangedJoin" bpmnElement="Gateway_InfoChangedJoin" isMarkerVisible="true">
+        <dc:Bounds x="1318" y="459" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_VerifyReadiness" bpmnElement="Task_VerifyReadiness">
+        <dc:Bounds x="1446" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_StageEquipment" bpmnElement="Task_StageEquipment">
+        <dc:Bounds x="1664" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_AnnounceArrival" bpmnElement="Task_AnnounceArrival">
+        <dc:Bounds x="1882" y="774" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_UnscheduledArrival" bpmnElement="Gateway_UnscheduledArrival" isMarkerVisible="true">
+        <dc:Bounds x="2100" y="459" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2055" y="408" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_VerifyAgainstSchedule" bpmnElement="Task_VerifyAgainstSchedule">
+        <dc:Bounds x="2228" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_UpdatePacketOnArrival" bpmnElement="Task_UpdatePacketOnArrival">
+        <dc:Bounds x="2446" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_UnscheduledArrivalJoin" bpmnElement="Gateway_UnscheduledArrivalJoin" isMarkerVisible="true">
+        <dc:Bounds x="2664" y="459" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_AdmitVehicle" bpmnElement="Task_AdmitVehicle">
+        <dc:Bounds x="2792" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EscortToHolding" bpmnElement="Task_EscortToHolding">
+        <dc:Bounds x="3010" y="774" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RemoveShackles" bpmnElement="Task_RemoveShackles">
+        <dc:Bounds x="3228" y="774" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ObtainReport" bpmnElement="Task_ObtainReport">
+        <dc:Bounds x="3446" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_SafetyConcern" bpmnElement="Gateway_SafetyConcern" isMarkerVisible="true">
+        <dc:Bounds x="3664" y="459" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3619" y="421" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecordBehavioralInfo" bpmnElement="Task_RecordBehavioralInfo">
+        <dc:Bounds x="3792" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CallUnitEarly" bpmnElement="Task_CallUnitEarly">
+        <dc:Bounds x="4010" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_NurseAssess" bpmnElement="Task_NurseAssess">
+        <dc:Bounds x="4228" y="1357" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ClinicalIntervention" bpmnElement="Gateway_ClinicalIntervention" isMarkerVisible="true">
+        <dc:Bounds x="4446" y="1372" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4401" y="1334" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_AdjustPrecautions" bpmnElement="Task_AdjustPrecautions">
+        <dc:Bounds x="4574" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Event_NurseAuthorizes" bpmnElement="Event_NurseAuthorizes">
+        <dc:Bounds x="4792" y="616" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4755" y="581" width="110" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ClinicalInterventionJoin" bpmnElement="Gateway_ClinicalInterventionJoin" isMarkerVisible="true">
+        <dc:Bounds x="4906" y="609" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_SafetyConcernJoin" bpmnElement="Gateway_SafetyConcernJoin" isMarkerVisible="true">
+        <dc:Bounds x="5034" y="459" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_DeputySignsForm" bpmnElement="Task_DeputySignsForm">
+        <dc:Bounds x="5162" y="774" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_OfficerSignsAndCopies" bpmnElement="Task_OfficerSignsAndCopies">
+        <dc:Bounds x="5380" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_GiveCopyToDeputy" bpmnElement="Task_GiveCopyToDeputy">
+        <dc:Bounds x="5598" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_CustodyDocsComplete" bpmnElement="Gateway_CustodyDocsComplete" isMarkerVisible="true">
+        <dc:Bounds x="5816" y="459" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5771" y="421" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReleaseDeputy" bpmnElement="Task_ReleaseDeputy">
+        <dc:Bounds x="5944" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EnterAvatarInitial" bpmnElement="Task_EnterAvatarInitial">
+        <dc:Bounds x="6162" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SecuritySearch" bpmnElement="Task_SecuritySearch">
+        <dc:Bounds x="6380" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecordProperty" bpmnElement="Task_RecordProperty">
+        <dc:Bounds x="6598" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ConsumerDresses" bpmnElement="Task_ConsumerDresses">
+        <dc:Bounds x="6816" y="1058" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ObserveSmartEntry" bpmnElement="Task_ObserveSmartEntry">
+        <dc:Bounds x="7034" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CapturePhoto" bpmnElement="Task_CapturePhoto">
+        <dc:Bounds x="7252" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_BeaconVerified" bpmnElement="Gateway_BeaconVerified" isMarkerVisible="true">
+        <dc:Bounds x="7470" y="459" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7425" y="421" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PlaceBeacon" bpmnElement="Task_PlaceBeacon">
+        <dc:Bounds x="7598" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_IntakeQuestionnaire" bpmnElement="Task_IntakeQuestionnaire">
+        <dc:Bounds x="7816" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SignVendorForm" bpmnElement="Task_SignVendorForm">
+        <dc:Bounds x="8034" y="1058" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReturnToHolding" bpmnElement="Task_ReturnToHolding">
+        <dc:Bounds x="8252" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteAvatar" bpmnElement="Task_CompleteAvatar">
+        <dc:Bounds x="8470" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CreateBracelet" bpmnElement="Task_CreateBracelet">
+        <dc:Bounds x="8688" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PlaceBracelet" bpmnElement="Task_PlaceBracelet">
+        <dc:Bounds x="8906" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CallUnitReady" bpmnElement="Task_CallUnitReady">
+        <dc:Bounds x="9124" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Event_StaffArrive" bpmnElement="Event_StaffArrive">
+        <dc:Bounds x="9342" y="466" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="9305" y="507" width="110" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_NursingSplit" bpmnElement="Gateway_NursingSplit">
+        <dc:Bounds x="9456" y="459" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_LiceTreatment" bpmnElement="Task_LiceTreatment">
+        <dc:Bounds x="9584" y="1357" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecordIntakeNeeds" bpmnElement="Task_RecordIntakeNeeds">
+        <dc:Bounds x="9584" y="1537" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_NursingJoin" bpmnElement="Gateway_NursingJoin">
+        <dc:Bounds x="9802" y="459" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_EscortConstraints" bpmnElement="Gateway_EscortConstraints" isMarkerVisible="true">
+        <dc:Bounds x="9930" y="459" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="9885" y="421" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_StandardEscort" bpmnElement="Task_StandardEscort">
+        <dc:Bounds x="10058" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CoordinateEscort" bpmnElement="Task_CoordinateEscort">
+        <dc:Bounds x="10058" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_EscortConstraintsJoin" bpmnElement="Gateway_EscortConstraintsJoin" isMarkerVisible="true">
+        <dc:Bounds x="10276" y="459" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_AltLocation" bpmnElement="Gateway_AltLocation" isMarkerVisible="true">
+        <dc:Bounds x="10404" y="459" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="10359" y="408" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EscortToShower" bpmnElement="Task_EscortToShower">
+        <dc:Bounds x="10532" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EscortToAltLocation" bpmnElement="Task_EscortToAltLocation">
+        <dc:Bounds x="10532" y="594" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_NursingAtAltLocation" bpmnElement="Task_NursingAtAltLocation">
+        <dc:Bounds x="10968" y="1357" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_Shower" bpmnElement="Task_Shower">
+        <dc:Bounds x="10750" y="1058" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EscortToUnit" bpmnElement="Task_EscortToUnit">
+        <dc:Bounds x="10968" y="444" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_LocationJoin" bpmnElement="Gateway_LocationJoin" isMarkerVisible="true">
+        <dc:Bounds x="11186" y="459" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_NurseAccepts" bpmnElement="Task_NurseAccepts">
+        <dc:Bounds x="11314" y="1357" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndEvent_Complete" bpmnElement="EndEvent_Complete">
+        <dc:Bounds x="11532" y="466" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="11495" y="507" width="110" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_PreparePacket" bpmnElement="Ann_Task_PreparePacket">
+        <dc:Bounds x="812" y="296" width="280" height="93"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_ObtainReport" bpmnElement="Ann_Task_ObtainReport">
+        <dc:Bounds x="3376" y="296" width="280" height="93"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_DeputySignsForm" bpmnElement="Ann_Task_DeputySignsForm">
+        <dc:Bounds x="5092" y="902" width="280" height="78"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_SecuritySearch" bpmnElement="Ann_Task_SecuritySearch">
+        <dc:Bounds x="6310" y="296" width="280" height="93"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_ObserveSmartEntry" bpmnElement="Ann_Task_ObserveSmartEntry">
+        <dc:Bounds x="6964" y="296" width="280" height="93"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_IntakeQuestionnaire" bpmnElement="Ann_Task_IntakeQuestionnaire">
+        <dc:Bounds x="7746" y="296" width="280" height="93"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_SignVendorForm" bpmnElement="Ann_Task_SignVendorForm">
+        <dc:Bounds x="7964" y="1186" width="280" height="93"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_EndEvent_Complete" bpmnElement="Ann_EndEvent_Complete">
+        <dc:Bounds x="11410" y="288" width="280" height="108"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_MessageFlow_ScheduledAdmission" bpmnElement="MessageFlow_ScheduledAdmission">
+        <di:waypoint x="326" y="150"/>
+        <di:waypoint x="326" y="466"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="332" y="172" width="140" height="27"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_StartEvent_ScheduledAdmission__Event_DayOfAdmission" bpmnElement="Flow_StartEvent_ScheduledAdmission__Event_DayOfAdmission">
+        <di:waypoint x="344" y="484"/>
+        <di:waypoint x="422" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Event_DayOfAdmission__Task_ReviewSchedule" bpmnElement="Flow_Event_DayOfAdmission__Task_ReviewSchedule">
+        <di:waypoint x="458" y="484"/>
+        <di:waypoint x="536" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReviewSchedule__Gateway_InfoChanged" bpmnElement="Flow_Task_ReviewSchedule__Gateway_InfoChanged">
+        <di:waypoint x="676" y="484"/>
+        <di:waypoint x="754" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_InfoChanged__Task_PreparePacket" bpmnElement="Flow_Gateway_InfoChanged__Task_PreparePacket">
+        <di:waypoint x="804" y="484"/>
+        <di:waypoint x="882" y="484"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="828" y="460" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_InfoChanged__Task_ReviewLatestEmail" bpmnElement="Flow_Gateway_InfoChanged__Task_ReviewLatestEmail">
+        <di:waypoint x="804" y="484"/>
+        <di:waypoint x="843" y="484"/>
+        <di:waypoint x="843" y="634"/>
+        <di:waypoint x="882" y="634"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="808" y="490" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReviewLatestEmail__Task_UpdatePacket" bpmnElement="Flow_Task_ReviewLatestEmail__Task_UpdatePacket">
+        <di:waypoint x="1022" y="634"/>
+        <di:waypoint x="1100" y="634"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PreparePacket__Gateway_InfoChangedJoin" bpmnElement="Flow_Task_PreparePacket__Gateway_InfoChangedJoin">
+        <di:waypoint x="1022" y="484"/>
+        <di:waypoint x="1318" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_UpdatePacket__Gateway_InfoChangedJoin" bpmnElement="Flow_Task_UpdatePacket__Gateway_InfoChangedJoin">
+        <di:waypoint x="1240" y="634"/>
+        <di:waypoint x="1279" y="634"/>
+        <di:waypoint x="1279" y="484"/>
+        <di:waypoint x="1318" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_InfoChangedJoin__Task_VerifyReadiness" bpmnElement="Flow_Gateway_InfoChangedJoin__Task_VerifyReadiness">
+        <di:waypoint x="1368" y="484"/>
+        <di:waypoint x="1446" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_VerifyReadiness__Task_StageEquipment" bpmnElement="Flow_Task_VerifyReadiness__Task_StageEquipment">
+        <di:waypoint x="1586" y="484"/>
+        <di:waypoint x="1664" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_StageEquipment__Task_AnnounceArrival" bpmnElement="Flow_Task_StageEquipment__Task_AnnounceArrival">
+        <di:waypoint x="1804" y="484"/>
+        <di:waypoint x="1843" y="484"/>
+        <di:waypoint x="1843" y="814"/>
+        <di:waypoint x="1882" y="814"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_AnnounceArrival__Gateway_UnscheduledArrival" bpmnElement="Flow_Task_AnnounceArrival__Gateway_UnscheduledArrival">
+        <di:waypoint x="2022" y="814"/>
+        <di:waypoint x="2061" y="814"/>
+        <di:waypoint x="2061" y="484"/>
+        <di:waypoint x="2100" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_UnscheduledArrival__Gateway_UnscheduledArrivalJoin" bpmnElement="Flow_Gateway_UnscheduledArrival__Gateway_UnscheduledArrivalJoin">
+        <di:waypoint x="2150" y="484"/>
+        <di:waypoint x="2664" y="484"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2392" y="460" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_UnscheduledArrival__Task_VerifyAgainstSchedule" bpmnElement="Flow_Gateway_UnscheduledArrival__Task_VerifyAgainstSchedule">
+        <di:waypoint x="2150" y="484"/>
+        <di:waypoint x="2189" y="484"/>
+        <di:waypoint x="2189" y="634"/>
+        <di:waypoint x="2228" y="634"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2154" y="490" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_VerifyAgainstSchedule__Task_UpdatePacketOnArrival" bpmnElement="Flow_Task_VerifyAgainstSchedule__Task_UpdatePacketOnArrival">
+        <di:waypoint x="2368" y="634"/>
+        <di:waypoint x="2446" y="634"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_UpdatePacketOnArrival__Gateway_UnscheduledArrivalJoin" bpmnElement="Flow_Task_UpdatePacketOnArrival__Gateway_UnscheduledArrivalJoin">
+        <di:waypoint x="2586" y="634"/>
+        <di:waypoint x="2625" y="634"/>
+        <di:waypoint x="2625" y="484"/>
+        <di:waypoint x="2664" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_UnscheduledArrivalJoin__Task_AdmitVehicle" bpmnElement="Flow_Gateway_UnscheduledArrivalJoin__Task_AdmitVehicle">
+        <di:waypoint x="2714" y="484"/>
+        <di:waypoint x="2792" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_AdmitVehicle__Task_EscortToHolding" bpmnElement="Flow_Task_AdmitVehicle__Task_EscortToHolding">
+        <di:waypoint x="2932" y="484"/>
+        <di:waypoint x="2971" y="484"/>
+        <di:waypoint x="2971" y="814"/>
+        <di:waypoint x="3010" y="814"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_EscortToHolding__Task_RemoveShackles" bpmnElement="Flow_Task_EscortToHolding__Task_RemoveShackles">
+        <di:waypoint x="3150" y="814"/>
+        <di:waypoint x="3228" y="814"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RemoveShackles__Task_ObtainReport" bpmnElement="Flow_Task_RemoveShackles__Task_ObtainReport">
+        <di:waypoint x="3368" y="814"/>
+        <di:waypoint x="3407" y="814"/>
+        <di:waypoint x="3407" y="484"/>
+        <di:waypoint x="3446" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ObtainReport__Gateway_SafetyConcern" bpmnElement="Flow_Task_ObtainReport__Gateway_SafetyConcern">
+        <di:waypoint x="3586" y="484"/>
+        <di:waypoint x="3664" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_SafetyConcern__Gateway_SafetyConcernJoin" bpmnElement="Flow_Gateway_SafetyConcern__Gateway_SafetyConcernJoin">
+        <di:waypoint x="3714" y="484"/>
+        <di:waypoint x="5034" y="484"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4359" y="460" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_SafetyConcern__Task_RecordBehavioralInfo" bpmnElement="Flow_Gateway_SafetyConcern__Task_RecordBehavioralInfo">
+        <di:waypoint x="3714" y="484"/>
+        <di:waypoint x="3753" y="484"/>
+        <di:waypoint x="3753" y="634"/>
+        <di:waypoint x="3792" y="634"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3718" y="490" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RecordBehavioralInfo__Task_CallUnitEarly" bpmnElement="Flow_Task_RecordBehavioralInfo__Task_CallUnitEarly">
+        <di:waypoint x="3932" y="634"/>
+        <di:waypoint x="4010" y="634"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CallUnitEarly__Task_NurseAssess" bpmnElement="Flow_Task_CallUnitEarly__Task_NurseAssess">
+        <di:waypoint x="4150" y="634"/>
+        <di:waypoint x="4189" y="634"/>
+        <di:waypoint x="4189" y="1397"/>
+        <di:waypoint x="4228" y="1397"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_NurseAssess__Gateway_ClinicalIntervention" bpmnElement="Flow_Task_NurseAssess__Gateway_ClinicalIntervention">
+        <di:waypoint x="4368" y="1397"/>
+        <di:waypoint x="4446" y="1397"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalIntervention__Gateway_ClinicalInterventionJoin" bpmnElement="Flow_Gateway_ClinicalIntervention__Gateway_ClinicalInterventionJoin">
+        <di:waypoint x="4496" y="1397"/>
+        <di:waypoint x="4867" y="1397"/>
+        <di:waypoint x="4867" y="634"/>
+        <di:waypoint x="4906" y="634"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4666" y="1373" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalIntervention__Task_AdjustPrecautions" bpmnElement="Flow_Gateway_ClinicalIntervention__Task_AdjustPrecautions">
+        <di:waypoint x="4496" y="1397"/>
+        <di:waypoint x="4535" y="1397"/>
+        <di:waypoint x="4535" y="634"/>
+        <di:waypoint x="4574" y="634"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4500" y="1373" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_AdjustPrecautions__Event_NurseAuthorizes" bpmnElement="Flow_Task_AdjustPrecautions__Event_NurseAuthorizes">
+        <di:waypoint x="4714" y="634"/>
+        <di:waypoint x="4792" y="634"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Event_NurseAuthorizes__Gateway_ClinicalInterventionJoin" bpmnElement="Flow_Event_NurseAuthorizes__Gateway_ClinicalInterventionJoin">
+        <di:waypoint x="4828" y="634"/>
+        <di:waypoint x="4906" y="634"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalInterventionJoin__Gateway_SafetyConcernJoin" bpmnElement="Flow_Gateway_ClinicalInterventionJoin__Gateway_SafetyConcernJoin">
+        <di:waypoint x="4956" y="634"/>
+        <di:waypoint x="4995" y="634"/>
+        <di:waypoint x="4995" y="484"/>
+        <di:waypoint x="5034" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_SafetyConcernJoin__Task_DeputySignsForm" bpmnElement="Flow_Gateway_SafetyConcernJoin__Task_DeputySignsForm">
+        <di:waypoint x="5084" y="484"/>
+        <di:waypoint x="5123" y="484"/>
+        <di:waypoint x="5123" y="814"/>
+        <di:waypoint x="5162" y="814"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_DeputySignsForm__Task_OfficerSignsAndCopies" bpmnElement="Flow_Task_DeputySignsForm__Task_OfficerSignsAndCopies">
+        <di:waypoint x="5302" y="814"/>
+        <di:waypoint x="5341" y="814"/>
+        <di:waypoint x="5341" y="484"/>
+        <di:waypoint x="5380" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_OfficerSignsAndCopies__Task_GiveCopyToDeputy" bpmnElement="Flow_Task_OfficerSignsAndCopies__Task_GiveCopyToDeputy">
+        <di:waypoint x="5520" y="484"/>
+        <di:waypoint x="5598" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_GiveCopyToDeputy__Gateway_CustodyDocsComplete" bpmnElement="Flow_Task_GiveCopyToDeputy__Gateway_CustodyDocsComplete">
+        <di:waypoint x="5738" y="484"/>
+        <di:waypoint x="5816" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_CustodyDocsComplete__Task_ReleaseDeputy" bpmnElement="Flow_Gateway_CustodyDocsComplete__Task_ReleaseDeputy">
+        <di:waypoint x="5866" y="484"/>
+        <di:waypoint x="5944" y="484"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5890" y="460" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_CustodyDocsComplete__Task_OfficerSignsAndCopies" bpmnElement="Flow_Gateway_CustodyDocsComplete__Task_OfficerSignsAndCopies">
+        <di:waypoint x="5841" y="509"/>
+        <di:waypoint x="5841" y="559"/>
+        <di:waypoint x="5450" y="559"/>
+        <di:waypoint x="5450" y="524"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5630" y="562" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReleaseDeputy__Task_EnterAvatarInitial" bpmnElement="Flow_Task_ReleaseDeputy__Task_EnterAvatarInitial">
+        <di:waypoint x="6084" y="484"/>
+        <di:waypoint x="6162" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_EnterAvatarInitial__Task_SecuritySearch" bpmnElement="Flow_Task_EnterAvatarInitial__Task_SecuritySearch">
+        <di:waypoint x="6302" y="484"/>
+        <di:waypoint x="6380" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_SecuritySearch__Task_RecordProperty" bpmnElement="Flow_Task_SecuritySearch__Task_RecordProperty">
+        <di:waypoint x="6520" y="484"/>
+        <di:waypoint x="6598" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RecordProperty__Task_ConsumerDresses" bpmnElement="Flow_Task_RecordProperty__Task_ConsumerDresses">
+        <di:waypoint x="6738" y="484"/>
+        <di:waypoint x="6777" y="484"/>
+        <di:waypoint x="6777" y="1098"/>
+        <di:waypoint x="6816" y="1098"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ConsumerDresses__Task_ObserveSmartEntry" bpmnElement="Flow_Task_ConsumerDresses__Task_ObserveSmartEntry">
+        <di:waypoint x="6956" y="1098"/>
+        <di:waypoint x="6995" y="1098"/>
+        <di:waypoint x="6995" y="484"/>
+        <di:waypoint x="7034" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ObserveSmartEntry__Task_CapturePhoto" bpmnElement="Flow_Task_ObserveSmartEntry__Task_CapturePhoto">
+        <di:waypoint x="7174" y="484"/>
+        <di:waypoint x="7252" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CapturePhoto__Gateway_BeaconVerified" bpmnElement="Flow_Task_CapturePhoto__Gateway_BeaconVerified">
+        <di:waypoint x="7392" y="484"/>
+        <di:waypoint x="7470" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_BeaconVerified__Task_PlaceBeacon" bpmnElement="Flow_Gateway_BeaconVerified__Task_PlaceBeacon">
+        <di:waypoint x="7520" y="484"/>
+        <di:waypoint x="7598" y="484"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7544" y="460" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_BeaconVerified__Task_ObserveSmartEntry" bpmnElement="Flow_Gateway_BeaconVerified__Task_ObserveSmartEntry">
+        <di:waypoint x="7495" y="509"/>
+        <di:waypoint x="7495" y="559"/>
+        <di:waypoint x="7104" y="559"/>
+        <di:waypoint x="7104" y="524"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7284" y="562" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PlaceBeacon__Task_IntakeQuestionnaire" bpmnElement="Flow_Task_PlaceBeacon__Task_IntakeQuestionnaire">
+        <di:waypoint x="7738" y="484"/>
+        <di:waypoint x="7816" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_IntakeQuestionnaire__Task_SignVendorForm" bpmnElement="Flow_Task_IntakeQuestionnaire__Task_SignVendorForm">
+        <di:waypoint x="7956" y="484"/>
+        <di:waypoint x="7995" y="484"/>
+        <di:waypoint x="7995" y="1098"/>
+        <di:waypoint x="8034" y="1098"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_SignVendorForm__Task_ReturnToHolding" bpmnElement="Flow_Task_SignVendorForm__Task_ReturnToHolding">
+        <di:waypoint x="8174" y="1098"/>
+        <di:waypoint x="8213" y="1098"/>
+        <di:waypoint x="8213" y="484"/>
+        <di:waypoint x="8252" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReturnToHolding__Task_CompleteAvatar" bpmnElement="Flow_Task_ReturnToHolding__Task_CompleteAvatar">
+        <di:waypoint x="8392" y="484"/>
+        <di:waypoint x="8470" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteAvatar__Task_CreateBracelet" bpmnElement="Flow_Task_CompleteAvatar__Task_CreateBracelet">
+        <di:waypoint x="8610" y="484"/>
+        <di:waypoint x="8688" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CreateBracelet__Task_PlaceBracelet" bpmnElement="Flow_Task_CreateBracelet__Task_PlaceBracelet">
+        <di:waypoint x="8828" y="484"/>
+        <di:waypoint x="8906" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PlaceBracelet__Task_CallUnitReady" bpmnElement="Flow_Task_PlaceBracelet__Task_CallUnitReady">
+        <di:waypoint x="9046" y="484"/>
+        <di:waypoint x="9124" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CallUnitReady__Event_StaffArrive" bpmnElement="Flow_Task_CallUnitReady__Event_StaffArrive">
+        <di:waypoint x="9264" y="484"/>
+        <di:waypoint x="9342" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Event_StaffArrive__Gateway_NursingSplit" bpmnElement="Flow_Event_StaffArrive__Gateway_NursingSplit">
+        <di:waypoint x="9378" y="484"/>
+        <di:waypoint x="9456" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_NursingSplit__Task_LiceTreatment" bpmnElement="Flow_Gateway_NursingSplit__Task_LiceTreatment">
+        <di:waypoint x="9506" y="484"/>
+        <di:waypoint x="9545" y="484"/>
+        <di:waypoint x="9545" y="1397"/>
+        <di:waypoint x="9584" y="1397"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_NursingSplit__Task_RecordIntakeNeeds" bpmnElement="Flow_Gateway_NursingSplit__Task_RecordIntakeNeeds">
+        <di:waypoint x="9506" y="484"/>
+        <di:waypoint x="9545" y="484"/>
+        <di:waypoint x="9545" y="1577"/>
+        <di:waypoint x="9584" y="1577"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_LiceTreatment__Gateway_NursingJoin" bpmnElement="Flow_Task_LiceTreatment__Gateway_NursingJoin">
+        <di:waypoint x="9724" y="1397"/>
+        <di:waypoint x="9757" y="1397"/>
+        <di:waypoint x="9757" y="484"/>
+        <di:waypoint x="9802" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RecordIntakeNeeds__Gateway_NursingJoin" bpmnElement="Flow_Task_RecordIntakeNeeds__Gateway_NursingJoin">
+        <di:waypoint x="9724" y="1577"/>
+        <di:waypoint x="9769" y="1577"/>
+        <di:waypoint x="9769" y="484"/>
+        <di:waypoint x="9802" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_NursingJoin__Gateway_EscortConstraints" bpmnElement="Flow_Gateway_NursingJoin__Gateway_EscortConstraints">
+        <di:waypoint x="9852" y="484"/>
+        <di:waypoint x="9930" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_EscortConstraints__Task_StandardEscort" bpmnElement="Flow_Gateway_EscortConstraints__Task_StandardEscort">
+        <di:waypoint x="9980" y="484"/>
+        <di:waypoint x="10058" y="484"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="10004" y="460" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_EscortConstraints__Task_CoordinateEscort" bpmnElement="Flow_Gateway_EscortConstraints__Task_CoordinateEscort">
+        <di:waypoint x="9980" y="484"/>
+        <di:waypoint x="10019" y="484"/>
+        <di:waypoint x="10019" y="634"/>
+        <di:waypoint x="10058" y="634"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="9984" y="490" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_StandardEscort__Gateway_EscortConstraintsJoin" bpmnElement="Flow_Task_StandardEscort__Gateway_EscortConstraintsJoin">
+        <di:waypoint x="10198" y="484"/>
+        <di:waypoint x="10276" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CoordinateEscort__Gateway_EscortConstraintsJoin" bpmnElement="Flow_Task_CoordinateEscort__Gateway_EscortConstraintsJoin">
+        <di:waypoint x="10198" y="634"/>
+        <di:waypoint x="10237" y="634"/>
+        <di:waypoint x="10237" y="484"/>
+        <di:waypoint x="10276" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_EscortConstraintsJoin__Gateway_AltLocation" bpmnElement="Flow_Gateway_EscortConstraintsJoin__Gateway_AltLocation">
+        <di:waypoint x="10326" y="484"/>
+        <di:waypoint x="10404" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AltLocation__Task_EscortToShower" bpmnElement="Flow_Gateway_AltLocation__Task_EscortToShower">
+        <di:waypoint x="10454" y="484"/>
+        <di:waypoint x="10532" y="484"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="10478" y="460" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AltLocation__Task_EscortToAltLocation" bpmnElement="Flow_Gateway_AltLocation__Task_EscortToAltLocation">
+        <di:waypoint x="10454" y="484"/>
+        <di:waypoint x="10493" y="484"/>
+        <di:waypoint x="10493" y="634"/>
+        <di:waypoint x="10532" y="634"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="10458" y="490" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_EscortToAltLocation__Task_NursingAtAltLocation" bpmnElement="Flow_Task_EscortToAltLocation__Task_NursingAtAltLocation">
+        <di:waypoint x="10672" y="634"/>
+        <di:waypoint x="10929" y="634"/>
+        <di:waypoint x="10929" y="1397"/>
+        <di:waypoint x="10968" y="1397"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_NursingAtAltLocation__Gateway_LocationJoin" bpmnElement="Flow_Task_NursingAtAltLocation__Gateway_LocationJoin">
+        <di:waypoint x="11108" y="1397"/>
+        <di:waypoint x="11147" y="1397"/>
+        <di:waypoint x="11147" y="484"/>
+        <di:waypoint x="11186" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_EscortToShower__Task_Shower" bpmnElement="Flow_Task_EscortToShower__Task_Shower">
+        <di:waypoint x="10672" y="484"/>
+        <di:waypoint x="10711" y="484"/>
+        <di:waypoint x="10711" y="1098"/>
+        <di:waypoint x="10750" y="1098"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_Shower__Task_EscortToUnit" bpmnElement="Flow_Task_Shower__Task_EscortToUnit">
+        <di:waypoint x="10890" y="1098"/>
+        <di:waypoint x="10929" y="1098"/>
+        <di:waypoint x="10929" y="484"/>
+        <di:waypoint x="10968" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_EscortToUnit__Gateway_LocationJoin" bpmnElement="Flow_Task_EscortToUnit__Gateway_LocationJoin">
+        <di:waypoint x="11108" y="484"/>
+        <di:waypoint x="11186" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_LocationJoin__Task_NurseAccepts" bpmnElement="Flow_Gateway_LocationJoin__Task_NurseAccepts">
+        <di:waypoint x="11236" y="484"/>
+        <di:waypoint x="11275" y="484"/>
+        <di:waypoint x="11275" y="1397"/>
+        <di:waypoint x="11314" y="1397"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_NurseAccepts__EndEvent_Complete" bpmnElement="Flow_Task_NurseAccepts__EndEvent_Complete">
+        <di:waypoint x="11454" y="1397"/>
+        <di:waypoint x="11493" y="1397"/>
+        <di:waypoint x="11493" y="484"/>
+        <di:waypoint x="11532" y="484"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_PreparePacket" bpmnElement="Assoc_Task_PreparePacket">
+        <di:waypoint x="952" y="444"/>
+        <di:waypoint x="952" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_ObtainReport" bpmnElement="Assoc_Task_ObtainReport">
+        <di:waypoint x="3516" y="444"/>
+        <di:waypoint x="3516" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_DeputySignsForm" bpmnElement="Assoc_Task_DeputySignsForm">
+        <di:waypoint x="5232" y="854"/>
+        <di:waypoint x="5232" y="902"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_SecuritySearch" bpmnElement="Assoc_Task_SecuritySearch">
+        <di:waypoint x="6450" y="444"/>
+        <di:waypoint x="6450" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_ObserveSmartEntry" bpmnElement="Assoc_Task_ObserveSmartEntry">
+        <di:waypoint x="7104" y="444"/>
+        <di:waypoint x="7104" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_IntakeQuestionnaire" bpmnElement="Assoc_Task_IntakeQuestionnaire">
+        <di:waypoint x="7886" y="444"/>
+        <di:waypoint x="7886" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_SignVendorForm" bpmnElement="Assoc_Task_SignVendorForm">
+        <di:waypoint x="8104" y="1138"/>
+        <di:waypoint x="8104" y="1186"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_EndEvent_Complete" bpmnElement="Assoc_EndEvent_Complete">
+        <di:waypoint x="11550" y="466"/>
+        <di:waypoint x="11550" y="396"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
