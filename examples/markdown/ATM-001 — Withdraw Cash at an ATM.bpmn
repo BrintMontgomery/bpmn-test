@@ -1,11 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_ATM_Withdrawal" targetNamespace="https://oklahoma.gov/odmhsas/ofc/bpmn/atm-withdrawal" exporter="OFC BPMN IR" exporterVersion="1">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_ATM_Withdrawal" targetNamespace="https://oklahoma.gov/odmhsas/ofc/bpmn/atm-withdrawal" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.24.0">
   <bpmn:collaboration id="Collaboration_ATM_Withdrawal">
-    <bpmn:participant id="Participant_ATM_Withdrawal" name="ATM Withdrawal" processRef="atm_withdrawal_v1"/>
+    <bpmn:participant id="Participant_ATM_Withdrawal" name="ATM Withdrawal" processRef="atm_withdrawal_v1" />
+    <bpmn:textAnnotation id="Ann_main_04_verify_pin">
+      <bpmn:text>a: PIN retry limits and card-retention behavior are set by the Financial Institution and may differ by card issuer.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_main_04_verify_pin" sourceRef="main_04_verify_pin" targetRef="Ann_main_04_verify_pin" />
+    <bpmn:textAnnotation id="Ann_option_a_03_retain_or_return_card">
+      <bpmn:text>a: PIN retry limits and card-retention behavior are set by the Financial Institution and may differ by card issuer.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_option_a_03_retain_or_return_card" sourceRef="option_a_03_retain_or_return_card" targetRef="Ann_option_a_03_retain_or_return_card" />
   </bpmn:collaboration>
   <bpmn:process id="atm_withdrawal_v1" name="Withdraw Cash at an ATM" isExecutable="false">
     <bpmn:documentation>- Source context: This procedure describes a cardholder withdrawing cash from an automated teller machine (ATM) using a debit card and PIN. Preconditions: the cardholder has an active debit card, knows the PIN, can access the selected account, and uses an available ATM with sufficient cash to operate. Outcome: the cardholder receives the requested cash and retrieves the debit card; the Financial Institution records the withdrawal. If completion fails, the ATM provides an appropriate message without dispensing cash. Modeling judgments: the first bold actor owns each main-path task. Option steps have no bold-actor extraction, so ownership follows the grammatical actor named in each step; this is an inference. The Financial Institution lane is retained because it is an extracted actor, but it has no separate task because it appears as a counterparty in the extracted ATM steps and no explicit lane handoff is specified. The start event, end events, and exclusive gateways are inferred BPMN control-flow elements. The three option triggers are represented by entry gateways in the main path. Option A has an internal retry-limit gateway; Option B has an internal smaller-amount-or-cancel gateway. Option C has no additional conditional branch. All branches share the single Main path and exception handling phase because their loops and rejoin points make separate later phases incompatible with the global layout ordering. No decomposition proposals are made, so no split rationales are applicable.</bpmn:documentation>
     <bpmn:laneSet id="LaneSet_atm_withdrawal_v1">
+      <bpmn:lane id="lane_financial_institution" name="Financial Institution">
+        <bpmn:flowNodeRef>main_08_debit_account</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_atm" name="ATM">
+        <bpmn:flowNodeRef>main_02_read_prompt_pin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>main_04_verify_pin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>main_gw_pin_result</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>main_05_display_options</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>main_07_verify_funds</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>main_gw_funds_entry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>main_10_return_card_receipt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_a_01_inform_pin_failure</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_a_gw_retry_limit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_a_02_permit_retry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_a_03_retain_or_return_card</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_a_end</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_b_03_return_card_cancel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_b_end</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_c_01_cancel_transaction</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_c_02_return_card</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>main_09_dispense_cash</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_b_01_inform_insufficient_funds</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>option_b_02_prompt_smaller_or_cancel</bpmn:flowNodeRef>
+      </bpmn:lane>
       <bpmn:lane id="lane_cardholder" name="Cardholder">
         <bpmn:flowNodeRef>start_withdrawal</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>main_01_insert_card</bpmn:flowNodeRef>
@@ -18,34 +50,11 @@
         <bpmn:flowNodeRef>option_c_03_retrieve_card</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>option_c_end</bpmn:flowNodeRef>
       </bpmn:lane>
-      <bpmn:lane id="lane_atm" name="ATM">
-        <bpmn:flowNodeRef>main_02_read_prompt_pin</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>main_04_verify_pin</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>main_gw_pin_result</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>main_05_display_options</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>main_07_verify_funds</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>main_gw_funds_entry</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>main_08_debit_account</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>main_09_dispense_cash</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>main_10_return_card_receipt</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_a_01_inform_pin_failure</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_a_gw_retry_limit</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_a_02_permit_retry</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_a_03_retain_or_return_card</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_a_end</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_b_01_inform_insufficient_funds</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_b_02_prompt_smaller_or_cancel</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_b_03_return_card_cancel</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_b_end</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_c_01_cancel_transaction</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>option_c_02_return_card</bpmn:flowNodeRef>
-      </bpmn:lane>
-      <bpmn:lane id="lane_financial_institution" name="Financial Institution"/>
     </bpmn:laneSet>
     <bpmn:startEvent id="start_withdrawal" name="Withdrawal starts">
       <bpmn:documentation>- Inferred start event before main-path step 1; the extraction does not specify a separate start trigger.</bpmn:documentation>
       <bpmn:outgoing>Flow_start_withdrawal__main_01_insert_card</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MsgDef_start_withdrawal"/>
+      <bpmn:messageEventDefinition id="MsgDef_start_withdrawal" />
     </bpmn:startEvent>
     <bpmn:manualTask id="main_01_insert_card" name="Insert debit card into ATM">
       <bpmn:documentation>- Main-path step 1, source line 30: Cardholder inserts the debit card into the ATM.</bpmn:documentation>
@@ -102,16 +111,6 @@
       <bpmn:outgoing>Flow_main_gw_funds_entry__main_08_debit_account</bpmn:outgoing>
       <bpmn:outgoing>Flow_main_gw_funds_entry__option_b_01_inform_insufficient_funds</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:manualTask id="main_08_debit_account" name="Debit selected account">
-      <bpmn:documentation>- Main-path step 8, source line 37: ATM debits the selected account through the Financial Institution.</bpmn:documentation>
-      <bpmn:incoming>Flow_main_gw_funds_entry__main_08_debit_account</bpmn:incoming>
-      <bpmn:outgoing>Flow_main_08_debit_account__main_09_dispense_cash</bpmn:outgoing>
-    </bpmn:manualTask>
-    <bpmn:manualTask id="main_09_dispense_cash" name="Dispense requested cash">
-      <bpmn:documentation>- Main-path step 9, source line 38: ATM dispenses the requested cash.</bpmn:documentation>
-      <bpmn:incoming>Flow_main_08_debit_account__main_09_dispense_cash</bpmn:incoming>
-      <bpmn:outgoing>Flow_main_09_dispense_cash__main_10_return_card_receipt</bpmn:outgoing>
-    </bpmn:manualTask>
     <bpmn:manualTask id="main_10_return_card_receipt" name="Return debit card and offer receipt">
       <bpmn:documentation>- Main-path step 10, source line 39: ATM returns the debit card and offers a receipt to the Cardholder.</bpmn:documentation>
       <bpmn:incoming>Flow_main_09_dispense_cash__main_10_return_card_receipt</bpmn:incoming>
@@ -151,16 +150,6 @@
       <bpmn:documentation>- End event inferred from Option A step 3.</bpmn:documentation>
       <bpmn:incoming>Flow_option_a_03_retain_or_return_card__option_a_end</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:manualTask id="option_b_01_inform_insufficient_funds" name="Inform Cardholder that requested amount cannot be withdrawn">
-      <bpmn:documentation>- Option B step 1, source line 56. Ownership inferred from the named ATM actor.</bpmn:documentation>
-      <bpmn:incoming>Flow_main_gw_funds_entry__option_b_01_inform_insufficient_funds</bpmn:incoming>
-      <bpmn:outgoing>Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel</bpmn:outgoing>
-    </bpmn:manualTask>
-    <bpmn:manualTask id="option_b_02_prompt_smaller_or_cancel" name="Prompt for a smaller amount or cancellation">
-      <bpmn:documentation>- Option B step 2, source line 57. Ownership inferred from the named ATM actor.</bpmn:documentation>
-      <bpmn:incoming>Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel</bpmn:incoming>
-      <bpmn:outgoing>Flow_option_b_02_prompt_smaller_or_cancel__option_b_gw_choice</bpmn:outgoing>
-    </bpmn:manualTask>
     <bpmn:exclusiveGateway id="option_b_gw_choice" name="Cardholder enters smaller amount or cancels?" default="Flow_option_b_gw_choice__main_06_select_withdrawal_amount">
       <bpmn:documentation>- Internal exclusive gateway required by the conditional in Option B step 3, source line 58.</bpmn:documentation>
       <bpmn:incoming>Flow_option_b_02_prompt_smaller_or_cancel__option_b_gw_choice</bpmn:incoming>
@@ -195,390 +184,405 @@
       <bpmn:documentation>- End event inferred after Option C step 3.</bpmn:documentation>
       <bpmn:incoming>Flow_option_c_03_retrieve_card__option_c_end</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_start_withdrawal__main_01_insert_card" sourceRef="start_withdrawal" targetRef="main_01_insert_card"/>
-    <bpmn:sequenceFlow id="Flow_main_01_insert_card__main_02_read_prompt_pin" sourceRef="main_01_insert_card" targetRef="main_02_read_prompt_pin"/>
-    <bpmn:sequenceFlow id="Flow_main_02_read_prompt_pin__main_03_enter_pin" sourceRef="main_02_read_prompt_pin" targetRef="main_03_enter_pin"/>
-    <bpmn:sequenceFlow id="Flow_main_03_enter_pin__main_04_verify_pin" sourceRef="main_03_enter_pin" targetRef="main_04_verify_pin"/>
-    <bpmn:sequenceFlow id="Flow_main_04_verify_pin__main_gw_pin_result" sourceRef="main_04_verify_pin" targetRef="main_gw_pin_result"/>
-    <bpmn:sequenceFlow id="Flow_main_gw_pin_result__main_05_display_options" sourceRef="main_gw_pin_result" targetRef="main_05_display_options" name="PIN verified"/>
-    <bpmn:sequenceFlow id="Flow_main_gw_pin_result__option_a_01_inform_pin_failure" sourceRef="main_gw_pin_result" targetRef="option_a_01_inform_pin_failure" name="PIN incorrect">
+    <bpmn:manualTask id="main_08_debit_account" name="Debit selected account">
+      <bpmn:documentation>- Main-path step 8, source line 37: ATM debits the selected account through the Financial Institution.</bpmn:documentation>
+      <bpmn:incoming>Flow_main_gw_funds_entry__main_08_debit_account</bpmn:incoming>
+      <bpmn:outgoing>Flow_main_08_debit_account__main_09_dispense_cash</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="main_09_dispense_cash" name="Dispense requested cash">
+      <bpmn:documentation>- Main-path step 9, source line 38: ATM dispenses the requested cash.</bpmn:documentation>
+      <bpmn:incoming>Flow_main_08_debit_account__main_09_dispense_cash</bpmn:incoming>
+      <bpmn:outgoing>Flow_main_09_dispense_cash__main_10_return_card_receipt</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="option_b_01_inform_insufficient_funds" name="Inform Cardholder that requested amount cannot be withdrawn">
+      <bpmn:documentation>- Option B step 1, source line 56. Ownership inferred from the named ATM actor.</bpmn:documentation>
+      <bpmn:incoming>Flow_main_gw_funds_entry__option_b_01_inform_insufficient_funds</bpmn:incoming>
+      <bpmn:outgoing>Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="option_b_02_prompt_smaller_or_cancel" name="Prompt for a smaller amount or cancellation">
+      <bpmn:documentation>- Option B step 2, source line 57. Ownership inferred from the named ATM actor.</bpmn:documentation>
+      <bpmn:incoming>Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel</bpmn:incoming>
+      <bpmn:outgoing>Flow_option_b_02_prompt_smaller_or_cancel__option_b_gw_choice</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_start_withdrawal__main_01_insert_card" sourceRef="start_withdrawal" targetRef="main_01_insert_card" />
+    <bpmn:sequenceFlow id="Flow_main_01_insert_card__main_02_read_prompt_pin" sourceRef="main_01_insert_card" targetRef="main_02_read_prompt_pin" />
+    <bpmn:sequenceFlow id="Flow_main_02_read_prompt_pin__main_03_enter_pin" sourceRef="main_02_read_prompt_pin" targetRef="main_03_enter_pin" />
+    <bpmn:sequenceFlow id="Flow_option_a_02_permit_retry__main_03_enter_pin" name="Another PIN entry" sourceRef="option_a_02_permit_retry" targetRef="main_03_enter_pin" />
+    <bpmn:sequenceFlow id="Flow_main_03_enter_pin__main_04_verify_pin" sourceRef="main_03_enter_pin" targetRef="main_04_verify_pin" />
+    <bpmn:sequenceFlow id="Flow_main_04_verify_pin__main_gw_pin_result" sourceRef="main_04_verify_pin" targetRef="main_gw_pin_result" />
+    <bpmn:sequenceFlow id="Flow_main_gw_pin_result__main_05_display_options" name="PIN verified" sourceRef="main_gw_pin_result" targetRef="main_05_display_options" />
+    <bpmn:sequenceFlow id="Flow_main_gw_pin_result__option_a_01_inform_pin_failure" name="PIN incorrect" sourceRef="main_gw_pin_result" targetRef="option_a_01_inform_pin_failure">
       <bpmn:conditionExpression>ATM reports that the entered PIN is incorrect</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_main_05_display_options__main_06_select_withdrawal_amount" sourceRef="main_05_display_options" targetRef="main_06_select_withdrawal_amount"/>
-    <bpmn:sequenceFlow id="Flow_main_06_select_withdrawal_amount__main_gw_cancel_entry" sourceRef="main_06_select_withdrawal_amount" targetRef="main_gw_cancel_entry"/>
-    <bpmn:sequenceFlow id="Flow_main_gw_cancel_entry__option_c_01_cancel_transaction" sourceRef="main_gw_cancel_entry" targetRef="option_c_01_cancel_transaction" name="Cancel">
+    <bpmn:sequenceFlow id="Flow_main_05_display_options__main_06_select_withdrawal_amount" sourceRef="main_05_display_options" targetRef="main_06_select_withdrawal_amount" />
+    <bpmn:sequenceFlow id="Flow_option_b_gw_choice__main_06_select_withdrawal_amount" name="Enter smaller amount" sourceRef="option_b_gw_choice" targetRef="main_06_select_withdrawal_amount" />
+    <bpmn:sequenceFlow id="Flow_main_06_select_withdrawal_amount__main_gw_cancel_entry" sourceRef="main_06_select_withdrawal_amount" targetRef="main_gw_cancel_entry" />
+    <bpmn:sequenceFlow id="Flow_main_gw_cancel_entry__option_c_01_cancel_transaction" name="Cancel" sourceRef="main_gw_cancel_entry" targetRef="option_c_01_cancel_transaction">
       <bpmn:conditionExpression>Cardholder selects cancel before cash is dispensed</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_main_gw_cancel_entry__main_07_verify_funds" sourceRef="main_gw_cancel_entry" targetRef="main_07_verify_funds" name="Continue"/>
-    <bpmn:sequenceFlow id="Flow_main_07_verify_funds__main_gw_funds_entry" sourceRef="main_07_verify_funds" targetRef="main_gw_funds_entry"/>
-    <bpmn:sequenceFlow id="Flow_main_gw_funds_entry__main_08_debit_account" sourceRef="main_gw_funds_entry" targetRef="main_08_debit_account" name="Sufficient funds"/>
-    <bpmn:sequenceFlow id="Flow_main_gw_funds_entry__option_b_01_inform_insufficient_funds" sourceRef="main_gw_funds_entry" targetRef="option_b_01_inform_insufficient_funds" name="Insufficient funds">
+    <bpmn:sequenceFlow id="Flow_main_gw_cancel_entry__main_07_verify_funds" name="Continue" sourceRef="main_gw_cancel_entry" targetRef="main_07_verify_funds" />
+    <bpmn:sequenceFlow id="Flow_main_07_verify_funds__main_gw_funds_entry" sourceRef="main_07_verify_funds" targetRef="main_gw_funds_entry" />
+    <bpmn:sequenceFlow id="Flow_main_gw_funds_entry__main_08_debit_account" name="Sufficient funds" sourceRef="main_gw_funds_entry" targetRef="main_08_debit_account" />
+    <bpmn:sequenceFlow id="Flow_main_gw_funds_entry__option_b_01_inform_insufficient_funds" name="Insufficient funds" sourceRef="main_gw_funds_entry" targetRef="option_b_01_inform_insufficient_funds">
       <bpmn:conditionExpression>Financial Institution reports insufficient available funds</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_main_08_debit_account__main_09_dispense_cash" sourceRef="main_08_debit_account" targetRef="main_09_dispense_cash"/>
-    <bpmn:sequenceFlow id="Flow_main_09_dispense_cash__main_10_return_card_receipt" sourceRef="main_09_dispense_cash" targetRef="main_10_return_card_receipt"/>
-    <bpmn:sequenceFlow id="Flow_main_10_return_card_receipt__main_11_retrieve_outputs" sourceRef="main_10_return_card_receipt" targetRef="main_11_retrieve_outputs"/>
-    <bpmn:sequenceFlow id="Flow_main_11_retrieve_outputs__main_end_success" sourceRef="main_11_retrieve_outputs" targetRef="main_end_success"/>
-    <bpmn:sequenceFlow id="Flow_option_a_01_inform_pin_failure__option_a_gw_retry_limit" sourceRef="option_a_01_inform_pin_failure" targetRef="option_a_gw_retry_limit"/>
-    <bpmn:sequenceFlow id="Flow_option_a_gw_retry_limit__option_a_02_permit_retry" sourceRef="option_a_gw_retry_limit" targetRef="option_a_02_permit_retry" name="Retry available"/>
-    <bpmn:sequenceFlow id="Flow_option_a_gw_retry_limit__option_a_03_retain_or_return_card" sourceRef="option_a_gw_retry_limit" targetRef="option_a_03_retain_or_return_card" name="Retry limit reached">
+    <bpmn:sequenceFlow id="Flow_main_09_dispense_cash__main_10_return_card_receipt" sourceRef="main_09_dispense_cash" targetRef="main_10_return_card_receipt" />
+    <bpmn:sequenceFlow id="Flow_main_10_return_card_receipt__main_11_retrieve_outputs" sourceRef="main_10_return_card_receipt" targetRef="main_11_retrieve_outputs" />
+    <bpmn:sequenceFlow id="Flow_main_11_retrieve_outputs__main_end_success" sourceRef="main_11_retrieve_outputs" targetRef="main_end_success" />
+    <bpmn:sequenceFlow id="Flow_option_a_01_inform_pin_failure__option_a_gw_retry_limit" sourceRef="option_a_01_inform_pin_failure" targetRef="option_a_gw_retry_limit" />
+    <bpmn:sequenceFlow id="Flow_option_a_gw_retry_limit__option_a_02_permit_retry" name="Retry available" sourceRef="option_a_gw_retry_limit" targetRef="option_a_02_permit_retry" />
+    <bpmn:sequenceFlow id="Flow_option_a_gw_retry_limit__option_a_03_retain_or_return_card" name="Retry limit reached" sourceRef="option_a_gw_retry_limit" targetRef="option_a_03_retain_or_return_card">
       <bpmn:conditionExpression>Retry limit is reached</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_option_a_02_permit_retry__main_03_enter_pin" sourceRef="option_a_02_permit_retry" targetRef="main_03_enter_pin" name="Another PIN entry"/>
-    <bpmn:sequenceFlow id="Flow_option_a_03_retain_or_return_card__option_a_end" sourceRef="option_a_03_retain_or_return_card" targetRef="option_a_end"/>
-    <bpmn:sequenceFlow id="Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel" sourceRef="option_b_01_inform_insufficient_funds" targetRef="option_b_02_prompt_smaller_or_cancel"/>
-    <bpmn:sequenceFlow id="Flow_option_b_02_prompt_smaller_or_cancel__option_b_gw_choice" sourceRef="option_b_02_prompt_smaller_or_cancel" targetRef="option_b_gw_choice"/>
-    <bpmn:sequenceFlow id="Flow_option_b_gw_choice__main_06_select_withdrawal_amount" sourceRef="option_b_gw_choice" targetRef="main_06_select_withdrawal_amount" name="Enter smaller amount"/>
-    <bpmn:sequenceFlow id="Flow_option_b_gw_choice__option_b_03_return_card_cancel" sourceRef="option_b_gw_choice" targetRef="option_b_03_return_card_cancel" name="Cancel">
+    <bpmn:sequenceFlow id="Flow_option_a_03_retain_or_return_card__option_a_end" sourceRef="option_a_03_retain_or_return_card" targetRef="option_a_end" />
+    <bpmn:sequenceFlow id="Flow_option_b_02_prompt_smaller_or_cancel__option_b_gw_choice" sourceRef="option_b_02_prompt_smaller_or_cancel" targetRef="option_b_gw_choice" />
+    <bpmn:sequenceFlow id="Flow_option_b_gw_choice__option_b_03_return_card_cancel" name="Cancel" sourceRef="option_b_gw_choice" targetRef="option_b_03_return_card_cancel">
       <bpmn:conditionExpression>Cardholder cancels</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_option_b_03_return_card_cancel__option_b_end" sourceRef="option_b_03_return_card_cancel" targetRef="option_b_end"/>
-    <bpmn:sequenceFlow id="Flow_option_c_01_cancel_transaction__option_c_02_return_card" sourceRef="option_c_01_cancel_transaction" targetRef="option_c_02_return_card"/>
-    <bpmn:sequenceFlow id="Flow_option_c_02_return_card__option_c_03_retrieve_card" sourceRef="option_c_02_return_card" targetRef="option_c_03_retrieve_card"/>
-    <bpmn:sequenceFlow id="Flow_option_c_03_retrieve_card__option_c_end" sourceRef="option_c_03_retrieve_card" targetRef="option_c_end"/>
-    <bpmn:textAnnotation id="Ann_main_04_verify_pin">
-      <bpmn:text>a: PIN retry limits and card-retention behavior are set by the Financial Institution and may differ by card issuer.</bpmn:text>
-    </bpmn:textAnnotation>
-    <bpmn:association id="Assoc_main_04_verify_pin" sourceRef="main_04_verify_pin" targetRef="Ann_main_04_verify_pin"/>
-    <bpmn:textAnnotation id="Ann_option_a_03_retain_or_return_card">
-      <bpmn:text>a: PIN retry limits and card-retention behavior are set by the Financial Institution and may differ by card issuer.</bpmn:text>
-    </bpmn:textAnnotation>
-    <bpmn:association id="Assoc_option_a_03_retain_or_return_card" sourceRef="option_a_03_retain_or_return_card" targetRef="Ann_option_a_03_retain_or_return_card"/>
+    <bpmn:sequenceFlow id="Flow_option_b_03_return_card_cancel__option_b_end" sourceRef="option_b_03_return_card_cancel" targetRef="option_b_end" />
+    <bpmn:sequenceFlow id="Flow_option_c_01_cancel_transaction__option_c_02_return_card" sourceRef="option_c_01_cancel_transaction" targetRef="option_c_02_return_card" />
+    <bpmn:sequenceFlow id="Flow_option_c_02_return_card__option_c_03_retrieve_card" sourceRef="option_c_02_return_card" targetRef="option_c_03_retrieve_card" />
+    <bpmn:sequenceFlow id="Flow_option_c_03_retrieve_card__option_c_end" sourceRef="option_c_03_retrieve_card" targetRef="option_c_end" />
+    <bpmn:sequenceFlow id="Flow_main_08_debit_account__main_09_dispense_cash" sourceRef="main_08_debit_account" targetRef="main_09_dispense_cash" />
+    <bpmn:sequenceFlow id="Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel" sourceRef="option_b_01_inform_insufficient_funds" targetRef="option_b_02_prompt_smaller_or_cancel" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_atm_withdrawal_v1">
     <bpmndi:BPMNPlane id="BPMNPlane_atm_withdrawal_v1" bpmnElement="Collaboration_ATM_Withdrawal">
       <bpmndi:BPMNShape id="Shape_Participant_ATM_Withdrawal" bpmnElement="Participant_ATM_Withdrawal" isHorizontal="true">
-        <dc:Bounds x="200" y="260" width="3644" height="1229"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_lane_cardholder" bpmnElement="lane_cardholder" isHorizontal="true">
-        <dc:Bounds x="230" y="260" width="3614" height="330"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_lane_atm" bpmnElement="lane_atm" isHorizontal="true">
-        <dc:Bounds x="230" y="590" width="3614" height="719"/>
+        <dc:Bounds x="200" y="80" width="3644" height="1229" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_lane_financial_institution" bpmnElement="lane_financial_institution" isHorizontal="true">
-        <dc:Bounds x="230" y="1309" width="3614" height="180"/>
+        <dc:Bounds x="230" y="1129" width="3614" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_lane_atm" bpmnElement="lane_atm" isHorizontal="true">
+        <dc:Bounds x="230" y="410" width="3614" height="719" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_lane_cardholder" bpmnElement="lane_cardholder" isHorizontal="true">
+        <dc:Bounds x="230" y="80" width="3614" height="330" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_start_withdrawal" bpmnElement="start_withdrawal">
-        <dc:Bounds x="308" y="332" width="36" height="36"/>
+        <dc:Bounds x="308" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="271" y="373" width="110" height="17"/>
+          <dc:Bounds x="284" y="193" width="85" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_01_insert_card" bpmnElement="main_01_insert_card">
-        <dc:Bounds x="422" y="310" width="140" height="80"/>
+        <dc:Bounds x="422" y="130" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_02_read_prompt_pin" bpmnElement="main_02_read_prompt_pin">
-        <dc:Bounds x="640" y="640" width="140" height="80"/>
+        <dc:Bounds x="640" y="460" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_03_enter_pin" bpmnElement="main_03_enter_pin">
-        <dc:Bounds x="858" y="310" width="140" height="80"/>
+        <dc:Bounds x="858" y="130" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_04_verify_pin" bpmnElement="main_04_verify_pin">
-        <dc:Bounds x="1076" y="640" width="140" height="80"/>
+        <dc:Bounds x="1076" y="460" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_gw_pin_result" bpmnElement="main_gw_pin_result" isMarkerVisible="true">
-        <dc:Bounds x="1294" y="655" width="50" height="50"/>
+        <dc:Bounds x="1294" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1249" y="617" width="140" height="30"/>
+          <dc:Bounds x="1249" y="437" width="140" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_05_display_options" bpmnElement="main_05_display_options">
-        <dc:Bounds x="1422" y="640" width="140" height="80"/>
+        <dc:Bounds x="1422" y="460" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_06_select_withdrawal_amount" bpmnElement="main_06_select_withdrawal_amount">
-        <dc:Bounds x="1640" y="310" width="140" height="80"/>
+        <dc:Bounds x="1640" y="130" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_gw_cancel_entry" bpmnElement="main_gw_cancel_entry" isMarkerVisible="true">
-        <dc:Bounds x="1903" y="325" width="50" height="50"/>
+        <dc:Bounds x="1903" y="145" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1858" y="274" width="140" height="43"/>
+          <dc:Bounds x="1862" y="94" width="132" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_07_verify_funds" bpmnElement="main_07_verify_funds">
-        <dc:Bounds x="2294" y="640" width="140" height="80"/>
+        <dc:Bounds x="2294" y="460" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_gw_funds_entry" bpmnElement="main_gw_funds_entry" isMarkerVisible="true">
-        <dc:Bounds x="2557" y="655" width="50" height="50"/>
+        <dc:Bounds x="2557" y="475" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2512" y="604" width="140" height="43"/>
+          <dc:Bounds x="2514" y="424" width="137" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_main_08_debit_account" bpmnElement="main_08_debit_account">
-        <dc:Bounds x="2730" y="640" width="140" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_main_09_dispense_cash" bpmnElement="main_09_dispense_cash">
-        <dc:Bounds x="2948" y="640" width="140" height="80"/>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_10_return_card_receipt" bpmnElement="main_10_return_card_receipt">
-        <dc:Bounds x="3294" y="640" width="140" height="80"/>
+        <dc:Bounds x="3294" y="460" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_11_retrieve_outputs" bpmnElement="main_11_retrieve_outputs">
-        <dc:Bounds x="3512" y="310" width="140" height="80"/>
+        <dc:Bounds x="3512" y="130" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_main_end_success" bpmnElement="main_end_success">
-        <dc:Bounds x="3730" y="332" width="36" height="36"/>
+        <dc:Bounds x="3730" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3693" y="373" width="110" height="30"/>
+          <dc:Bounds x="3694" y="193" width="109" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_a_01_inform_pin_failure" bpmnElement="option_a_01_inform_pin_failure">
-        <dc:Bounds x="1422" y="790" width="140" height="80"/>
+        <dc:Bounds x="1422" y="610" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_a_gw_retry_limit" bpmnElement="option_a_gw_retry_limit" isMarkerVisible="true">
-        <dc:Bounds x="1685" y="805" width="50" height="50"/>
+        <dc:Bounds x="1685" y="625" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1640" y="767" width="140" height="30"/>
+          <dc:Bounds x="1653" y="587" width="115" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_a_02_permit_retry" bpmnElement="option_a_02_permit_retry">
-        <dc:Bounds x="1858" y="790" width="140" height="80"/>
+        <dc:Bounds x="1858" y="610" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_a_03_retain_or_return_card" bpmnElement="option_a_03_retain_or_return_card">
-        <dc:Bounds x="1858" y="940" width="140" height="80"/>
+        <dc:Bounds x="1858" y="760" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_a_end" bpmnElement="option_a_end">
-        <dc:Bounds x="2128" y="962" width="36" height="36"/>
+        <dc:Bounds x="2128" y="782" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2091" y="927" width="110" height="30"/>
+          <dc:Bounds x="2092" y="747" width="109" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_option_b_01_inform_insufficient_funds" bpmnElement="option_b_01_inform_insufficient_funds">
-        <dc:Bounds x="2730" y="790" width="140" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_option_b_02_prompt_smaller_or_cancel" bpmnElement="option_b_02_prompt_smaller_or_cancel">
-        <dc:Bounds x="2948" y="790" width="140" height="80"/>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_b_gw_choice" bpmnElement="option_b_gw_choice" isMarkerVisible="true">
-        <dc:Bounds x="3166" y="475" width="50" height="50"/>
+        <dc:Bounds x="3166" y="295" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3121" y="424" width="140" height="43"/>
+          <dc:Bounds x="3128" y="244" width="127" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_b_03_return_card_cancel" bpmnElement="option_b_03_return_card_cancel">
-        <dc:Bounds x="3294" y="940" width="140" height="80"/>
+        <dc:Bounds x="3294" y="760" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_b_end" bpmnElement="option_b_end">
-        <dc:Bounds x="3564" y="962" width="36" height="36"/>
+        <dc:Bounds x="3564" y="782" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3527" y="914" width="110" height="43"/>
+          <dc:Bounds x="3538" y="734" width="88" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_c_01_cancel_transaction" bpmnElement="option_c_01_cancel_transaction">
-        <dc:Bounds x="2076" y="1090" width="140" height="80"/>
+        <dc:Bounds x="2076" y="910" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_c_02_return_card" bpmnElement="option_c_02_return_card">
-        <dc:Bounds x="2294" y="1090" width="140" height="80"/>
+        <dc:Bounds x="2294" y="910" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_c_03_retrieve_card" bpmnElement="option_c_03_retrieve_card">
-        <dc:Bounds x="2512" y="460" width="140" height="80"/>
+        <dc:Bounds x="2512" y="280" width="140" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_option_c_end" bpmnElement="option_c_end">
-        <dc:Bounds x="2782" y="482" width="36" height="36"/>
+        <dc:Bounds x="2782" y="302" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2745" y="447" width="110" height="30"/>
+          <dc:Bounds x="2770" y="267" width="61" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_main_08_debit_account" bpmnElement="main_08_debit_account">
+        <dc:Bounds x="2720" y="1190" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_main_09_dispense_cash" bpmnElement="main_09_dispense_cash">
+        <dc:Bounds x="2948" y="740" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_option_b_01_inform_insufficient_funds" bpmnElement="option_b_01_inform_insufficient_funds">
+        <dc:Bounds x="2730" y="460" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_option_b_02_prompt_smaller_or_cancel" bpmnElement="option_b_02_prompt_smaller_or_cancel">
+        <dc:Bounds x="2948" y="460" width="140" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Ann_main_04_verify_pin" bpmnElement="Ann_main_04_verify_pin">
-        <dc:Bounds x="1006" y="1218" width="280" height="63"/>
+        <dc:Bounds x="1006" y="1038" width="280" height="63" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Ann_option_a_03_retain_or_return_card" bpmnElement="Ann_option_a_03_retain_or_return_card">
-        <dc:Bounds x="1788" y="1218" width="280" height="63"/>
+        <dc:Bounds x="1788" y="1038" width="280" height="63" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Edge_Flow_start_withdrawal__main_01_insert_card" bpmnElement="Flow_start_withdrawal__main_01_insert_card">
-        <di:waypoint x="344" y="350"/>
-        <di:waypoint x="422" y="350"/>
+        <di:waypoint x="344" y="170" />
+        <di:waypoint x="422" y="170" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_01_insert_card__main_02_read_prompt_pin" bpmnElement="Flow_main_01_insert_card__main_02_read_prompt_pin">
-        <di:waypoint x="562" y="350"/>
-        <di:waypoint x="601" y="350"/>
-        <di:waypoint x="601" y="680"/>
-        <di:waypoint x="640" y="680"/>
+        <di:waypoint x="562" y="170" />
+        <di:waypoint x="601" y="170" />
+        <di:waypoint x="601" y="500" />
+        <di:waypoint x="640" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_02_read_prompt_pin__main_03_enter_pin" bpmnElement="Flow_main_02_read_prompt_pin__main_03_enter_pin">
-        <di:waypoint x="780" y="680"/>
-        <di:waypoint x="819" y="680"/>
-        <di:waypoint x="819" y="350"/>
-        <di:waypoint x="858" y="350"/>
+        <di:waypoint x="780" y="500" />
+        <di:waypoint x="819" y="500" />
+        <di:waypoint x="819" y="170" />
+        <di:waypoint x="858" y="170" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_03_enter_pin__main_04_verify_pin" bpmnElement="Flow_main_03_enter_pin__main_04_verify_pin">
-        <di:waypoint x="998" y="350"/>
-        <di:waypoint x="1037" y="350"/>
-        <di:waypoint x="1037" y="680"/>
-        <di:waypoint x="1076" y="680"/>
+        <di:waypoint x="998" y="170" />
+        <di:waypoint x="1037" y="170" />
+        <di:waypoint x="1037" y="500" />
+        <di:waypoint x="1076" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_04_verify_pin__main_gw_pin_result" bpmnElement="Flow_main_04_verify_pin__main_gw_pin_result">
-        <di:waypoint x="1216" y="680"/>
-        <di:waypoint x="1294" y="680"/>
+        <di:waypoint x="1216" y="500" />
+        <di:waypoint x="1294" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_gw_pin_result__main_05_display_options" bpmnElement="Flow_main_gw_pin_result__main_05_display_options">
-        <di:waypoint x="1344" y="680"/>
-        <di:waypoint x="1422" y="680"/>
+        <di:waypoint x="1344" y="500" />
+        <di:waypoint x="1422" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1368" y="656" width="30" height="18"/>
+          <dc:Bounds x="1355" y="476" width="57" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_gw_pin_result__option_a_01_inform_pin_failure" bpmnElement="Flow_main_gw_pin_result__option_a_01_inform_pin_failure">
-        <di:waypoint x="1344" y="680"/>
-        <di:waypoint x="1383" y="680"/>
-        <di:waypoint x="1383" y="830"/>
-        <di:waypoint x="1422" y="830"/>
+        <di:waypoint x="1344" y="500" />
+        <di:waypoint x="1383" y="500" />
+        <di:waypoint x="1383" y="650" />
+        <di:waypoint x="1422" y="650" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1348" y="686" width="30" height="18"/>
+          <dc:Bounds x="1331" y="506" width="64" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_05_display_options__main_06_select_withdrawal_amount" bpmnElement="Flow_main_05_display_options__main_06_select_withdrawal_amount">
-        <di:waypoint x="1562" y="680"/>
-        <di:waypoint x="1601" y="680"/>
-        <di:waypoint x="1601" y="350"/>
-        <di:waypoint x="1640" y="350"/>
+        <di:waypoint x="1562" y="500" />
+        <di:waypoint x="1601" y="500" />
+        <di:waypoint x="1601" y="170" />
+        <di:waypoint x="1640" y="170" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_06_select_withdrawal_amount__main_gw_cancel_entry" bpmnElement="Flow_main_06_select_withdrawal_amount__main_gw_cancel_entry">
-        <di:waypoint x="1780" y="350"/>
-        <di:waypoint x="1903" y="350"/>
+        <di:waypoint x="1780" y="170" />
+        <di:waypoint x="1903" y="170" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_gw_cancel_entry__option_c_01_cancel_transaction" bpmnElement="Flow_main_gw_cancel_entry__option_c_01_cancel_transaction">
-        <di:waypoint x="1953" y="350"/>
-        <di:waypoint x="2037" y="350"/>
-        <di:waypoint x="2037" y="1130"/>
-        <di:waypoint x="2076" y="1130"/>
+        <di:waypoint x="1953" y="170" />
+        <di:waypoint x="2037" y="170" />
+        <di:waypoint x="2037" y="950" />
+        <di:waypoint x="2076" y="950" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1980" y="356" width="30" height="18"/>
+          <dc:Bounds x="1978" y="176" width="35" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_gw_cancel_entry__main_07_verify_funds" bpmnElement="Flow_main_gw_cancel_entry__main_07_verify_funds">
-        <di:waypoint x="1953" y="350"/>
-        <di:waypoint x="2255" y="350"/>
-        <di:waypoint x="2255" y="680"/>
-        <di:waypoint x="2294" y="680"/>
+        <di:waypoint x="1953" y="170" />
+        <di:waypoint x="2255" y="170" />
+        <di:waypoint x="2255" y="500" />
+        <di:waypoint x="2294" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2089" y="356" width="30" height="18"/>
+          <dc:Bounds x="2082" y="176" width="45" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_07_verify_funds__main_gw_funds_entry" bpmnElement="Flow_main_07_verify_funds__main_gw_funds_entry">
-        <di:waypoint x="2434" y="680"/>
-        <di:waypoint x="2557" y="680"/>
+        <di:waypoint x="2434" y="500" />
+        <di:waypoint x="2557" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_gw_funds_entry__main_08_debit_account" bpmnElement="Flow_main_gw_funds_entry__main_08_debit_account">
-        <di:waypoint x="2607" y="680"/>
-        <di:waypoint x="2730" y="680"/>
+        <di:waypoint x="2582" y="525" />
+        <di:waypoint x="2582" y="1230" />
+        <di:waypoint x="2720" y="1230" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2654" y="656" width="30" height="18"/>
+          <dc:Bounds x="2614" y="1206" width="76" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_gw_funds_entry__option_b_01_inform_insufficient_funds" bpmnElement="Flow_main_gw_funds_entry__option_b_01_inform_insufficient_funds">
-        <di:waypoint x="2607" y="680"/>
-        <di:waypoint x="2691" y="680"/>
-        <di:waypoint x="2691" y="830"/>
-        <di:waypoint x="2730" y="830"/>
+        <di:waypoint x="2607" y="500" />
+        <di:waypoint x="2730" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2634" y="686" width="30" height="18"/>
+          <dc:Bounds x="2628" y="506" width="83" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_08_debit_account__main_09_dispense_cash" bpmnElement="Flow_main_08_debit_account__main_09_dispense_cash">
-        <di:waypoint x="2870" y="680"/>
-        <di:waypoint x="2948" y="680"/>
+        <di:waypoint x="2860" y="1230" />
+        <di:waypoint x="2904" y="1230" />
+        <di:waypoint x="2904" y="780" />
+        <di:waypoint x="2948" y="780" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_09_dispense_cash__main_10_return_card_receipt" bpmnElement="Flow_main_09_dispense_cash__main_10_return_card_receipt">
-        <di:waypoint x="3088" y="680"/>
-        <di:waypoint x="3294" y="680"/>
+        <di:waypoint x="3088" y="780" />
+        <di:waypoint x="3191" y="780" />
+        <di:waypoint x="3191" y="500" />
+        <di:waypoint x="3294" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_10_return_card_receipt__main_11_retrieve_outputs" bpmnElement="Flow_main_10_return_card_receipt__main_11_retrieve_outputs">
-        <di:waypoint x="3434" y="680"/>
-        <di:waypoint x="3473" y="680"/>
-        <di:waypoint x="3473" y="350"/>
-        <di:waypoint x="3512" y="350"/>
+        <di:waypoint x="3434" y="500" />
+        <di:waypoint x="3473" y="500" />
+        <di:waypoint x="3473" y="170" />
+        <di:waypoint x="3512" y="170" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_main_11_retrieve_outputs__main_end_success" bpmnElement="Flow_main_11_retrieve_outputs__main_end_success">
-        <di:waypoint x="3652" y="350"/>
-        <di:waypoint x="3730" y="350"/>
+        <di:waypoint x="3652" y="170" />
+        <di:waypoint x="3730" y="170" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_a_01_inform_pin_failure__option_a_gw_retry_limit" bpmnElement="Flow_option_a_01_inform_pin_failure__option_a_gw_retry_limit">
-        <di:waypoint x="1562" y="830"/>
-        <di:waypoint x="1685" y="830"/>
+        <di:waypoint x="1562" y="650" />
+        <di:waypoint x="1685" y="650" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_a_gw_retry_limit__option_a_02_permit_retry" bpmnElement="Flow_option_a_gw_retry_limit__option_a_02_permit_retry">
-        <di:waypoint x="1735" y="830"/>
-        <di:waypoint x="1858" y="830"/>
+        <di:waypoint x="1735" y="650" />
+        <di:waypoint x="1858" y="650" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1782" y="806" width="30" height="18"/>
+          <dc:Bounds x="1761" y="626" width="73" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_a_gw_retry_limit__option_a_03_retain_or_return_card" bpmnElement="Flow_option_a_gw_retry_limit__option_a_03_retain_or_return_card">
-        <di:waypoint x="1735" y="830"/>
-        <di:waypoint x="1819" y="830"/>
-        <di:waypoint x="1819" y="980"/>
-        <di:waypoint x="1858" y="980"/>
+        <di:waypoint x="1735" y="650" />
+        <di:waypoint x="1819" y="650" />
+        <di:waypoint x="1819" y="800" />
+        <di:waypoint x="1858" y="800" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1762" y="836" width="30" height="18"/>
+          <dc:Bounds x="1753" y="656" width="49" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_a_02_permit_retry__main_03_enter_pin" bpmnElement="Flow_option_a_02_permit_retry__main_03_enter_pin">
-        <di:waypoint x="1928" y="870"/>
-        <di:waypoint x="1928" y="905"/>
-        <di:waypoint x="928" y="905"/>
-        <di:waypoint x="928" y="390"/>
+        <di:waypoint x="1928" y="690" />
+        <di:waypoint x="1928" y="725" />
+        <di:waypoint x="928" y="725" />
+        <di:waypoint x="928" y="210" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1413" y="908" width="30" height="18"/>
+          <dc:Bounds x="1384" y="728" width="88" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_a_03_retain_or_return_card__option_a_end" bpmnElement="Flow_option_a_03_retain_or_return_card__option_a_end">
-        <di:waypoint x="1998" y="980"/>
-        <di:waypoint x="2128" y="980"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel" bpmnElement="Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel">
-        <di:waypoint x="2870" y="830"/>
-        <di:waypoint x="2948" y="830"/>
+        <di:waypoint x="1998" y="800" />
+        <di:waypoint x="2128" y="800" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_b_02_prompt_smaller_or_cancel__option_b_gw_choice" bpmnElement="Flow_option_b_02_prompt_smaller_or_cancel__option_b_gw_choice">
-        <di:waypoint x="3088" y="830"/>
-        <di:waypoint x="3127" y="830"/>
-        <di:waypoint x="3127" y="500"/>
-        <di:waypoint x="3166" y="500"/>
+        <di:waypoint x="3088" y="500" />
+        <di:waypoint x="3127" y="500" />
+        <di:waypoint x="3127" y="320" />
+        <di:waypoint x="3166" y="320" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_b_gw_choice__main_06_select_withdrawal_amount" bpmnElement="Flow_option_b_gw_choice__main_06_select_withdrawal_amount">
-        <di:waypoint x="3191" y="525"/>
-        <di:waypoint x="3191" y="575"/>
-        <di:waypoint x="1710" y="575"/>
-        <di:waypoint x="1710" y="390"/>
+        <di:waypoint x="3191" y="345" />
+        <di:waypoint x="3191" y="395" />
+        <di:waypoint x="1710" y="395" />
+        <di:waypoint x="1710" y="210" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2436" y="578" width="30" height="18"/>
+          <dc:Bounds x="2419" y="398" width="65" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_b_gw_choice__option_b_03_return_card_cancel" bpmnElement="Flow_option_b_gw_choice__option_b_03_return_card_cancel">
-        <di:waypoint x="3216" y="500"/>
-        <di:waypoint x="3255" y="500"/>
-        <di:waypoint x="3255" y="980"/>
-        <di:waypoint x="3294" y="980"/>
+        <di:waypoint x="3216" y="320" />
+        <di:waypoint x="3255" y="320" />
+        <di:waypoint x="3255" y="800" />
+        <di:waypoint x="3294" y="800" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3220" y="506" width="30" height="18"/>
+          <dc:Bounds x="3218" y="326" width="35" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_b_03_return_card_cancel__option_b_end" bpmnElement="Flow_option_b_03_return_card_cancel__option_b_end">
-        <di:waypoint x="3434" y="980"/>
-        <di:waypoint x="3564" y="980"/>
+        <di:waypoint x="3434" y="800" />
+        <di:waypoint x="3564" y="800" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_c_01_cancel_transaction__option_c_02_return_card" bpmnElement="Flow_option_c_01_cancel_transaction__option_c_02_return_card">
-        <di:waypoint x="2216" y="1130"/>
-        <di:waypoint x="2294" y="1130"/>
+        <di:waypoint x="2216" y="950" />
+        <di:waypoint x="2294" y="950" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_c_02_return_card__option_c_03_retrieve_card" bpmnElement="Flow_option_c_02_return_card__option_c_03_retrieve_card">
-        <di:waypoint x="2434" y="1130"/>
-        <di:waypoint x="2473" y="1130"/>
-        <di:waypoint x="2473" y="500"/>
-        <di:waypoint x="2512" y="500"/>
+        <di:waypoint x="2434" y="950" />
+        <di:waypoint x="2473" y="950" />
+        <di:waypoint x="2473" y="320" />
+        <di:waypoint x="2512" y="320" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_option_c_03_retrieve_card__option_c_end" bpmnElement="Flow_option_c_03_retrieve_card__option_c_end">
-        <di:waypoint x="2652" y="500"/>
-        <di:waypoint x="2782" y="500"/>
+        <di:waypoint x="2652" y="320" />
+        <di:waypoint x="2782" y="320" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Assoc_main_04_verify_pin" bpmnElement="Assoc_main_04_verify_pin">
-        <di:waypoint x="1146" y="720"/>
-        <di:waypoint x="1146" y="1218"/>
+        <di:waypoint x="1146" y="540" />
+        <di:waypoint x="1146" y="1038" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Assoc_option_a_03_retain_or_return_card" bpmnElement="Assoc_option_a_03_retain_or_return_card">
-        <di:waypoint x="1928" y="1020"/>
-        <di:waypoint x="1928" y="1218"/>
+        <di:waypoint x="1928" y="840" />
+        <di:waypoint x="1928" y="1038" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel" bpmnElement="Flow_option_b_01_inform_insufficient_funds__option_b_02_prompt_smaller_or_cancel">
+        <di:waypoint x="2870" y="500" />
+        <di:waypoint x="2948" y="500" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
