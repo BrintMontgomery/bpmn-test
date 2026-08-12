@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Iterable
 
 from bpmn_engine import (
     DecompositionConfig,
@@ -16,8 +16,6 @@ from bpmn_engine import (
     PhaseOrderError,
     Scope,
     Layout,
-    build_mermaid,
-    build_xml,
     compute_layout,
     write_bpmn,
 )
@@ -216,9 +214,9 @@ def decompose_model(model: ProcessModel) -> ProcessModel:
 def scopes_for(model: ProcessModel) -> list[Scope]:
     """Return top-level then nested scopes in deterministic node order."""
     scopes = [Scope.top_level(model)]
-    queue = list(node for node in model.nodes if node.kind == "subprocess")
+    queue = deque(node for node in model.nodes if node.kind == "subprocess")
     while queue:
-        subprocess = queue.pop(0)
+        subprocess = queue.popleft()
         scopes.append(Scope.child(model, subprocess))
         queue.extend(
             node for node in model.nodes

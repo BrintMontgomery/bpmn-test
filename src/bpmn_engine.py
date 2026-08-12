@@ -12,6 +12,7 @@ import re
 import xml.dom.minidom as minidom
 import xml.etree.ElementTree as ET
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -45,6 +46,9 @@ MESSAGE_LABEL_DX = 6
 MESSAGE_LABEL_DY = 22
 
 LBL_W, LBL_H = 30, 18
+
+# Event kinds that carry a caption drawn outside their own shape.
+LABELED_EVENT_KINDS = ("start_message", "end", "catch_timer", "catch_message")
 
 
 # --------------------------------------------------------------------------
@@ -211,16 +215,21 @@ class ProcessModel:
         return {node.id: node for node in self.nodes}
 
     @property
+    def _id_suffix(self) -> str:
+        """The process id without its conventional ``Process_`` prefix."""
+        return self.process_id.removeprefix("Process_")
+
+    @property
     def resolved_lane_set_id(self) -> str:
-        return self.lane_set_id or f"LaneSet_{self.process_id.removeprefix('Process_')}"
+        return self.lane_set_id or f"LaneSet_{self._id_suffix}"
 
     @property
     def resolved_diagram_id(self) -> str:
-        return self.diagram_id or f"BPMNDiagram_{self.process_id.removeprefix('Process_')}"
+        return self.diagram_id or f"BPMNDiagram_{self._id_suffix}"
 
     @property
     def resolved_plane_id(self) -> str:
-        return self.plane_id or f"BPMNPlane_{self.process_id.removeprefix('Process_')}"
+        return self.plane_id or f"BPMNPlane_{self._id_suffix}"
 
 
 @dataclass(frozen=True)
@@ -293,7 +302,7 @@ class Layout:
     corridors: dict[tuple[str, str], float]
 
     def row_center(self, lane_id: str, subrow: int) -> float:
-        return self.row_top[lane_id] + subrow * ROW_PITCH + ROW_PITCH / 2
+        return row_center(self.row_top, lane_id, subrow)
 
     def placement(self, node_id: str) -> "Placement":
         return self.placements[node_id]
@@ -305,6 +314,26 @@ class Placement:
 
     col: int
     subrow: int = 0
+
+
+@dataclass(frozen=True)
+class BranchToken:
+    """One gateway branch's column span within a single lane.
+
+    ``desired`` is the branch nesting depth the span would like to occupy;
+    interval coloring may push it further down when spans overlap.
+    """
+
+    key: tuple[str, str, str]  # (gateway id, branch target id, lane id)
+    start: int
+    end: int
+    desired: int
+    nodes: frozenset[str]
+
+
+def row_center(row_top: dict[str, float], lane_id: str, subrow: int) -> float:
+    """Vertical center of one sub-row inside a lane."""
+    return row_top[lane_id] + subrow * ROW_PITCH + ROW_PITCH / 2
 
 
 class LayoutError(ValueError):
@@ -339,8 +368,46 @@ class PhaseOrderError(LayoutError):
         )
 
 
-N = Node
-E = Edge
+@dataclass(frozen=True)
+class PhaseViolation:
+    """The first authored phase that begins left of an earlier phase."""
+
+    phase_id: str
+    earlier_phase_id: str
+    offender_id: str
+    offender_column: int
+    earlier_end_column: int
+
+
+def _first_phase_violation(
+    model: ProcessModel,
+    nodes: list[Node],
+    column_of: Callable[[str], int],
+) -> PhaseViolation | None:
+    """Return the first authored-phase ordering conflict, if there is one.
+
+    A later phase may share a column with the immediately preceding phase, but
+    it may not begin to the left of any earlier phase. Equality keeps compact
+    diagrams compact while still enforcing the authored ordering.
+    """
+    latest_previous = -1
+    latest_phase_id = "<start>"
+    for phase_id, _ in model.phases:
+        members = [node for node in nodes if node.phase == phase_id]
+        if not members:
+            continue
+        offender = min(members, key=lambda node: column_of(node.id))
+        if column_of(offender.id) < latest_previous:
+            return PhaseViolation(
+                phase_id=phase_id,
+                earlier_phase_id=latest_phase_id,
+                offender_id=offender.id,
+                offender_column=column_of(offender.id),
+                earlier_end_column=latest_previous,
+            )
+        latest_previous = max(column_of(node.id) for node in members)
+        latest_phase_id = phase_id
+    return None
 
 
 def _scope_nodes(model: ProcessModel, scope: Scope) -> list[Node]:
@@ -398,10 +465,29 @@ def node_size(node: Node) -> tuple[int, int]:
     return EV_W, EV_H
 
 
+def _wrapped_lines(text: str, chars_per_line: int) -> int:
+    """How many wrapped lines ``text`` needs: a ceiling division by width."""
+    return -(-len(text) // chars_per_line)
+
+
 def annotation_height(note: str) -> float:
     """Tall enough that bpmn-js's wrapped text stays inside the bracket."""
-    lines = -(-len(note) // ANN_CHARS)
+    lines = _wrapped_lines(note, ANN_CHARS)
     return max(50, lines * ANN_LINE + 18)
+
+
+def _forward_graph(
+    model: ProcessModel, scope: Scope
+) -> tuple[list[Edge], dict[str, list[str]], dict[str, list[Edge]]]:
+    """Return the non-loop edges of a scope with adjacency and incoming maps."""
+    nodes = _scope_nodes(model, scope)
+    forward = [edge for edge in _topology_edges(model, scope) if not edge.loop]
+    adjacency: dict[str, list[str]] = {node.id: [] for node in nodes}
+    incoming: dict[str, list[Edge]] = {node.id: [] for node in nodes}
+    for edge in forward:
+        adjacency[edge.source].append(edge.target)
+        incoming[edge.target].append(edge)
+    return forward, adjacency, incoming
 
 
 def _topological_layout_data(
@@ -413,13 +499,9 @@ def _topological_layout_data(
         raise LayoutError(f"scope {scope.id} contains no nodes")
 
     by_id = {node.id: node for node in nodes}
-    forward = [edge for edge in _topology_edges(model, scope) if not edge.loop]
-    adjacency: dict[str, list[str]] = {node.id: [] for node in nodes}
-    incoming: dict[str, list[Edge]] = {node.id: [] for node in nodes}
+    forward, adjacency, _ = _forward_graph(model, scope)
     indegree = {node.id: 0 for node in nodes}
     for edge in forward:
-        adjacency[edge.source].append(edge.target)
-        incoming[edge.target].append(edge)
         indegree[edge.target] += 1
 
     starts = [node for node in nodes if node.kind == "start_message"]
@@ -475,29 +557,17 @@ def _topological_layout_data(
             f"{remaining}"
         )
 
-    # A later phase may share a column with the immediately preceding phase,
-    # but it may not begin to the left of any earlier phase. Equality keeps
-    # compact diagrams compact while still enforcing the authored ordering.
-    latest_previous = -1
-    latest_phase_id = "<start>"
-    for phase_id, _ in model.phases:
-        members = [node for node in nodes if node.phase == phase_id]
-        if not members:
-            continue
-        minimum = min(columns[node.id] for node in members)
-        if minimum < latest_previous:
-            offender = min(members, key=lambda node: columns[node.id])
-            raise PhaseOrderError(
-                process_id=model.process_id,
-                scope_id=scope.id,
-                phase_id=phase_id,
-                earlier_phase_id=latest_phase_id,
-                offender_id=offender.id,
-                offender_column=columns[offender.id],
-                earlier_end_column=latest_previous,
-            )
-        latest_previous = max(columns[node.id] for node in members)
-        latest_phase_id = phase_id
+    violation = _first_phase_violation(model, nodes, columns.__getitem__)
+    if violation is not None:
+        raise PhaseOrderError(
+            process_id=model.process_id,
+            scope_id=scope.id,
+            phase_id=violation.phase_id,
+            earlier_phase_id=violation.earlier_phase_id,
+            offender_id=violation.offender_id,
+            offender_column=violation.offender_column,
+            earlier_end_column=violation.earlier_end_column,
+        )
 
     return columns, order
 
@@ -519,12 +589,7 @@ def _auto_placements(model: ProcessModel, scope: Scope) -> dict[str, Placement]:
     columns, order = _topological_layout_data(model, scope)
     nodes = _scope_nodes(model, scope)
     by_id = {node.id: node for node in nodes}
-    forward = [edge for edge in _topology_edges(model, scope) if not edge.loop]
-    adjacency: dict[str, list[str]] = {node.id: [] for node in nodes}
-    incoming: dict[str, list[Edge]] = {node.id: [] for node in nodes}
-    for edge in forward:
-        adjacency[edge.source].append(edge.target)
-        incoming[edge.target].append(edge)
+    forward, adjacency, incoming = _forward_graph(model, scope)
 
     # Propagate branch nesting through the DAG. A conditioned exclusive
     # branch increases depth; an unconditioned/default edge preserves it. At
@@ -545,7 +610,7 @@ def _auto_placements(model: ProcessModel, scope: Scope) -> dict[str, Placement]:
     # are excluded, so branch depth naturally ends at the join. The branch
     # depth threshold also trims loop-backed option paths whose forward graph
     # has no ordinary reconvergence.
-    branch_tokens: list[dict[str, object]] = []
+    branch_tokens: list[BranchToken] = []
     for gateway in nodes:
         outgoing = [edge for edge in forward if edge.source == gateway.id]
         if len(outgoing) < 2:
@@ -582,38 +647,37 @@ def _auto_placements(model: ProcessModel, scope: Scope) -> dict[str, Placement]:
                 }
                 if not lane_nodes:
                     continue
-                branch_tokens.append({
-                    "key": (gateway.id, edge.target, lane_id),
-                    "start": min(columns[node_id] for node_id in lane_nodes),
-                    "end": max(columns[node_id] for node_id in lane_nodes),
-                    "desired": desired,
-                    "nodes": lane_nodes,
-                })
+                branch_tokens.append(BranchToken(
+                    key=(gateway.id, edge.target, lane_id),
+                    start=min(columns[node_id] for node_id in lane_nodes),
+                    end=max(columns[node_id] for node_id in lane_nodes),
+                    desired=desired,
+                    nodes=frozenset(lane_nodes),
+                ))
 
     # Interval coloring is deterministic and keeps overlapping option spans
     # on separate rows even when their individual nodes do not share a column.
     colors: dict[tuple[str, str, str], int] = {}
     for lane_id, _ in _scope_lanes(model, scope):
-        tokens = [token for token in branch_tokens if token["key"][2] == lane_id]
-        tokens.sort(key=lambda token: (token["start"], token["end"], token["key"]))
+        tokens = [token for token in branch_tokens if token.key[2] == lane_id]
+        tokens.sort(key=lambda token: (token.start, token.end, token.key))
         assigned: list[tuple[int, int, int]] = []
         for token in tokens:
-            color = int(token["desired"])
+            color = token.desired
             while any(
                 color == previous_color
-                and token["start"] <= previous_end
-                and previous_start <= token["end"]
+                and token.start <= previous_end
+                and previous_start <= token.end
                 for previous_start, previous_end, previous_color in assigned
             ):
                 color += 1
-            key = token["key"]
-            colors[key] = color
-            assigned.append((token["start"], token["end"], color))
+            colors[token.key] = color
+            assigned.append((token.start, token.end, color))
 
     subrows = dict(branch_depth)
     for token in branch_tokens:
-        color = colors[token["key"]]
-        for node_id in token["nodes"]:
+        color = colors[token.key]
+        for node_id in token.nodes:
             subrows[node_id] = max(subrows[node_id], color)
 
     # Resolve any same-lane/same-column point conflict left by unusual graph
@@ -695,7 +759,7 @@ def _build_layout(
         width, height = node_size(node)
         placement = placements[node.id]
         cx = col_center[placement.col]
-        cy = row_top[node.lane] + placement.subrow * ROW_PITCH + ROW_PITCH / 2
+        cy = row_center(row_top, node.lane, placement.subrow)
         bounds[node.id] = (cx - width / 2, cy - height / 2, width, height)
 
     ann_bounds: dict[str, tuple[float, float, float, float]] = {}
@@ -722,7 +786,7 @@ def _build_layout(
         target_place = placements[target.id]
         if source.lane == target.lane and source_place.subrow == target_place.subrow:
             continue
-        sx, sy, sw, sh = bounds[source.id]
+        sx, _, sw, _ = bounds[source.id]
         tx, _, _, _ = bounds[target.id]
         corridors[(edge.source, edge.target)] = max(
             tx - COL_GAP / 2 + offsets.get((edge.source, edge.target), 0),
@@ -831,7 +895,7 @@ def event_label_bounds(
     if col + 1 < len(centers):
         room.append(centers[col + 1] - centers[col])
     width = max(70.0, min(110.0, min(room) - 8)) if room else 110.0
-    lines = max(1, -(-len(node.name) // max(8, int(width / 6.4))))
+    lines = max(1, _wrapped_lines(node.name, max(8, int(width / 6.4))))
     height = lines * 13 + 4
 
     # On a branch sub-row the space below carries return traffic, so the
@@ -848,9 +912,6 @@ def edge_label_bounds(
     lay: Layout,
 ) -> tuple[float, float, float, float]:
     """Place a branch label on the segment that distinguishes its branch."""
-    nodes = model.by_id()
-    src, tgt = nodes[edge.source], nodes[edge.target]
-
     if edge.loop:
         mx = (pts[1][0] + pts[2][0]) / 2
         return (mx - LBL_W / 2, pts[1][1] + 3, LBL_W, LBL_H)
@@ -865,6 +926,60 @@ def edge_label_bounds(
             y, LBL_W, LBL_H)
 
 
+def shape_label_bounds(
+    node: Node, x: float, y: float, w: float, h: float, lay: Layout
+) -> tuple[float, float, float, float] | None:
+    """Return the caption box drawn beside one node, or None if it has none.
+
+    Only events and gateways carry an external caption; a task draws its name
+    inside its own shape.
+    """
+    if not node.name:
+        return None
+    if node.kind in LABELED_EVENT_KINDS:
+        return event_label_bounds(node, x, y, w, h, lay)
+    if node.kind.startswith("gateway"):
+        height = max(1, _wrapped_lines(node.name, 21)) * 13 + 4
+        return (x + w / 2 - GW_LBL_W / 2, y - height - 8, GW_LBL_W, height)
+    return None
+
+
+def association_waypoints(
+    node_bounds: tuple[float, float, float, float],
+    ann_bounds: tuple[float, float, float, float],
+) -> list[tuple[float, float]]:
+    """Join a node to its annotation on whichever side the band was placed."""
+    nx, ny, nw, nh = node_bounds
+    ax, ay, aw, ah = ann_bounds
+    if ay < ny:
+        return [(nx + nw / 2, ny), (ax + aw / 2, ay + ah)]
+    return [(nx + nw / 2, ny + nh), (ax + aw / 2, ay)]
+
+
+def message_flow_geometry(
+    message: MessageFlow,
+    source: tuple[float, float, float, float],
+    target: tuple[float, float, float, float],
+) -> tuple[list[tuple[float, float]],
+           tuple[float, float, float, float] | None]:
+    """Return the waypoints and label box for one message flow.
+
+    Endpoint resolution stays with the caller: an external pool and a flow
+    node are looked up in different maps, and the callers differ in whether a
+    missing endpoint is skipped or is an error.
+    """
+    sx, sy, sw, sh = source
+    tx, ty, tw, _ = target
+    points = [(sx + sw / 2, sy + sh), (tx + tw / 2, ty)]
+    label = (
+        sx + sw / 2 + message.label_dx,
+        sy + sh + message.label_dy,
+        message.label_width,
+        message.label_height,
+    ) if message.name else None
+    return points, label
+
+
 # --------------------------------------------------------------------------
 # In-memory geometry gate and deterministic repair
 # --------------------------------------------------------------------------
@@ -875,22 +990,9 @@ def _layout_labels(
 ) -> dict[str, tuple[float, float, float, float]]:
     labels: dict[str, tuple[float, float, float, float]] = {}
     for node in _scope_nodes(model, scope):
-        x, y, w, h = lay.bounds[node.id]
-        if node.name and node.kind in (
-            "start_message", "end", "catch_timer", "catch_message"
-        ):
-            labels[f"{node.id} label"] = event_label_bounds(
-                node, x, y, w, h, lay
-            )
-        elif node.name and node.kind.startswith("gateway"):
-            lines = max(1, -(-len(node.name) // 21))
-            height = lines * 13 + 4
-            labels[f"{node.id} label"] = (
-                x + w / 2 - GW_LBL_W / 2,
-                y - height - 8,
-                GW_LBL_W,
-                height,
-            )
+        label = shape_label_bounds(node, *lay.bounds[node.id], lay)
+        if label is not None:
+            labels[f"{node.id} label"] = label
 
     for edge in _scope_edges(model, scope):
         points = edge_waypoints(model, edge, lay)
@@ -904,7 +1006,6 @@ def _layout_labels(
             pool.id: _external_pool_bounds(model, pool, lay)
             for pool in model.external_pools
         }
-        by_id = model.by_id()
         for message in model.message_flows:
             source = external_bounds.get(message.source)
             if source is None:
@@ -914,16 +1015,9 @@ def _layout_labels(
                 target = external_bounds.get(message.target)
             if source is None or target is None:
                 continue
-            sx, sy, sw, sh = source
-            tx, ty, tw, th = target
-            points = [(sx + sw / 2, sy + sh), (tx + tw / 2, ty)]
-            if message.name:
-                labels[f"{message.id} label"] = (
-                    sx + sw / 2 + message.label_dx,
-                    sy + sh + message.label_dy,
-                    message.label_width,
-                    message.label_height,
-                )
+            _, label = message_flow_geometry(message, source, target)
+            if label is not None:
+                labels[f"{message.id} label"] = label
     return labels
 
 
@@ -934,17 +1028,13 @@ def _layout_edges(
         (flow_id(edge), edge_waypoints(model, edge, lay))
         for edge in _scope_edges(model, scope)
     ]
-    by_id = model.by_id()
     for node in _scope_nodes(model, scope):
         if not node.note:
             continue
-        nx, ny, nw, nh = lay.bounds[node.id]
-        ax, ay, aw, ah = lay.ann_bounds[node.id]
-        if ay < ny:
-            points = [(nx + nw / 2, ny), (ax + aw / 2, ay + ah)]
-        else:
-            points = [(nx + nw / 2, ny + nh), (ax + aw / 2, ay)]
-        edges.append((f"Assoc_{node.id}", points))
+        edges.append((
+            f"Assoc_{node.id}",
+            association_waypoints(lay.bounds[node.id], lay.ann_bounds[node.id]),
+        ))
 
     if scope.include_pool:
         external_bounds = {
@@ -956,12 +1046,8 @@ def _layout_edges(
             target = lay.bounds.get(message.target) or external_bounds.get(message.target)
             if source is None or target is None:
                 continue
-            sx, sy, sw, sh = source
-            tx, ty, tw, th = target
-            edges.append((
-                message.id,
-                [(sx + sw / 2, sy + sh), (tx + tw / 2, ty)],
-            ))
+            points, _ = message_flow_geometry(message, source, target)
+            edges.append((message.id, points))
     return edges
 
 
@@ -979,27 +1065,19 @@ def layout_findings(
 def _placement_order_valid(
     model: ProcessModel, scope: Scope, placements: dict[str, Placement]
 ) -> bool:
-    by_id = model.by_id()
+    nodes = _scope_nodes(model, scope)
+    known_phases = {phase_id for phase_id, _ in model.phases}
+    if any(node.phase not in known_phases for node in nodes):
+        return False
     for edge in _scope_edges(model, scope):
         if edge.loop:
             continue
         if placements[edge.source].col >= placements[edge.target].col:
             return False
-    phase_order = {phase_id: index for index, (phase_id, _) in enumerate(model.phases)}
-    latest_previous = -1
-    nodes = _scope_nodes(model, scope)
-    for phase_id, _ in model.phases:
-        members = [node for node in nodes if node.phase == phase_id]
-        if not members:
-            continue
-        minimum = min(placements[node.id].col for node in members)
-        if minimum < latest_previous:
-            return False
-        latest_previous = max(placements[node.id].col for node in members)
-    return all(
-        by_id[node.id].phase in phase_order
-        for node in nodes
+    violation = _first_phase_violation(
+        model, nodes, lambda node_id: placements[node_id].col
     )
+    return violation is None
 
 
 def _repair_placements(
@@ -1115,26 +1193,23 @@ TASK_ELEMENT = {
 }
 
 
+ELEMENT_TAG = {
+    "gateway_x": "exclusiveGateway",
+    "gateway_p": "parallelGateway",
+    "start_message": "startEvent",
+    "end": "endEvent",
+    "subprocess": "subProcess",
+    "call_activity": "callActivity",
+    "link_throw": "intermediateThrowEvent",
+    "link_catch": "intermediateCatchEvent",
+}
+
+
 def element_tag(node: Node) -> str:
     if node.kind == "task":
         return TASK_ELEMENT[node.ttype]
-    if node.kind == "gateway_x":
-        return "exclusiveGateway"
-    if node.kind == "gateway_p":
-        return "parallelGateway"
-    if node.kind == "start_message":
-        return "startEvent"
-    if node.kind == "end":
-        return "endEvent"
-    if node.kind == "subprocess":
-        return "subProcess"
-    if node.kind == "call_activity":
-        return "callActivity"
-    if node.kind == "link_throw":
-        return "intermediateThrowEvent"
-    if node.kind == "link_catch":
-        return "intermediateCatchEvent"
-    return "intermediateCatchEvent"
+    # catch_timer and catch_message both emit a plain intermediate catch event.
+    return ELEMENT_TAG.get(node.kind, "intermediateCatchEvent")
 
 
 def flow_id(edge: Edge) -> str:
@@ -1379,17 +1454,9 @@ def build_xml(
     nodes = _scope_nodes(model, scope)
     for node in nodes:
         x, y, w, h = lay.bounds[node.id]
-        label = None
-        if node.name and node.kind in (
-            "start_message", "end", "catch_timer", "catch_message"
-        ):
-            label = event_label_bounds(node, x, y, w, h, lay)
-        elif node.name and node.kind.startswith("gateway"):
-            lines = max(1, -(-len(node.name) // 21))
-            gh = lines * 13 + 4
-            label = (x + w / 2 - GW_LBL_W / 2, y - gh - 8, GW_LBL_W, gh)
         shape(node.id, x, y, w, h,
-              marker=(node.kind == "gateway_x"), label=label,
+              marker=(node.kind == "gateway_x"),
+              label=shape_label_bounds(node, x, y, w, h, lay),
               expanded=(node.collapsed is False if node.kind == "subprocess" else None))
 
     for node in nodes:
@@ -1429,21 +1496,9 @@ def build_xml(
             source = lay.bounds[message.source]
         target = (lay.bounds.get(message.target)
                   or external_bounds[message.target])
-        sx, sy, sw, sh = source
-        tx, ty, tw, th = target
-        points = [
-            (sx + sw / 2, sy + sh),
-            (tx + tw / 2, ty),
-        ]
-        label = (
-            sx + sw / 2 + message.label_dx,
-            sy + sh + message.label_dy,
-            message.label_width,
-            message.label_height,
-        ) if message.name else None
+        points, label = message_flow_geometry(message, source, target)
         edge_di(message.id, points, label)
 
-    by_id = model.by_id()
     for edge in _scope_edges(model, scope):
         points = edge_waypoints(model, edge, lay)
         label = (edge_label_bounds(model, edge, points, lay)
@@ -1453,24 +1508,20 @@ def build_xml(
     for node in nodes:
         if not node.note:
             continue
-        nx, ny, nw, nh = lay.bounds[node.id]
-        ax, ay, aw, ah = lay.ann_bounds[node.id]
-        if ay < ny:
-            edge_di(f"Assoc_{node.id}", [(nx + nw / 2, ny),
-                                          (ax + aw / 2, ay + ah)])
-        else:
-            edge_di(f"Assoc_{node.id}", [(nx + nw / 2, ny + nh),
-                                          (ax + aw / 2, ay)])
+        edge_di(
+            f"Assoc_{node.id}",
+            association_waypoints(lay.bounds[node.id], lay.ann_bounds[node.id]),
+        )
 
     # Collapsed subprocesses get independent coordinate spaces and planes.
     # The process content was emitted recursively above; this is its DI.
     layouts = layouts or {scope.id: lay}
-    pending_subprocesses = [
+    pending_subprocesses = deque(
         node for node in _scope_nodes(model, scope)
         if node.kind == "subprocess" and node.collapsed
-    ]
+    )
     while pending_subprocesses:
-        subprocess = pending_subprocesses.pop(0)
+        subprocess = pending_subprocesses.popleft()
         if subprocess.kind != "subprocess" or not subprocess.collapsed:
             continue
         child_scope = Scope.child(model, subprocess)
@@ -1486,17 +1537,9 @@ def build_xml(
                   height, horizontal=True, target_plane=child_plane)
         for node in _scope_nodes(model, child_scope):
             x, y, w, h = child_layout.bounds[node.id]
-            label = None
-            if node.name and node.kind in (
-                "start_message", "end", "catch_timer", "catch_message",
-            ):
-                label = event_label_bounds(node, x, y, w, h, child_layout)
-            elif node.name and node.kind.startswith("gateway"):
-                lines = max(1, -(-len(node.name) // 21))
-                gh = lines * 13 + 4
-                label = (x + w / 2 - GW_LBL_W / 2, y - gh - 8, GW_LBL_W, gh)
             shape(node.id, x, y, w, h, marker=(node.kind == "gateway_x"),
-                  label=label, target_plane=child_plane)
+                  label=shape_label_bounds(node, x, y, w, h, child_layout),
+                  target_plane=child_plane)
             if node.note:
                 ax, ay, aw, ah = child_layout.ann_bounds[node.id]
                 shape(f"Ann_{node.id}", ax, ay, aw, ah,
@@ -1509,13 +1552,12 @@ def build_xml(
         for node in _scope_nodes(model, child_scope):
             if not node.note:
                 continue
-            nx, ny, nw, nh = child_layout.bounds[node.id]
-            ax, ay, aw, ah = child_layout.ann_bounds[node.id]
-            if ay < ny:
-                points = [(nx + nw / 2, ny), (ax + aw / 2, ay + ah)]
-            else:
-                points = [(nx + nw / 2, ny + nh), (ax + aw / 2, ay)]
-            edge_di(f"Assoc_{node.id}", points, target_plane=child_plane)
+            edge_di(
+                f"Assoc_{node.id}",
+                association_waypoints(child_layout.bounds[node.id],
+                                      child_layout.ann_bounds[node.id]),
+                target_plane=child_plane,
+            )
         pending_subprocesses.extend(
             node for node in _scope_nodes(model, child_scope)
             if node.kind == "subprocess" and node.collapsed
@@ -1576,15 +1618,13 @@ def build_mermaid(
     scope = scope or Scope.top_level(model)
     nodes = _scope_nodes(model, scope)
     edges = _scope_edges(model, scope)
-    node_ids = {node.id for node in nodes}
 
     out = ["flowchart TB"]
-    phase_names = dict(model.phases)
     for phase_id, phase_name in model.phases:
         members = [node for node in nodes if node.phase == phase_id]
         if not members:
             continue
-        out.append(f'  subgraph {phase_id}["{phase_names[phase_id]}"]')
+        out.append(f'  subgraph {phase_id}["{phase_name}"]')
         out.append("    direction LR")
         for node in members:
             if node.kind == "subprocess":

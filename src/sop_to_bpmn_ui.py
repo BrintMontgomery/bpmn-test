@@ -400,6 +400,20 @@ class SOPToBPMNApp:
         self.root.clipboard_append(self.ir_validation_feedback)
         self.status_var.set("IR validation feedback copied to the clipboard.")
 
+    def _confirm_overwrite(
+        self,
+        *,
+        title: str,
+        message: str,
+        retry: Callable[[], None],
+        declined: str,
+    ) -> None:
+        """Ask before replacing generated files, then retry or report."""
+        if messagebox.askyesno(title, message):
+            retry()
+        else:
+            self.status_var.set(declined)
+
     def _clear_ir_validation_feedback(self) -> None:
         self.ir_validation_feedback = ""
         if hasattr(self, "copy_feedback_button"):
@@ -446,10 +460,12 @@ class SOPToBPMNApp:
 
         def done(result: Path | None, error: Exception | None) -> None:
             if isinstance(error, OverwriteRequired):
-                if messagebox.askyesno("Replace existing IR?", f"Replace this file?\n\n{error.paths[0]}"):
-                    self._save_ir(overwrite=True)
-                else:
-                    self.status_var.set("IR was not replaced.")
+                self._confirm_overwrite(
+                    title="Replace existing IR?",
+                    message=f"Replace this file?\n\n{error.paths[0]}",
+                    retry=lambda: self._save_ir(overwrite=True),
+                    declined="IR was not replaced.",
+                )
                 return
             if error:
                 if isinstance(error, IRResponseValidationError):
@@ -469,10 +485,12 @@ class SOPToBPMNApp:
         def done(result: BuildResult | None, error: Exception | None) -> None:
             if isinstance(error, OverwriteRequired):
                 files = "\n".join(str(path) for path in error.paths)
-                if messagebox.askyesno("Replace existing BPMN?", f"Replace these BPMN files?\n\n{files}"):
-                    self._build_bpmn(overwrite=True)
-                else:
-                    self.status_var.set("BPMN files were not replaced.")
+                self._confirm_overwrite(
+                    title="Replace existing BPMN?",
+                    message=f"Replace these BPMN files?\n\n{files}",
+                    retry=lambda: self._build_bpmn(overwrite=True),
+                    declined="BPMN files were not replaced.",
+                )
                 return
             if error:
                 self.status_var.set(f"BPMN build failed: {error}")

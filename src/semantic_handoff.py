@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from bpmn_engine import ProcessModel
-from ir import IR_SCHEMA_PATH, IRValidationError, load_ir
+from ir import IR_SCHEMA_PATH, load_ir
 from markdown_extractor import ExtractedSOP
 
 
@@ -121,13 +121,12 @@ def parse_semantic_response(response: str | bytes | Mapping[str, Any]) -> dict[s
 def validate_semantic_response(
     response: str | bytes | Mapping[str, Any],
 ) -> ProcessModel:
-    """Parse and validate a semantic response using the established IR loader."""
+    """Parse and validate a semantic response using the established IR loader.
 
-    document = parse_semantic_response(response)
-    try:
-        return load_ir(document)
-    except IRValidationError:
-        raise
+    An invalid document raises :class:`IRValidationError` from ``load_ir``.
+    """
+
+    return load_ir(parse_semantic_response(response))
 
 
 __all__ = [

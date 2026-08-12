@@ -113,9 +113,10 @@ def lane_slugs(process_model: ProcessModel) -> dict[str, str]:
 
 
 def lane_style_css(process_model: ProcessModel) -> str:
+    slugs = lane_slugs(process_model)
     styles = []
     for index, (lane_id, _) in enumerate(process_model.lanes):
-        slug = lane_slugs(process_model)[lane_id]
+        slug = slugs[lane_id]
         stroke, tint = _PALETTE[index % len(_PALETTE)]
         styles.append(
             f".sw-{slug} {{ color:{stroke}; background:{tint}; }}\n"

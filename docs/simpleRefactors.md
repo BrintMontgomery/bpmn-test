@@ -8,11 +8,16 @@ and the desktop UI **byte-for-byte identical**; the regression suite
 
 Mark an item `[x]` when it is implemented.
 
+**Status:** items 1-26 are implemented. Verification: 75 tests pass,
+`scripts/check_golden.py` passes, every generated BPMN/Mermaid/IR/preview artifact
+hashes identically to its pre-refactor output, and 1,495 mutated IR documents
+produce byte-identical validation errors before and after the `ir.py` split.
+
 ---
 
 ## `src/bpmn_engine.py`
 
-### [ ] 1. Extract one shape-label geometry helper
+### [x] 1. Extract one shape-label geometry helper
 
 * **Where:** the event/gateway label block is written three times —
   [bpmn_engine.py:879-893](src/bpmn_engine.py#L879-L893) (`_layout_labels`),
@@ -24,7 +29,7 @@ Mark an item `[x]` when it is implemented.
 * **Change:** add `def shape_label_bounds(node, x, y, w, h, lay) -> Bounds | None`
   beside `event_label_bounds` and call it from all three sites.
 
-### [ ] 2. Extract the annotation-association waypoints
+### [x] 2. Extract the annotation-association waypoints
 
 * **Where:** the same "annotation above → top edge, else bottom edge" branch appears at
   [bpmn_engine.py:941-946](src/bpmn_engine.py#L941-L946),
@@ -33,7 +38,7 @@ Mark an item `[x]` when it is implemented.
 * **Change:** add `def association_waypoints(node_bounds, ann_bounds) -> list[Point]`
   and use it in `_layout_edges` and both `build_xml` passes.
 
-### [ ] 3. Extract the message-flow geometry
+### [x] 3. Extract the message-flow geometry
 
 * **Where:** message-flow endpoints, waypoints, and label offsets are recomputed in
   [bpmn_engine.py:902-926](src/bpmn_engine.py#L902-L926),
@@ -46,7 +51,7 @@ Mark an item `[x]` when it is implemented.
   `MessageFlow`, keeping each caller's existing missing-endpoint handling at the
   call site so behavior is unchanged.
 
-### [ ] 4. Name the wrapped-line-count idiom
+### [x] 4. Name the wrapped-line-count idiom
 
 * **Where:** `-(-len(text) // width)` appears at
   [bpmn_engine.py:403](src/bpmn_engine.py#L403),
@@ -58,7 +63,7 @@ Mark an item `[x]` when it is implemented.
   one-line docstring explaining that it is a ceiling division. The double
   negation is the least readable expression in the layout code.
 
-### [ ] 5. Build the forward graph once
+### [x] 5. Build the forward graph once
 
 * **Where:** `_topological_layout_data`
   ([bpmn_engine.py:416-423](src/bpmn_engine.py#L416-L423)) and `_auto_placements`
@@ -68,7 +73,7 @@ Mark an item `[x]` when it is implemented.
   `(forward, adjacency, incoming)`; `_topological_layout_data` keeps its own
   `indegree` counter since only it consumes one.
 
-### [ ] 6. Share the phase-order scan between the strict and repair paths
+### [x] 6. Share the phase-order scan between the strict and repair paths
 
 * **Where:** [bpmn_engine.py:479-500](src/bpmn_engine.py#L479-L500) (raises
   `PhaseOrderError`) and [bpmn_engine.py:988-998](src/bpmn_engine.py#L988-L998)
@@ -79,7 +84,7 @@ Mark an item `[x]` when it is implemented.
   `PhaseOrderError`, the repair caller turns it into `False`. Divergence between
   these two is exactly what makes `--repair-layout` hard to reason about.
 
-### [ ] 7. Replace the `branch_tokens` dicts with a dataclass
+### [x] 7. Replace the `branch_tokens` dicts with a dataclass
 
 * **Where:** [bpmn_engine.py:548-591](src/bpmn_engine.py#L548-L591) builds
   `list[dict[str, object]]` with `"key"`, `"start"`, `"end"`, `"desired"`,
@@ -89,7 +94,7 @@ Mark an item `[x]` when it is implemented.
   the `object` value type both disappear, and the interval-coloring loop at
   [bpmn_engine.py:595-611](src/bpmn_engine.py#L595-L611) becomes readable.
 
-### [ ] 8. Turn `element_tag` into a lookup table
+### [x] 8. Turn `element_tag` into a lookup table
 
 * **Where:** [bpmn_engine.py:1118-1137](src/bpmn_engine.py#L1118-L1137) — an
   eight-branch `if` chain over `node.kind`.
@@ -98,7 +103,7 @@ Mark an item `[x]` when it is implemented.
   keeping the `task` special case and the current fallback to
   `"intermediateCatchEvent"`.
 
-### [ ] 9. Name the event kinds that carry a caption
+### [x] 9. Name the event kinds that carry a caption
 
 * **Where:** the literal tuple `("start_message", "end", "catch_timer",
   "catch_message")` is repeated at
@@ -108,7 +113,7 @@ Mark an item `[x]` when it is implemented.
 * **Change:** a module constant `LABELED_EVENT_KINDS` near the other kind
   constants. (Folds naturally into item 1.)
 
-### [ ] 10. Delete dead names in the engine
+### [x] 10. Delete dead names in the engine
 
 * `N = Node` / `E = Edge` at
   [bpmn_engine.py:342-343](src/bpmn_engine.py#L342-L343) — no module imports
@@ -131,7 +136,7 @@ Mark an item `[x]` when it is implemented.
 * Keep `edge_label_bounds`'s `model` parameter — `tests/test_bpmn_engine.py:113`
   passes it — and drop only the dead body lines.
 
-### [ ] 11. Collapse the three `resolved_*_id` properties
+### [x] 11. Collapse the three `resolved_*_id` properties
 
 * **Where:** [bpmn_engine.py:213-223](src/bpmn_engine.py#L213-L223) repeats
   `self.process_id.removeprefix("Process_")` three times.
@@ -141,7 +146,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/ir.py`
 
-### [ ] 12. Split `_validate_and_normalize` into per-section validators
+### [x] 12. Split `_validate_and_normalize` into per-section validators
 
 * **Where:** [ir.py:135-500](src/ir.py#L135-L500) — one 365-line function that
   validates documents, decomposition, lanes, phases, nodes, edges, pools,
@@ -158,7 +163,7 @@ Mark an item `[x]` when it is implemented.
   the returned dict must not change: `model_to_document` round-trips are
   compared byte-for-byte by `scripts/check_golden.py`.
 
-### [ ] 13. Extract a `_duplicates` helper
+### [x] 13. Extract a `_duplicates` helper
 
 * **Where:** `sorted({item for item in xs if xs.count(item) > 1})` appears at
   [ir.py:663](src/ir.py#L663), [ir.py:671](src/ir.py#L671), and
@@ -171,7 +176,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/validate_bpmn.py`
 
-### [ ] 14. Give `_direct_scope_items` a named result
+### [x] 14. Give `_direct_scope_items` a named result
 
 * **Where:** [validate_bpmn.py:60-74](src/validate_bpmn.py#L60-L74) returns a bare
   4-tuple, read positionally as `_direct_scope_items(scope)[0]` at
@@ -181,7 +186,7 @@ Mark an item `[x]` when it is implemented.
   associations)`. Tuple-unpacking call sites become `items.nodes`, and the
   `[0]` indexing that currently requires reading the helper body goes away.
 
-### [ ] 15. Resolve the collaboration element once
+### [x] 15. Resolve the collaboration element once
 
 * **Where:** `_participant_exists`
   ([validate_bpmn.py:262-267](src/validate_bpmn.py#L262-L267)) re-scans
@@ -195,7 +200,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/geometry.py`
 
-### [ ] 16. Hoist the obstacle sort and name the edge-ownership test
+### [x] 16. Hoist the obstacle sort and name the edge-ownership test
 
 * **Where:** [geometry.py:88-100](src/geometry.py#L88-L100) calls
   `sorted(obstacles.items())` inside the per-segment loop, so the same list is
@@ -211,7 +216,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/markdown_extractor.py`
 
-### [ ] 17. Find the `Version` marker once
+### [x] 17. Find the `Version` marker once
 
 * **Where:** `_version_lines`
   ([markdown_extractor.py:236-250](src/markdown_extractor.py#L236-L250)) and
@@ -223,7 +228,7 @@ Mark an item `[x]` when it is implemented.
   duplicate-marker and missing-marker errors; the two slicing helpers become
   two-line functions. Keep the existing message text so CLI/UI output is unchanged.
 
-### [ ] 18. Parse actor lines once
+### [x] 18. Parse actor lines once
 
 * **Where:** [markdown_extractor.py:450-457](src/markdown_extractor.py#L450-L457)
   runs `ACTOR_RE.fullmatch` three times per line (once inside `_bullets`, once in
@@ -233,7 +238,7 @@ Mark an item `[x]` when it is implemented.
   loop, keeping the `_bullets(...)` call above it for its non-bullet error
   message and its "must not be empty" check.
 
-### [ ] 19. Drop the unused loop variable in `_paragraphs`
+### [x] 19. Drop the unused loop variable in `_paragraphs`
 
 * **Where:** [markdown_extractor.py:163](src/markdown_extractor.py#L163) binds
   `line_number` and never uses it, unlike its sibling `_bullets`.
@@ -244,7 +249,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/ir_to_bpmn.py`
 
-### [ ] 20. Fold the repeated argument guard into `preflight`
+### [x] 20. Fold the repeated argument guard into `preflight`
 
 * **Where:** `if not ir_files: raise CLIError("at least one IR file is required")`
   plus `ir_paths = [Path(path) for path in ir_files]` appears in `preflight`
@@ -261,7 +266,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/semantic_handoff.py`
 
-### [ ] 21. Remove the no-op `except`
+### [x] 21. Remove the no-op `except`
 
 * **Where:** [semantic_handoff.py:127-130](src/semantic_handoff.py#L127-L130) —
   `try: return load_ir(document) except IRValidationError: raise` catches and
@@ -273,7 +278,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/build_preview.py`
 
-### [ ] 22. Compute lane slugs once per model
+### [x] 22. Compute lane slugs once per model
 
 * **Where:** [build_preview.py:115-125](src/build_preview.py#L115-L125) —
   `lane_style_css` calls `lane_slugs(process_model)` inside the loop, rebuilding
@@ -286,7 +291,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/sop_to_bpmn_ui.py`
 
-### [ ] 23. Share the overwrite-confirm flow
+### [x] 23. Share the overwrite-confirm flow
 
 * **Where:** `_save_ir` ([sop_to_bpmn_ui.py:447-453](src/sop_to_bpmn_ui.py#L447-L453))
   and `_build_bpmn` ([sop_to_bpmn_ui.py:469-476](src/sop_to_bpmn_ui.py#L469-L476))
@@ -301,7 +306,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/decomposition.py`
 
-### [ ] 24. Use a deque for the subprocess walks
+### [x] 24. Use a deque for the subprocess walks
 
 * **Where:** `scopes_for` ([decomposition.py:219-226](src/decomposition.py#L219-L226))
   and the child-plane walk in `build_xml`
@@ -315,7 +320,7 @@ Mark an item `[x]` when it is implemented.
 
 ## `src/bpmn_engine.py` (continued)
 
-### [ ] 25. Make `_placement_order_valid` read as guard-then-check
+### [x] 25. Make `_placement_order_valid` read as guard-then-check
 
 * **Where:** [bpmn_engine.py:979-1002](src/bpmn_engine.py#L979-L1002) — the
   "every node's phase is known" check is the trailing `return all(...)`, after
@@ -324,3 +329,17 @@ Mark an item `[x]` when it is implemented.
   result is identical for every input (an unknown phase fails either way), and
   the function then reads top-to-bottom: validate inputs, check edge columns,
   check phase order.
+
+---
+
+## Found while implementing items 1-25
+
+### [x] 26. Drop the unused imports in `decomposition.py`
+
+* **Where:** [decomposition.py:8-23](src/decomposition.py#L8-L23) imported
+  `Iterable`, `build_mermaid`, and `build_xml`; none of the three was referenced
+  anywhere in the module.
+* **Why:** `build_xml` in particular read as if this module emitted XML
+  directly, when it actually delegates through `write_bpmn`.
+* **Change:** delete the three names from the import list. `typing` was imported
+  only for `Iterable`, so that import line goes away entirely.

@@ -160,7 +160,9 @@ def _section_name(value: str) -> str:
 def _paragraphs(lines: list[tuple[int, str]], section: str) -> tuple[str, ...]:
     paragraphs: list[str] = []
     current: list[str] = []
-    for line_number, raw in lines:
+    # Unlike the other section parsers, a paragraph spans lines, so this one
+    # cannot attribute a failure to a single line number.
+    for _, raw in lines:
         text = _clean_line(raw).strip()
         if text:
             current.append(text)
@@ -233,9 +235,11 @@ def _section_lines(
     return [(index + 1, lines[index]) for index in range(start + 1, end)]
 
 
-def _version_lines(
+def _version_marker_index(
     lines: list[str], outcome_start: int, main_start: int
-) -> list[tuple[int, str]]:
+) -> int:
+    """Locate the ``Version`` marker that splits the Outcome section."""
+
     marker_index: int | None = None
     for index in range(outcome_start, main_start):
         if _clean_line(lines[index]).strip().rstrip(":") == "Version":
@@ -244,6 +248,13 @@ def _version_lines(
             marker_index = index
     if marker_index is None:
         raise MarkdownExtractionError("missing Version marker")
+    return marker_index
+
+
+def _version_lines(
+    lines: list[str], outcome_start: int, main_start: int
+) -> list[tuple[int, str]]:
+    marker_index = _version_marker_index(lines, outcome_start, main_start)
     return [
         (index + 1, lines[index])
         for index in range(marker_index + 1, main_start)
@@ -253,13 +264,11 @@ def _version_lines(
 def _outcome_lines(
     lines: list[str], outcome_start: int, main_start: int
 ) -> list[tuple[int, str]]:
-    for index in range(outcome_start, main_start):
-        if _clean_line(lines[index]).strip().rstrip(":") == "Version":
-            return [
-                (line + 1, lines[line])
-                for line in range(outcome_start, index)
-            ]
-    raise MarkdownExtractionError("missing Version marker")
+    marker_index = _version_marker_index(lines, outcome_start, main_start)
+    return [
+        (index + 1, lines[index])
+        for index in range(outcome_start, marker_index)
+    ]
 
 
 def _numbered_steps(
@@ -448,12 +457,13 @@ def extract_markdown(source: str | Path) -> ExtractedSOP:
     sections = _find_sections(lines)
 
     actor_lines = _section_lines(lines, sections, "Actors")
-    # Parse actors separately to produce a useful error for non-bullet content.
+    # Call _bullets first for its non-bullet and empty-section errors; it
+    # discards the line numbers, so the actors are matched again here.
     _bullets(actor_lines, "Actors")
     actors = tuple(
-        Actor(ACTOR_RE.fullmatch(_clean_line(raw).strip()).group(1).strip(), line_number)
+        Actor(match.group(1).strip(), line_number)
         for line_number, raw in actor_lines
-        if ACTOR_RE.fullmatch(_clean_line(raw).strip())
+        if (match := ACTOR_RE.fullmatch(_clean_line(raw).strip()))
     )
 
     main_start, _ = sections["Main Path"]

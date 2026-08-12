@@ -10,6 +10,7 @@ before the result is handed to the layout engine.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from collections.abc import Mapping
 from dataclasses import asdict
 from pathlib import Path
@@ -106,6 +107,12 @@ def _required(value: dict[str, Any], required: set[str], path: str) -> None:
         _fail(path, f"missing required field(s): {', '.join(missing)}")
 
 
+def _duplicates(values: list[str]) -> list[str]:
+    """Return the sorted set of values that appear more than once."""
+    counts = Counter(values)
+    return sorted(value for value, count in counts.items() if count > 1)
+
+
 def _unique(ids: list[str], path: str) -> None:
     seen: set[str] = set()
     for index, item in enumerate(ids):
@@ -132,7 +139,9 @@ def _read_document(path_or_mapping: str | Path | Mapping[str, Any]) -> dict[str,
     return _object(raw, "IR")
 
 
-def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
+def _validate_header(document: dict[str, Any]) -> None:
+    """Check the allowed/required key sets and the always-present fields."""
+
     allowed = {
         "schema_version", "process_id", "participant_name", "process_doc",
         "process_name", "participant_id", "collaboration_id", "definitions_id",
@@ -154,6 +163,23 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         _string(document[field], field, allow_empty=False)
     _string(document["process_doc"], "process_doc")
 
+
+def _validate_optional_identity_fields(document: dict[str, Any]) -> None:
+    """Check the optional naming fields that default from ``process_id``."""
+
+    for field in (
+        "process_name", "participant_id", "collaboration_id", "definitions_id",
+        "exporter", "exporter_version", "target_namespace",
+    ):
+        if field in document:
+            _string(document[field], field, allow_empty=False)
+
+
+def _validate_documents(
+    document: dict[str, Any]
+) -> tuple[list[dict[str, str]], list[str]]:
+    """Validate the generated-BPMN output manifest."""
+
     documents_raw = _array(document.get("documents", []), "documents")
     documents: list[dict[str, str]] = []
     document_ids: list[str] = []
@@ -170,6 +196,15 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         documents.append({"id": document_id, "file": filename, "role": role})
         document_ids.append(document_id)
     _unique(document_ids, "documents")
+    return documents, document_ids
+
+
+def _validate_decomposition(document: dict[str, Any]) -> dict[str, Any]:
+    """Validate the opt-in scope-splitting policy.
+
+    ``collapse_phases`` entries are only checked for shape here; that they name
+    real phases is a cross-section check the caller applies once phases load.
+    """
 
     decomposition_raw = _object(
         document.get("decomposition", {}), "decomposition"
@@ -198,12 +233,20 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
     )
     for index, phase_id in enumerate(collapse_phases):
         _string(phase_id, f"decomposition.collapse_phases[{index}]", allow_empty=False)
-    for field in (
-        "process_name", "participant_id", "collaboration_id", "definitions_id",
-        "exporter", "exporter_version", "target_namespace",
-    ):
-        if field in document:
-            _string(document[field], field, allow_empty=False)
+    return {
+        "mode": mode,
+        "max_nodes_per_plane": max_nodes,
+        "max_columns": max_columns,
+        "max_pool_width": max_width,
+        "collapse_phases": list(collapse_phases),
+        "max_lanes_per_collapsed_phase": max_lanes,
+    }
+
+
+def _validate_lanes(
+    document: dict[str, Any]
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Validate the lane list and its per-lane annotation placement flag."""
 
     lanes_raw = _array(document["lanes"], "lanes")
     if not lanes_raw:
@@ -222,6 +265,13 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         lanes.append({"id": lane_id, "name": name, "ann_above": ann_above})
         lane_ids.append(lane_id)
     _unique(lane_ids, "lanes")
+    return lanes, lane_ids
+
+
+def _validate_phases(
+    document: dict[str, Any]
+) -> tuple[list[dict[str, str]], list[str]]:
+    """Validate the ordered phase list."""
 
     phases_raw = _array(document["phases"], "phases")
     if not phases_raw:
@@ -238,10 +288,18 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         phases.append({"id": phase_id, "name": name})
         phase_ids.append(phase_id)
     _unique(phase_ids, "phases")
-    phase_id_set_for_config = set(phase_ids)
-    for index, phase_id in enumerate(collapse_phases):
-        if phase_id not in phase_id_set_for_config:
-            _fail(f"decomposition.collapse_phases[{index}]", f"unknown phase {phase_id!r}")
+    return phases, phase_ids
+
+
+def _validate_nodes(
+    document: dict[str, Any],
+    *,
+    lane_ids: list[str],
+    phase_ids: list[str],
+    document_ids: list[str],
+    has_documents: bool,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Validate every node, its kind-specific fields, and its references."""
 
     nodes_raw = _array(document["nodes"], "nodes")
     if not nodes_raw:
@@ -327,7 +385,7 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
             _fail(f"{path}.phase", f"unknown phase {node['phase']!r}")
         if node["parent"] is not None and node["parent"] not in node_id_set:
             _fail(f"{path}.parent", f"unknown parent {node['parent']!r}")
-        if node["called_element"] is not None and documents:
+        if node["called_element"] is not None and has_documents:
             if node["called_element"] not in document_ids:
                 _fail(
                     f"{path}.called_element",
@@ -344,7 +402,18 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
                 _fail("nodes.parent", f"contains a cycle: {cycle}")
             trail.append(current)
             current = parent_by_id[current]
+    return nodes, node_ids
 
+
+def _validate_edges(
+    document: dict[str, Any],
+    *,
+    nodes: list[dict[str, Any]],
+    node_ids: list[str],
+) -> list[dict[str, Any]]:
+    """Validate sequence flows and the exclusive-gateway branch invariant."""
+
+    node_id_set = set(node_ids)
     edges_raw = _array(document["edges"], "edges")
     edges: list[dict[str, Any]] = []
     flow_ids: list[str] = []
@@ -395,6 +464,13 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
                     f"non-default branch {branch['source']}->{branch['target']} "
                     "must have a condition",
                 )
+    return edges
+
+
+def _validate_external_pools(
+    document: dict[str, Any], *, node_id_set: set[str]
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Validate participant pools drawn outside the process."""
 
     pools_raw = _array(document.get("external_pools", []), "external_pools")
     pools: list[dict[str, Any]] = []
@@ -423,11 +499,17 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
     _unique(pool_ids, "external_pools")
     if set(pool_ids) & node_id_set:
         _fail("external_pools", "pool ids must not duplicate node ids")
+    return pools, pool_ids
+
+
+def _validate_message_flows(
+    document: dict[str, Any], *, endpoint_ids: set[str]
+) -> list[dict[str, Any]]:
+    """Validate collaboration message flows and their label geometry."""
 
     message_raw = _array(document.get("message_flows", []), "message_flows")
     messages: list[dict[str, Any]] = []
     message_ids: list[str] = []
-    endpoint_ids = node_id_set | set(pool_ids)
     for index, raw_message in enumerate(message_raw):
         path = f"message_flows[{index}]"
         message = _object(raw_message, path)
@@ -458,6 +540,13 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
             "mermaid_name": mermaid_name, "label_width": label_width,
             "label_height": label_height, "label_dx": label_dx, "label_dy": label_dy,
         })
+    return messages
+
+
+def _validate_presentation(
+    document: dict[str, Any], *, lane_id_set: set[str]
+) -> tuple[list[str], dict[str, Any], list[str]]:
+    """Validate the Mermaid/preview styling fields, which are all lane-keyed."""
 
     ann_above = document.get("ann_above", [])
     _array(ann_above, "ann_above")
@@ -475,6 +564,45 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
     _array(mermaid_class_defs, "mermaid_class_defs")
     for index, class_def in enumerate(mermaid_class_defs):
         _string(class_def, f"mermaid_class_defs[{index}]")
+    return list(ann_above), lane_classes, list(mermaid_class_defs)
+
+
+def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
+    """Validate an IR document section by section and return it normalized.
+
+    The section order is part of the contract: a document with several
+    problems reports the earliest one, and later sections cross-check the ids
+    that earlier sections collected.
+    """
+
+    _validate_header(document)
+    documents, document_ids = _validate_documents(document)
+    decomposition = _validate_decomposition(document)
+    _validate_optional_identity_fields(document)
+    lanes, lane_ids = _validate_lanes(document)
+    phases, phase_ids = _validate_phases(document)
+
+    phase_id_set = set(phase_ids)
+    for index, phase_id in enumerate(decomposition["collapse_phases"]):
+        if phase_id not in phase_id_set:
+            _fail(f"decomposition.collapse_phases[{index}]", f"unknown phase {phase_id!r}")
+
+    nodes, node_ids = _validate_nodes(
+        document,
+        lane_ids=lane_ids,
+        phase_ids=phase_ids,
+        document_ids=document_ids,
+        has_documents=bool(documents),
+    )
+    edges = _validate_edges(document, nodes=nodes, node_ids=node_ids)
+    node_id_set = set(node_ids)
+    pools, pool_ids = _validate_external_pools(document, node_id_set=node_id_set)
+    messages = _validate_message_flows(
+        document, endpoint_ids=node_id_set | set(pool_ids)
+    )
+    ann_above, lane_classes, mermaid_class_defs = _validate_presentation(
+        document, lane_id_set=set(lane_ids)
+    )
 
     normalized = dict(document)
     normalized.update({
@@ -484,18 +612,11 @@ def _validate_and_normalize(document: dict[str, Any]) -> dict[str, Any]:
         "edges": edges,
         "external_pools": pools,
         "message_flows": messages,
-        "ann_above": list(ann_above),
+        "ann_above": ann_above,
         "lane_classes": lane_classes,
-        "mermaid_class_defs": list(mermaid_class_defs),
+        "mermaid_class_defs": mermaid_class_defs,
         "documents": documents,
-        "decomposition": {
-            "mode": mode,
-            "max_nodes_per_plane": max_nodes,
-            "max_columns": max_columns,
-            "max_pool_width": max_width,
-            "collapse_phases": list(collapse_phases),
-            "max_lanes_per_collapsed_phase": max_lanes,
-        },
+        "decomposition": decomposition,
     })
     return normalized
 
@@ -659,16 +780,16 @@ def validate_document_manifest(
         raise IRValidationError("documents: bundle must contain at least one process")
 
     process_ids = [model.process_id for model in models]
-    if len(process_ids) != len(set(process_ids)):
-        duplicates = sorted({item for item in process_ids if process_ids.count(item) > 1})
+    duplicate_processes = _duplicates(process_ids)
+    if duplicate_processes:
         raise IRValidationError(
             "documents: duplicate process id(s) in bundle: "
-            + ", ".join(repr(item) for item in duplicates)
+            + ", ".join(repr(item) for item in duplicate_processes)
         )
 
     specs = tuple(specs)
     spec_ids = [spec.id for spec in specs]
-    duplicate_ids = sorted({item for item in spec_ids if spec_ids.count(item) > 1})
+    duplicate_ids = _duplicates(spec_ids)
     if duplicate_ids:
         raise IRValidationError(
             "documents: duplicate document id(s): "
@@ -690,8 +811,7 @@ def validate_document_manifest(
             + ", ".join(repr(item) for item in missing_ids)
         )
 
-    filenames = [spec.file for spec in specs]
-    duplicate_files = sorted({item for item in filenames if filenames.count(item) > 1})
+    duplicate_files = _duplicates([spec.file for spec in specs])
     if duplicate_files:
         raise IRValidationError(
             "documents: duplicate BPMN output filename(s): "

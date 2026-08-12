@@ -56,6 +56,16 @@ def _segment_crosses(
     )
 
 
+def _edge_owns(edge_id: str, obstacle_id: str) -> bool:
+    """Whether an obstacle is one of the edge's own endpoints or labels.
+
+    Flow ids embed their endpoint ids (``Flow_<source>__<target>``, see
+    ``bpmn_engine.flow_id``), so a substring test identifies the shapes an edge
+    is expected to touch and must not be reported as crossing.
+    """
+    return obstacle_id.split(" label", 1)[0] in edge_id
+
+
 def check_geometry(
     boxes: dict[str, Bounds],
     labels: dict[str, Bounds],
@@ -85,12 +95,12 @@ def check_geometry(
 
     obstacles = dict(boxes)
     obstacles.update(labels)
+    sorted_obstacles = sorted(obstacles.items())
     for edge_id, points in sorted(edges.items()):
         for first, second in zip(points, points[1:]):
             segment = _segment_bounds(first, second)
-            for obstacle_id, obstacle_box in sorted(obstacles.items()):
-                owner = obstacle_id.split(" label", 1)[0]
-                if owner in edge_id:
+            for obstacle_id, obstacle_box in sorted_obstacles:
+                if _edge_owns(edge_id, obstacle_id):
                     continue
                 checks += 1
                 if _segment_crosses(first, second, obstacle_box, pad):
@@ -101,7 +111,7 @@ def check_geometry(
 
     for label_id, label_box in sorted(labels.items()):
         owner = label_id.split(" label", 1)[0]
-        for obstacle_id, obstacle_box in sorted(obstacles.items()):
+        for obstacle_id, obstacle_box in sorted_obstacles:
             if obstacle_id == label_id or obstacle_id.split(" label", 1)[0] == owner:
                 continue
             checks += 1

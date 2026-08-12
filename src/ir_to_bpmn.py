@@ -26,6 +26,14 @@ def default_bpmn_name(ir_path: Path) -> str:
     return f"{stem}.bpmn"
 
 
+def _ir_paths(ir_files: list[str | Path]) -> list[Path]:
+    """Require at least one IR input and return the inputs as paths."""
+
+    if not ir_files:
+        raise CLIError("at least one IR file is required")
+    return [Path(path) for path in ir_files]
+
+
 def _source_bpmn_names(basename: str, count: int) -> list[str]:
     """Return BPMN filenames derived from a source basename."""
 
@@ -102,9 +110,7 @@ def preflight(
 ) -> tuple[ProcessBundle, PreparedBundle]:
     """Load, normalize, decompose, and layout a complete BPMN bundle."""
 
-    if not ir_files:
-        raise CLIError("at least one IR file is required")
-    ir_paths = [Path(path) for path in ir_files]
+    ir_paths = _ir_paths(ir_files)
     try:
         bundle = _default_documents(
             ir_paths, load_bundle(ir_paths), output_basename=output_basename
@@ -126,9 +132,7 @@ def planned_output_paths(
     not create directories or write output files.
     """
 
-    if not ir_files:
-        raise CLIError("at least one IR file is required")
-    ir_paths = [Path(path) for path in ir_files]
+    ir_paths = _ir_paths(ir_files)
     bundle, _prepared = preflight(
         ir_paths,
         repair_layout=repair_layout,
@@ -146,11 +150,9 @@ def run(
 ) -> list[Path]:
     """Emit and validate a complete BPMN bundle, returning emitted paths."""
 
-    if not ir_files:
-        raise CLIError("at least one IR file is required")
-    ir_paths = [Path(path) for path in ir_files]
+    ir_paths = _ir_paths(ir_files)
     try:
-        bundle, prepared = preflight(
+        _bundle, prepared = preflight(
             ir_paths,
             repair_layout=repair_layout,
             output_basename=output_basename,

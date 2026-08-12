@@ -57,21 +57,32 @@ def _scope_tree(process: ET.Element) -> list[ScopeInfo]:
     return scopes
 
 
-def _direct_scope_items(scope: ScopeInfo):
-    nodes = {
-        child.get("id"): child
-        for child in scope.element
-        if local(child.tag) in FLOW_NODE_TAGS and child.get("id")
-    }
-    flows = [child for child in scope.element
-             if local(child.tag) == "sequenceFlow"]
-    annotations = {
-        child.get("id") for child in scope.element
-        if local(child.tag) == "textAnnotation" and child.get("id")
-    }
-    associations = [child for child in scope.element
-                    if local(child.tag) == "association"]
-    return nodes, flows, annotations, associations
+@dataclass(frozen=True)
+class ScopeItems:
+    """The elements a scope owns directly, excluding nested subprocesses."""
+
+    nodes: dict[str, ET.Element]
+    flows: list[ET.Element]
+    annotations: set[str]
+    associations: list[ET.Element]
+
+
+def _direct_scope_items(scope: ScopeInfo) -> ScopeItems:
+    return ScopeItems(
+        nodes={
+            child.get("id"): child
+            for child in scope.element
+            if local(child.tag) in FLOW_NODE_TAGS and child.get("id")
+        },
+        flows=[child for child in scope.element
+               if local(child.tag) == "sequenceFlow"],
+        annotations={
+            child.get("id") for child in scope.element
+            if local(child.tag) == "textAnnotation" and child.get("id")
+        },
+        associations=[child for child in scope.element
+                      if local(child.tag) == "association"],
+    )
 
 
 def _link_definition(event: ET.Element) -> ET.Element | None:
@@ -104,6 +115,8 @@ class Validator:
         self.root = ET.parse(self.path).getroot()
         self.errors: list[str] = []
         self.checks = 0
+        self.collab = next((el for el in self.root
+                            if local(el.tag) == "collaboration"), None)
 
         local_processes = [el for el in self.root
                            if local(el.tag) == "process"]
@@ -128,8 +141,7 @@ class Validator:
     def run(self) -> bool:
         processes = [el for el in self.root
                      if local(el.tag) == "process"]
-        collab = next((el for el in self.root
-                       if local(el.tag) == "collaboration"), None)
+        collab = self.collab
         if not processes:
             self.fail("missing bpmn:process")
             return self.report()
@@ -148,7 +160,7 @@ class Validator:
         all_nodes = {
             node_id: node
             for scope in all_scopes
-            for node_id, node in _direct_scope_items(scope)[0].items()
+            for node_id, node in _direct_scope_items(scope).nodes.items()
         }
         self.check_message_refs(all_nodes)
         self.check_called_elements()
@@ -164,10 +176,10 @@ class Validator:
             )
             self.check_process_ref(collab, process)
 
-            top_nodes, top_flows, top_annotations, _ = _direct_scope_items(top)
-            print(f"{self.path.name}: {len(top_nodes)} flow nodes, "
-                  f"{len(top_flows)} sequence flows, "
-                  f"{len(top_annotations)} annotations, "
+            top_items = _direct_scope_items(top)
+            print(f"{self.path.name}: {len(top_items.nodes)} flow nodes, "
+                  f"{len(top_items.flows)} sequence flows, "
+                  f"{len(top_items.annotations)} annotations, "
                   f"{self.checks} assertions")
 
         return self.report()
@@ -185,18 +197,18 @@ class Validator:
         owner_by_node = {
             node_id: scope.id
             for scope in scopes
-            for node_id in _direct_scope_items(scope)[0]
+            for node_id in _direct_scope_items(scope).nodes
         }
         for scope in scopes:
-            nodes, flows, annotations, associations = _direct_scope_items(scope)
+            items = _direct_scope_items(scope)
             self.check_flow_refs(
-                nodes, flows, all_nodes, owner_by_node, annotations,
-                associations,
+                items.nodes, items.flows, all_nodes, owner_by_node,
+                items.annotations, items.associations,
             )
-            self.check_connectivity(scope, nodes, flows)
-            self.check_lanes(scope, nodes)
-            self.check_gateways(nodes, flows)
-            self.check_links(scope, nodes)
+            self.check_connectivity(scope, items.nodes, items.flows)
+            self.check_lanes(scope, items.nodes)
+            self.check_gateways(items.nodes, items.flows)
+            self.check_links(scope, items.nodes)
 
     def check_message_refs(self, all_nodes: dict[str, ET.Element]) -> None:
         for message in [el for el in self.root.iter()
@@ -260,10 +272,8 @@ class Validator:
             )
 
     def _participant_exists(self, participant_id: str | None) -> bool:
-        collab = next((el for el in self.root
-                       if local(el.tag) == "collaboration"), None)
         return any(el.get("id") == participant_id
-                   for el in (collab if collab is not None else [])
+                   for el in (self.collab if self.collab is not None else [])
                    if local(el.tag) == "participant")
 
     def check_connectivity(
@@ -473,11 +483,12 @@ class Validator:
         return shape is None or shape.get("isExpanded") != "false"
 
     def _visible_scope_items(self, scope: ScopeInfo, plane: ET.Element):
-        nodes, flows, annotations, associations = _direct_scope_items(scope)
-        visible_nodes = set(nodes)
-        visible_flows = {flow.get("id") for flow in flows if flow.get("id")}
-        visible_annotations = set(annotations)
-        visible_associations = {association.get("id") for association in associations
+        items = _direct_scope_items(scope)
+        visible_nodes = set(items.nodes)
+        visible_flows = {flow.get("id") for flow in items.flows if flow.get("id")}
+        visible_annotations = set(items.annotations)
+        visible_associations = {association.get("id")
+                                for association in items.associations
                                 if association.get("id")}
         for child in scope.element:
             if local(child.tag) != "subProcess":
