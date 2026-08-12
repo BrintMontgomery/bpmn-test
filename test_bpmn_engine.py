@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import unittest
 import xml.etree.ElementTree as ET
+from dataclasses import fields, replace
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import bpmn_engine as engine
+from validate_bpmn import Validator
 
 
 BPMN = "{http://www.omg.org/spec/BPMN/20100524/MODEL}"
@@ -17,24 +21,24 @@ class EngineTests(unittest.TestCase):
         lanes = [("Lane_A", "Actor A"), ("Lane_B", "Actor B")]
         nodes = [
             engine.Node(
-                "Start_Custom", "start_message", "Lane_A", 0,
+                "Start_Custom", "start_message", "Lane_A",
                 "Custom start", "P0", doc=["Start documentation."],
             ),
             engine.Node(
-                "Gateway_Custom", "gateway_x", "Lane_A", 1,
+                "Gateway_Custom", "gateway_x", "Lane_A",
                 "Continue?", "P0",
             ),
             engine.Node(
-                "Task_Default", "task", "Lane_A", 2,
+                "Task_Default", "task", "Lane_A",
                 "Default task", "P0", ttype="user",
                 note="A regression note.",
             ),
             engine.Node(
-                "Task_Conditional", "task", "Lane_B", 2,
-                "Conditional task", "P0", subrow=1,
+                "Task_Conditional", "task", "Lane_B",
+                "Conditional task", "P0",
             ),
             engine.Node(
-                "End_Custom", "end", "Lane_A", 3,
+                "End_Custom", "end", "Lane_A",
                 "Finished", "P0",
             ),
         ]
@@ -113,6 +117,162 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(4, len(engine.edge_waypoints(model, loop, layout)))
         self.assertEqual(50, engine.annotation_height("short note"))
         self.assertEqual(scope.id, model.process_id)
+
+    def test_auto_columns_subrows_and_loop_ignoring(self) -> None:
+        model, _, layout, _ = self.build()
+        placements = layout.placements
+
+        self.assertEqual(0, placements["Start_Custom"].col)
+        self.assertEqual(1, placements["Gateway_Custom"].col)
+        self.assertEqual(2, placements["Task_Default"].col)
+        self.assertEqual(2, placements["Task_Conditional"].col)
+        self.assertEqual(3, placements["End_Custom"].col)
+        self.assertEqual(0, placements["Task_Default"].subrow)
+        self.assertEqual(1, placements["Task_Conditional"].subrow)
+        self.assertEqual(0, placements["Task_Conditional"].col - 2)
+        self.assertEqual(4, len(engine.edge_waypoints(model, model.edges[-1], layout)))
+
+    def test_phase_order_allows_compact_same_column_and_rejects_backtracking(self) -> None:
+        def graph_model(nodes, edges, phases):
+            return replace(
+                self.make_model(),
+                nodes=nodes,
+                edges=edges,
+                phases=phases,
+                external_pools=[],
+                message_flows=[],
+            )
+
+        compact = graph_model(
+            [
+                engine.Node("Start", "start_message", "Lane_A", "Start", "P0"),
+                engine.Node("Split", "gateway_p", "Lane_A", "Split", "P0"),
+                engine.Node("Early", "task", "Lane_A", "Early", "P1"),
+                engine.Node("Late", "task", "Lane_B", "Late", "P2"),
+                engine.Node("End", "end", "Lane_A", "End", "P2"),
+            ],
+            [
+                engine.Edge("Start", "Split"),
+                engine.Edge("Split", "Early"),
+                engine.Edge("Split", "Late"),
+                engine.Edge("Early", "End"),
+                engine.Edge("Late", "End"),
+            ],
+            [("P0", "Trigger"), ("P1", "Early"), ("P2", "Late")],
+        )
+        compact_layout = engine.compute_layout(
+            compact, engine.Scope.top_level(compact)
+        )
+        self.assertEqual(
+            compact_layout.placements["Early"].col,
+            compact_layout.placements["Late"].col,
+        )
+
+        invalid = graph_model(
+            [
+                engine.Node("Start", "start_message", "Lane_A", "Start", "P0"),
+                engine.Node("Late", "task", "Lane_A", "Late", "P2"),
+                engine.Node("Early", "task", "Lane_A", "Early", "P1"),
+                engine.Node("End", "end", "Lane_A", "End", "P2"),
+            ],
+            [
+                engine.Edge("Start", "Late"),
+                engine.Edge("Late", "Early"),
+                engine.Edge("Early", "End"),
+            ],
+            [("P0", "Trigger"), ("P1", "Early"), ("P2", "Late")],
+        )
+        with self.assertRaisesRegex(engine.LayoutError, "later phase"):
+            engine.compute_layout(invalid, engine.Scope.top_level(invalid))
+
+    def test_scope_layout_restarts_from_scope_start(self) -> None:
+        model = self.make_model()
+        scope = engine.Scope(
+            id="NestedScope",
+            node_ids=("Start_Custom", "Gateway_Custom", "Task_Default", "End_Custom"),
+            lane_ids=("Lane_A",),
+            include_pool=False,
+        )
+        nested = engine.compute_layout(model, scope)
+        self.assertEqual(0, nested.placements["Start_Custom"].col)
+        self.assertEqual(1, nested.placements["Gateway_Custom"].col)
+        self.assertEqual(2, nested.placements["Task_Default"].col)
+        self.assertEqual(3, nested.placements["End_Custom"].col)
+        self.assertIsNone(nested.pool)
+
+    def test_layout_is_deterministic_and_geometry_clean(self) -> None:
+        model, scope, first, _ = self.build()
+        second = engine.compute_layout(model, scope)
+
+        self.assertEqual(first.placements, second.placements)
+        self.assertEqual(first.bounds, second.bounds)
+        self.assertEqual([], engine.layout_findings(model, scope, first))
+        self.assertEqual(
+            ET.tostring(engine.build_xml(model, first, scope)),
+            ET.tostring(engine.build_xml(model, second, scope)),
+        )
+
+    def test_unresolved_collision_is_reported(self) -> None:
+        model = self.make_model()
+        scope = engine.Scope.top_level(model)
+        original_findings = engine.layout_findings
+        engine.layout_findings = lambda *_args: [
+            engine.GeometryFinding("test collision", "Task_Default", "Task_Conditional")
+        ]
+        try:
+            with self.assertRaisesRegex(engine.LayoutError, "Task_Default"):
+                engine.compute_layout(model, scope)
+        finally:
+            engine.layout_findings = original_findings
+
+    def test_node_has_no_manual_coordinate_fields(self) -> None:
+        names = {field.name for field in fields(engine.Node)}
+        self.assertNotIn("col", names)
+        self.assertNotIn("subrow", names)
+
+    def test_nested_and_parallel_branches_get_stable_rows(self) -> None:
+        import generate_bpmn_ofc004
+        import ofc001_model
+
+        ofc001_layout = engine.compute_layout(
+            ofc001_model.MODEL,
+            engine.Scope.top_level(ofc001_model.MODEL),
+        )
+        self.assertEqual(
+            1, ofc001_layout.placements["Task_RecordBehavioralInfo"].subrow
+        )
+        self.assertEqual(
+            2, ofc001_layout.placements["Task_AdjustPrecautions"].subrow
+        )
+        self.assertEqual(
+            0, ofc001_layout.placements["Task_LiceTreatment"].subrow
+        )
+        self.assertEqual(
+            0, ofc001_layout.placements["Task_RecordIntakeNeeds"].subrow
+        )
+
+        ofc004_layout = engine.compute_layout(
+            generate_bpmn_ofc004.MODEL,
+            engine.Scope.top_level(generate_bpmn_ofc004.MODEL),
+        )
+        self.assertGreater(
+            ofc004_layout.placements["Task_InformConsumerDeclined"].subrow,
+            ofc004_layout.placements["Task_InformFloorStaffNewContact"].subrow,
+        )
+
+    def test_current_processes_generate_valid_bpmn(self) -> None:
+        import ofc001_model
+        import generate_bpmn_ofc004
+
+        with TemporaryDirectory() as temp_dir:
+            for model, filename in (
+                (ofc001_model.MODEL, "OFC-001.bpmn"),
+                (generate_bpmn_ofc004.MODEL, "OFC-004.bpmn"),
+            ):
+                path = Path(temp_dir) / filename
+                scope = engine.Scope.top_level(model)
+                engine.write_bpmn(path, model, engine.compute_layout(model, scope), scope)
+                self.assertTrue(Validator(path).run())
 
     def test_element_tags_and_xml_content(self) -> None:
         model, _, _, definitions = self.build()

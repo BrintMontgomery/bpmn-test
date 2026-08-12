@@ -50,26 +50,26 @@ E = Edge
 
 NODES: list[Node] = [
     # -- Trigger ----------------------------------------------------------
-    N("StartEvent_ScheduledAdmission", "start_message", SO, 0,
+    N("StartEvent_ScheduledAdmission", "start_message", SO,
       "Scheduled admission email received", "P0",
       doc=["Receive the consumer name, identifying number, destination unit, "
            "and planned admission date from the Admissions Coordinator."]),
-    N("Event_DayOfAdmission", "catch_timer", SO, 1,
+    N("Event_DayOfAdmission", "catch_timer", SO,
       "On the day of admission", "P0",
       doc=["The packet is prepared on the day of admission, not on receipt "
            "of the scheduling email."]),
 
     # -- 1. Prepare for Admission -----------------------------------------
-    N("Task_ReviewSchedule", "task", SO, 2,
+    N("Task_ReviewSchedule", "task", SO,
       "Review admission schedule and confirm admission remains active",
       "P1", ttype="user",
       doc=["Review the admission schedule on the day of admission.",
            "Confirm that the scheduled admission remains active."]),
-    N("Gateway_InfoChanged", "gateway_x", SO, 3,
+    N("Gateway_InfoChanged", "gateway_x", SO,
       "Admission information changed?", "P1",
       doc=["Option B - the admission date, arrival time, consumer "
            "information, or destination unit changed before arrival."]),
-    N("Task_PreparePacket", "task", SO, 4,
+    N("Task_PreparePacket", "task", SO,
       "Prepare the security admission packet", "P1",
       doc=["Prepare the security admission packet on the day of admission.",
            "Enter the consumer name, identifying number, and destination "
@@ -78,22 +78,22 @@ NODES: list[Node] = [
            "admission dates and times are frequently changed. Do not print "
            "the final packet solely in response to the initial scheduling "
            "email."),
-    N("Task_ReviewLatestEmail", "task", SO, 4,
-      "Review the most recent admission email", "P1", subrow=1, ttype="user",
+    N("Task_ReviewLatestEmail", "task", SO,
+      "Review the most recent admission email", "P1", ttype="user",
       doc=["Review the most recent admission email.",
            "Confirm the current admission date, arrival time, consumer "
            "information, and destination unit.",
            "Do not rely on a packet printed from an earlier schedule."]),
-    N("Task_UpdatePacket", "task", SO, 5,
+    N("Task_UpdatePacket", "task", SO,
       "Print or update the packet from confirmed information",
-      "P1", subrow=1,
+      "P1",
       doc=["Print or update the security admission packet using the "
            "confirmed information."]),
-    N("Gateway_InfoChangedJoin", "gateway_x", SO, 6,
+    N("Gateway_InfoChangedJoin", "gateway_x", SO,
       "", "P1",
       doc=["Resume admission preparation using the current confirmed "
            "admission information."]),
-    N("Task_VerifyReadiness", "task", SO, 7,
+    N("Task_VerifyReadiness", "task", SO,
       "Verify packet contents, system access, and staffing", "P1",
       doc=["Confirm the packet contains the Vendor Form, the Admission "
            "Property Inventory, the Admission Notification Form, and the "
@@ -104,45 +104,45 @@ NODES: list[Node] = [
            "Confirm that the camera and ID-bracelet equipment are available.",
            "Confirm that at least two Security Officers are available for "
            "the security search."]),
-    N("Task_StageEquipment", "task", SO, 8,
+    N("Task_StageEquipment", "task", SO,
       "Stage admission systems and equipment", "P1",
       doc=["Stage Avatar, ObserveSmart, the tablet, the beacon, the camera, "
            "and the ID-bracelet equipment."]),
 
     # -- 2. Receive Consumer from Law Enforcement -------------------------
-    N("Task_AnnounceArrival", "task", LED, 9,
+    N("Task_AnnounceArrival", "task", LED,
       "Announce arrival through the sally-port intercom", "P2"),
-    N("Gateway_UnscheduledArrival", "gateway_x", SO, 10,
+    N("Gateway_UnscheduledArrival", "gateway_x", SO,
       "Arrival unscheduled or outside the expected time?", "P2",
       doc=["Option A - the Law Enforcement Deputy arrives without calling "
            "ahead or arrives outside the scheduled time."]),
-    N("Task_VerifyAgainstSchedule", "task", SO, 11,
+    N("Task_VerifyAgainstSchedule", "task", SO,
       "Verify consumer against the schedule and daily plan",
-      "P2", subrow=1, ttype="user",
+      "P2", ttype="user",
       doc=["Verify the consumer against the scheduled admission email and "
            "the daily admission plan.",
            "Confirm that the admission remains authorized."]),
-    N("Task_UpdatePacketOnArrival", "task", SO, 12,
-      "Prepare or update the packet and stage equipment", "P2", subrow=1,
+    N("Task_UpdatePacketOnArrival", "task", SO,
+      "Prepare or update the packet and stage equipment", "P2",
       doc=["Prepare or update the admission packet after confirming the "
            "admission.",
            "Stage the required admission systems and equipment."]),
-    N("Gateway_UnscheduledArrivalJoin", "gateway_x", SO, 13,
+    N("Gateway_UnscheduledArrivalJoin", "gateway_x", SO,
       "", "P2",
       doc=["Resume the standard arrival process after confirming the "
            "admission."]),
-    N("Task_AdmitVehicle", "task", SO, 14,
+    N("Task_AdmitVehicle", "task", SO,
       "Admit the transport vehicle and close the garage door", "P2",
       doc=["Admit the transport vehicle into the sally port.",
            "Close the garage door."]),
-    N("Task_EscortToHolding", "task", LED, 15,
+    N("Task_EscortToHolding", "task", LED,
       "Remove consumer from the vehicle and escort to the holding room",
       "P2",
       doc=["Remove the consumer from the transport vehicle.",
            "Escort the consumer to the admissions holding room."]),
-    N("Task_RemoveShackles", "task", LED, 16,
+    N("Task_RemoveShackles", "task", LED,
       "Remove the consumer's shackles in the holding room", "P2"),
-    N("Task_ObtainReport", "task", SO, 17,
+    N("Task_ObtainReport", "task", SO,
       "Obtain the behavioral and transport report from the Deputy", "P2",
       doc=["Review conduct at the county facility.",
            "Review any combative incidents or transport problems.",
@@ -152,60 +152,60 @@ NODES: list[Node] = [
            "facility, combative incidents, problems during transport, "
            "threats, agitation, and other facts that affect staffing or "
            "safety precautions."),
-    N("Gateway_SafetyConcern", "gateway_x", SO, 18,
+    N("Gateway_SafetyConcern", "gateway_x", SO,
       "Behavioral or safety concern?", "P2",
       doc=["Option C - the Deputy reports combative behavior, transport "
            "problems, threats, or other safety concerns, or the consumer "
            "appears irritable, agitated, or verbally aggressive."]),
-    N("Task_RecordBehavioralInfo", "task", SO, 19,
-      "Record the behavioral and safety information", "P2", subrow=1,
+    N("Task_RecordBehavioralInfo", "task", SO,
+      "Record the behavioral and safety information", "P2",
       ttype="user"),
-    N("Task_CallUnitEarly", "task", SO, 20,
+    N("Task_CallUnitEarly", "task", SO,
       "Call the destination unit and request a nursing assessment",
-      "P2", subrow=1, ttype="send",
+      "P2", ttype="send",
       doc=["Call the destination unit before continuing routine processing.",
            "Report the identified behavioral or safety concern.",
            "Request a nursing assessment."]),
-    N("Task_NurseAssess", "task", UN, 21,
+    N("Task_NurseAssess", "task", UN,
       "Report to admissions and assess the consumer", "P2",
       doc=["Report to the admissions area.",
            "Assess the consumer.",
            "Determine whether clinical intervention is required."]),
-    N("Gateway_ClinicalIntervention", "gateway_x", UN, 22,
+    N("Gateway_ClinicalIntervention", "gateway_x", UN,
       "Clinical intervention required?", "P2"),
-    N("Task_AdjustPrecautions", "task", SO, 23,
-      "Adjust staffing and movement precautions", "P2", subrow=1,
+    N("Task_AdjustPrecautions", "task", SO,
+      "Adjust staffing and movement precautions", "P2",
       doc=["Adjust security staffing and movement precautions according to "
            "the nursing assessment."]),
-    N("Event_NurseAuthorizes", "catch_message", SO, 24,
-      "Unit Nurse authorizes continuation", "P2", subrow=1),
-    N("Gateway_ClinicalInterventionJoin", "gateway_x", SO, 25,
-      "", "P2", subrow=1),
-    N("Gateway_SafetyConcernJoin", "gateway_x", SO, 26,
+    N("Event_NurseAuthorizes", "catch_message", SO,
+      "Unit Nurse authorizes continuation", "P2"),
+    N("Gateway_ClinicalInterventionJoin", "gateway_x", SO,
+      "", "P2"),
+    N("Gateway_SafetyConcernJoin", "gateway_x", SO,
       "", "P2",
       doc=["Resume routine security admission when the Unit Nurse "
            "authorizes continuation."]),
 
     # -- 3. Document Transfer of Custody ----------------------------------
-    N("Task_DeputySignsForm", "task", LED, 27,
+    N("Task_DeputySignsForm", "task", LED,
       "Sign the Admission Notification Form before departure", "P3",
       note="[f] The Law Enforcement Deputy must sign the Admission "
            "Notification Form before departing. Do not release the deputy "
            "until the form has been signed, copied, and returned."),
-    N("Task_OfficerSignsAndCopies", "task", SO, 28,
+    N("Task_OfficerSignsAndCopies", "task", SO,
       "Sign the Admission Notification Form and make the required copies",
       "P3"),
-    N("Task_GiveCopyToDeputy", "task", SO, 29,
+    N("Task_GiveCopyToDeputy", "task", SO,
       "Give one copy of the form to the Law Enforcement Deputy", "P3"),
-    N("Gateway_CustodyDocsComplete", "gateway_x", SO, 30,
+    N("Gateway_CustodyDocsComplete", "gateway_x", SO,
       "Form signed, copied, and returned?", "P3"),
-    N("Task_ReleaseDeputy", "task", SO, 31,
+    N("Task_ReleaseDeputy", "task", SO,
       "Release the Law Enforcement Deputy", "P3",
       doc=["Release the Deputy after the transfer-of-custody documentation "
            "is complete."]),
 
     # -- 4. Establish Initial Electronic Admission Record -----------------
-    N("Task_EnterAvatarInitial", "task", SO, 32,
+    N("Task_EnterAvatarInitial", "task", SO,
       "Enter known admission information into Avatar", "P4", ttype="user",
       doc=["Record the consumer's language.",
            "Record the transporting authority.",
@@ -213,7 +213,7 @@ NODES: list[Node] = [
            "Record the originating county."]),
 
     # -- 5. Security Search and Property Inventory ------------------------
-    N("Task_SecuritySearch", "task", SO, 33,
+    N("Task_SecuritySearch", "task", SO,
       "Conduct the two-officer security search", "P5",
       doc=["Assign two Security Officers to conduct the security search.",
            "Search the consumer for contraband.",
@@ -223,14 +223,14 @@ NODES: list[Node] = [
            "the search of one consumer. Security staffing should exceed the "
            "number of consumers being searched whenever operationally "
            "possible."),
-    N("Task_RecordProperty", "task", SO, 34,
+    N("Task_RecordProperty", "task", SO,
       "Record the consumer's property on the Admission Property Inventory",
       "P5", ttype="user"),
-    N("Task_ConsumerDresses", "task", CON, 35,
+    N("Task_ConsumerDresses", "task", CON,
       "Dress after the security search is complete", "P5"),
 
     # -- 6. ObserveSmart Tracking and Identification ----------------------
-    N("Task_ObserveSmartEntry", "task", SO, 36,
+    N("Task_ObserveSmartEntry", "task", SO,
       "Enter the consumer into ObserveSmart and pair the beacon",
       "P6", ttype="user",
       doc=["Enter the consumer's name into ObserveSmart.",
@@ -241,17 +241,17 @@ NODES: list[Node] = [
            "beacon and subsequent observation checks. The beacon must be "
            "paired to the correct consumer before it is placed on the "
            "consumer."),
-    N("Task_CapturePhoto", "task", SO, 37,
+    N("Task_CapturePhoto", "task", SO,
       "Capture the consumer's photograph", "P6",
       doc=["Capture the consumer's photograph for the facility record.",
            "Associate the photograph with the ObserveSmart record."]),
-    N("Gateway_BeaconVerified", "gateway_x", SO, 38,
+    N("Gateway_BeaconVerified", "gateway_x", SO,
       "Beacon paired to the correct consumer?", "P6"),
-    N("Task_PlaceBeacon", "task", SO, 39,
+    N("Task_PlaceBeacon", "task", SO,
       "Place the paired beacon on the consumer", "P6"),
 
     # -- 7. Collect Supplemental Admission Information --------------------
-    N("Task_IntakeQuestionnaire", "task", SO, 40,
+    N("Task_IntakeQuestionnaire", "task", SO,
       "Collect supplemental information using the Security Intake "
       "Questionnaire", "P7", ttype="user",
       doc=["Record military-service status.",
@@ -263,102 +263,102 @@ NODES: list[Node] = [
            "document and is not an official OFC form. Use it to collect "
            "information required for Avatar, but do not treat it as the "
            "official electronic record."),
-    N("Task_SignVendorForm", "task", CON, 41,
+    N("Task_SignVendorForm", "task", CON,
       "Sign the Vendor Form", "P7",
       note="[h] The Vendor Form supports the return or payment of consumer "
            "funds at discharge, usually by check. It sets the consumer up "
            "in the finance system so OFC can pay out any remaining funds "
            "when they leave."),
-    N("Task_ReturnToHolding", "task", SO, 42,
+    N("Task_ReturnToHolding", "task", SO,
       "Return the consumer to the holding room", "P7"),
-    N("Task_CompleteAvatar", "task", SO, 43,
+    N("Task_CompleteAvatar", "task", SO,
       "Complete the remaining Avatar fields", "P7", ttype="user",
       doc=["Use the best available information from the admission documents "
            "and the consumer interview."]),
-    N("Task_CreateBracelet", "task", SO, 44,
+    N("Task_CreateBracelet", "task", SO,
       "Create the ID bracelet from the admission photograph", "P7"),
-    N("Task_PlaceBracelet", "task", SO, 45,
+    N("Task_PlaceBracelet", "task", SO,
       "Place the ID bracelet on the consumer", "P7"),
 
     # -- 8. Initiate Nursing Handoff --------------------------------------
-    N("Task_CallUnitReady", "task", SO, 46,
+    N("Task_CallUnitReady", "task", SO,
       "Call the destination unit and report the consumer is ready",
       "P8", ttype="send",
       doc=["Call the destination unit.",
            "Report that the consumer is ready for the nursing admission "
            "process."]),
-    N("Event_StaffArrive", "catch_message", SO, 47,
+    N("Event_StaffArrive", "catch_message", SO,
       "Unit Nurse and Mental Health Technician report to admissions", "P8",
       doc=["Hold the consumer in the admissions area until the Unit Nurse "
            "and Mental Health Technician report."]),
-    N("Gateway_NursingSplit", "gateway_p", SO, 48, "", "P8"),
-    N("Task_LiceTreatment", "task", UN, 49,
+    N("Gateway_NursingSplit", "gateway_p", SO, "", "P8"),
+    N("Task_LiceTreatment", "task", UN,
       "Apply the required lice treatment", "P8"),
-    N("Task_RecordIntakeNeeds", "task", MHT, 49,
+    N("Task_RecordIntakeNeeds", "task", MHT,
       "Record clothing size, allergies, and immediate food needs",
       "P8", ttype="user",
       doc=["Record the consumer's clothing size.",
            "Record the consumer's allergies.",
            "Record the consumer's hunger status.",
            "Record any immediate food needs."]),
-    N("Gateway_NursingJoin", "gateway_p", SO, 50, "", "P8"),
+    N("Gateway_NursingJoin", "gateway_p", SO, "", "P8"),
 
     # -- 9. Determine Escort and Nursing Location -------------------------
-    N("Gateway_EscortConstraints", "gateway_x", SO, 51,
+    N("Gateway_EscortConstraints", "gateway_x", SO,
       "Multiple admissions or escort constraints?", "P9",
       doc=["Option D - Security is processing multiple admissions or the "
            "primary Security Officer cannot complete the shower or unit "
            "escort."]),
-    N("Task_StandardEscort", "task", SO, 52,
+    N("Task_StandardEscort", "task", SO,
       "Use the standard Security Officer and MHT escort", "P9"),
-    N("Task_CoordinateEscort", "task", SO, 52,
+    N("Task_CoordinateEscort", "task", SO,
       "Coordinate the escort plan with the Unit Nurse and MHT",
-      "P9", subrow=1,
+      "P9",
       doc=["Assign a Security Officer to support the escort when staffing "
            "permits.",
            "Assign the Mental Health Technician to perform or assist with "
            "the escort according to staffing and unit direction."]),
-    N("Gateway_EscortConstraintsJoin", "gateway_x", SO, 53,
+    N("Gateway_EscortConstraintsJoin", "gateway_x", SO,
       "", "P9",
       doc=["Resume consumer movement under the established escort plan."]),
-    N("Gateway_AltLocation", "gateway_x", SO, 54,
+    N("Gateway_AltLocation", "gateway_x", SO,
       "Alternate shower or nursing location required?", "P9",
       doc=["Option E - the destination unit directs that the shower or "
            "nursing admission activities occur in a secure unit location "
            "rather than the admissions-area shower."]),
-    N("Task_EscortToShower", "task", SO, 55,
+    N("Task_EscortToShower", "task", SO,
       "Escort the consumer to the admissions-area shower", "P9"),
-    N("Task_EscortToAltLocation", "task", SO, 55,
+    N("Task_EscortToAltLocation", "task", SO,
       "Escort the consumer to the location designated by the Unit Nurse",
-      "P9", subrow=1),
-    N("Task_NursingAtAltLocation", "task", UN, 57,
+      "P9"),
+    N("Task_NursingAtAltLocation", "task", UN,
       "Complete the required nursing activities at the designated location",
       "P9"),
 
     # -- 10. Complete Shower and Unit Transfer ----------------------------
-    N("Task_Shower", "task", CON, 56,
+    N("Task_Shower", "task", CON,
       "Complete the shower under required supervision", "P10",
 
       doc=["The shower is completed under the required security and "
            "clinical supervision."]),
-    N("Task_EscortToUnit", "task", SO, 57,
+    N("Task_EscortToUnit", "task", SO,
       "Escort the consumer to the destination unit", "P10",
       doc=["The Security Officer and Mental Health Technician escort the "
            "consumer from the shower location to the destination unit."]),
-    N("Gateway_LocationJoin", "gateway_x", SO, 58,
+    N("Gateway_LocationJoin", "gateway_x", SO,
       "", "P10",
       doc=["Resume the common handoff flow when the consumer reaches the "
            "location where the Unit Nurse will accept custody."]),
 
     # -- 11. Complete Security-to-Nursing Handoff -------------------------
-    N("Task_NurseAccepts", "task", UN, 59,
+    N("Task_NurseAccepts", "task", UN,
       "Accept the consumer and complete the security-to-nursing handoff",
       "P11",
       doc=["The consumer is presented to the Unit Nurse at the destination "
            "unit or authorized alternate location.",
            "Confirm receipt of the consumer.",
            "Complete the security-to-nursing handoff."]),
-    N("EndEvent_Complete", "end", SO, 60,
+    N("EndEvent_Complete", "end", SO,
       "Security admission complete", "P11",
       doc=["The consumer has been accepted from law enforcement.",
            "The security search and property documentation are complete.",

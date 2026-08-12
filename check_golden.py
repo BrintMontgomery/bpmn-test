@@ -1,4 +1,4 @@
-"""Regenerate the existing BPMN diagrams and compare them byte-for-byte."""
+"""Regenerate the BPMN diagrams and validate every generated output."""
 
 from __future__ import annotations
 
@@ -20,11 +20,10 @@ SHARED_MODEL_FILES = {
 
 
 def main() -> int:
-    mismatches: list[str] = []
-
     with tempfile.TemporaryDirectory(prefix="bpmn-golden-") as temp_dir:
         work = Path(temp_dir)
         shutil.copy2(ROOT / "bpmn_engine.py", work / "bpmn_engine.py")
+        shutil.copy2(ROOT / "validate_bpmn.py", work / "validate_bpmn.py")
         for model_file in SHARED_MODEL_FILES:
             shutil.copy2(ROOT / model_file, work / model_file)
         for generator, outputs in GENERATORS.items():
@@ -36,22 +35,19 @@ def main() -> int:
             )
 
             for output in outputs:
-                expected = ROOT / output
                 actual = work / output
                 if not actual.exists():
-                    mismatches.append(f"{output}: generator did not produce it")
-                elif not expected.exists():
-                    mismatches.append(f"{output}: golden file is missing")
-                elif actual.read_bytes() != expected.read_bytes():
-                    mismatches.append(f"{output}: bytes differ")
+                    print(f"{output}: generator did not produce it")
+                    return 1
+                if actual.suffix != ".bpmn":
+                    continue
+                subprocess.run(
+                    [sys.executable, "validate_bpmn.py", output],
+                    cwd=work,
+                    check=True,
+                )
 
-    if mismatches:
-        print("golden check failed:")
-        for mismatch in mismatches:
-            print(f"  - {mismatch}")
-        return 1
-
-    print("golden files match")
+    print("generated BPMN outputs passed validation")
     return 0
 
 

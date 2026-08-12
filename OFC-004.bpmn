@@ -438,28 +438,28 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_OFC004">
     <bpmndi:BPMNPlane id="BPMNPlane_OFC004" bpmnElement="Collaboration_OFC004">
       <bpmndi:BPMNShape id="Shape_Participant_OFCCaseManagement" bpmnElement="Participant_OFCCaseManagement" isHorizontal="true">
-        <dc:Bounds x="200" y="260" width="10646" height="2609"/>
+        <dc:Bounds x="200" y="260" width="9350" height="2009"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Lane_CM" bpmnElement="Lane_CM" isHorizontal="true">
-        <dc:Bounds x="230" y="260" width="10616" height="779"/>
+        <dc:Bounds x="230" y="260" width="9320" height="629"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Lane_CON" bpmnElement="Lane_CON" isHorizontal="true">
-        <dc:Bounds x="230" y="1039" width="10616" height="330"/>
+        <dc:Bounds x="230" y="889" width="9320" height="180"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Lane_SW" bpmnElement="Lane_SW" isHorizontal="true">
-        <dc:Bounds x="230" y="1369" width="10616" height="480"/>
+        <dc:Bounds x="230" y="1069" width="9320" height="330"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Lane_NS" bpmnElement="Lane_NS" isHorizontal="true">
-        <dc:Bounds x="230" y="1849" width="10616" height="180"/>
+        <dc:Bounds x="230" y="1399" width="9320" height="180"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Lane_FS" bpmnElement="Lane_FS" isHorizontal="true">
-        <dc:Bounds x="230" y="2029" width="10616" height="330"/>
+        <dc:Bounds x="230" y="1579" width="9320" height="180"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Lane_PTA" bpmnElement="Lane_PTA" isHorizontal="true">
-        <dc:Bounds x="230" y="2359" width="10616" height="180"/>
+        <dc:Bounds x="230" y="1759" width="9320" height="180"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Lane_PC" bpmnElement="Lane_PC" isHorizontal="true">
-        <dc:Bounds x="230" y="2539" width="10616" height="330"/>
+        <dc:Bounds x="230" y="1939" width="9320" height="330"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_StartEvent_AdmissionNotification" bpmnElement="StartEvent_AdmissionNotification">
         <dc:Bounds x="308" y="481" width="36" height="36"/>
@@ -498,7 +498,7 @@
         <dc:Bounds x="1768" y="759" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_ProtectiveOrderJoin" bpmnElement="Gateway_ProtectiveOrderJoin" isMarkerVisible="true">
-        <dc:Bounds x="1986" y="624" width="50" height="50"/>
+        <dc:Bounds x="1986" y="474" width="50" height="50"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ObtainRemainingInfo" bpmnElement="Task_ObtainRemainingInfo">
         <dc:Bounds x="2114" y="459" width="140" height="80"/>
@@ -510,9 +510,9 @@
         <dc:Bounds x="2550" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_ConsumerAbleToParticipate" bpmnElement="Gateway_ConsumerAbleToParticipate" isMarkerVisible="true">
-        <dc:Bounds x="2768" y="474" width="50" height="50"/>
+        <dc:Bounds x="2768" y="624" width="50" height="50"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2723" y="436" width="140" height="30"/>
+          <dc:Bounds x="2723" y="586" width="140" height="30"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_PostponeActivity" bpmnElement="Task_PostponeActivity">
@@ -525,138 +525,138 @@
         <dc:Bounds x="3332" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ConsumerIdentifiesAdvocate" bpmnElement="Task_ConsumerIdentifiesAdvocate">
-        <dc:Bounds x="3550" y="1089" width="140" height="80"/>
+        <dc:Bounds x="2896" y="939" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ContactAdvocate" bpmnElement="Task_ContactAdvocate">
-        <dc:Bounds x="3768" y="459" width="140" height="80"/>
+        <dc:Bounds x="3114" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_AdvocateSignsForm" bpmnElement="Task_AdvocateSignsForm">
-        <dc:Bounds x="4064" y="2409" width="140" height="80"/>
+        <dc:Bounds x="3332" y="1809" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ConsumerSignsROI" bpmnElement="Task_ConsumerSignsROI">
-        <dc:Bounds x="4282" y="1239" width="140" height="80"/>
+        <dc:Bounds x="3550" y="939" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ScanDocumentation" bpmnElement="Task_ScanDocumentation">
-        <dc:Bounds x="4500" y="459" width="140" height="80"/>
+        <dc:Bounds x="3768" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_MailCopyToAdvocate" bpmnElement="Task_MailCopyToAdvocate">
-        <dc:Bounds x="4718" y="459" width="140" height="80"/>
+        <dc:Bounds x="3986" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_AdvocateChangeRequested" bpmnElement="Gateway_AdvocateChangeRequested" isMarkerVisible="true">
-        <dc:Bounds x="4936" y="474" width="50" height="50"/>
+        <dc:Bounds x="4204" y="474" width="50" height="50"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="4891" y="423" width="140" height="43"/>
+          <dc:Bounds x="4159" y="423" width="140" height="43"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ProcessAdvocateChange" bpmnElement="Task_ProcessAdvocateChange">
-        <dc:Bounds x="5064" y="609" width="140" height="80"/>
+        <dc:Bounds x="4410" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_AdvocateChangeJoin" bpmnElement="Gateway_AdvocateChangeJoin" isMarkerVisible="true">
-        <dc:Bounds x="5282" y="624" width="50" height="50"/>
+        <dc:Bounds x="4628" y="474" width="50" height="50"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_NursingCompletesAdmission" bpmnElement="Task_NursingCompletesAdmission">
-        <dc:Bounds x="5410" y="1899" width="140" height="80"/>
+        <dc:Bounds x="4756" y="1449" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_CheckAdditionalContacts" bpmnElement="Task_CheckAdditionalContacts">
-        <dc:Bounds x="5628" y="459" width="140" height="80"/>
+        <dc:Bounds x="4974" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_AdditionalContactRequested" bpmnElement="Gateway_AdditionalContactRequested" isMarkerVisible="true">
-        <dc:Bounds x="5846" y="474" width="50" height="50"/>
+        <dc:Bounds x="5192" y="474" width="50" height="50"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="5801" y="436" width="140" height="30"/>
+          <dc:Bounds x="5147" y="436" width="140" height="30"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_CompleteROI" bpmnElement="Task_CompleteROI">
-        <dc:Bounds x="5974" y="609" width="140" height="80"/>
+        <dc:Bounds x="5320" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_RecordROIPurpose" bpmnElement="Task_RecordROIPurpose">
-        <dc:Bounds x="6192" y="609" width="140" height="80"/>
+        <dc:Bounds x="5538" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ContactProspectiveContact" bpmnElement="Task_ContactProspectiveContact">
-        <dc:Bounds x="6410" y="609" width="140" height="80"/>
+        <dc:Bounds x="5756" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ProspectiveContactResponds" bpmnElement="Task_ProspectiveContactResponds">
-        <dc:Bounds x="6628" y="2739" width="140" height="80"/>
+        <dc:Bounds x="5974" y="2139" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_ContactAgrees" bpmnElement="Gateway_ContactAgrees" isMarkerVisible="true">
-        <dc:Bounds x="6846" y="624" width="50" height="50"/>
+        <dc:Bounds x="6192" y="624" width="50" height="50"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="6801" y="586" width="140" height="30"/>
+          <dc:Bounds x="6147" y="586" width="140" height="30"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_InformFloorStaffNewContact" bpmnElement="Task_InformFloorStaffNewContact">
-        <dc:Bounds x="6974" y="759" width="140" height="80"/>
+        <dc:Bounds x="6320" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_PlaceROIInChartOptionA" bpmnElement="Task_PlaceROIInChartOptionA">
-        <dc:Bounds x="7192" y="759" width="140" height="80"/>
+        <dc:Bounds x="6538" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_InformConsumerDeclined" bpmnElement="Task_InformConsumerDeclined">
-        <dc:Bounds x="7410" y="909" width="140" height="80"/>
+        <dc:Bounds x="6320" y="759" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_ContactJoin" bpmnElement="Gateway_ContactJoin" isMarkerVisible="true">
-        <dc:Bounds x="7706" y="624" width="50" height="50"/>
+        <dc:Bounds x="6756" y="474" width="50" height="50"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ConfirmContactSheet" bpmnElement="Task_ConfirmContactSheet">
-        <dc:Bounds x="7834" y="459" width="140" height="80"/>
+        <dc:Bounds x="6884" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_CommunicateVerifiedContacts" bpmnElement="Task_CommunicateVerifiedContacts">
-        <dc:Bounds x="8052" y="459" width="140" height="80"/>
+        <dc:Bounds x="7102" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_FloorStaffMaintainsSheet" bpmnElement="Task_FloorStaffMaintainsSheet">
-        <dc:Bounds x="8052" y="2079" width="140" height="80"/>
+        <dc:Bounds x="7320" y="1629" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_FileApprovedROIs" bpmnElement="Task_FileApprovedROIs">
-        <dc:Bounds x="8270" y="459" width="140" height="80"/>
+        <dc:Bounds x="7538" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_ClinicalEventWitnessed" bpmnElement="Gateway_ClinicalEventWitnessed" isMarkerVisible="true">
-        <dc:Bounds x="8488" y="474" width="50" height="50"/>
+        <dc:Bounds x="7756" y="474" width="50" height="50"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="8443" y="423" width="140" height="43"/>
+          <dc:Bounds x="7711" y="423" width="140" height="43"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_DocumentInAvatar" bpmnElement="Task_DocumentInAvatar">
-        <dc:Bounds x="8616" y="609" width="140" height="80"/>
+        <dc:Bounds x="7962" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_ClinicalEventJoin" bpmnElement="Gateway_ClinicalEventJoin" isMarkerVisible="true">
-        <dc:Bounds x="8834" y="624" width="50" height="50"/>
+        <dc:Bounds x="8180" y="474" width="50" height="50"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_PostAdmissionChange" bpmnElement="Gateway_PostAdmissionChange" isMarkerVisible="true">
-        <dc:Bounds x="8962" y="474" width="50" height="50"/>
+        <dc:Bounds x="8308" y="474" width="50" height="50"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="8917" y="423" width="140" height="43"/>
+          <dc:Bounds x="8263" y="423" width="140" height="43"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_ProcessContactChange" bpmnElement="Task_ProcessContactChange">
-        <dc:Bounds x="9090" y="609" width="140" height="80"/>
+        <dc:Bounds x="8436" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_VerifyROIForChange" bpmnElement="Task_VerifyROIForChange">
-        <dc:Bounds x="9308" y="609" width="140" height="80"/>
+        <dc:Bounds x="8654" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_CommunicateChangeToFloorStaff" bpmnElement="Task_CommunicateChangeToFloorStaff">
-        <dc:Bounds x="9526" y="609" width="140" height="80"/>
+        <dc:Bounds x="8872" y="609" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_DeliverOngoingIssues" bpmnElement="Task_DeliverOngoingIssues">
-        <dc:Bounds x="9744" y="459" width="140" height="80"/>
+        <dc:Bounds x="8436" y="459" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_HandoffTarget" bpmnElement="Gateway_HandoffTarget" isMarkerVisible="true">
-        <dc:Bounds x="9962" y="474" width="50" height="50"/>
+        <dc:Bounds x="8699" y="474" width="50" height="50"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="9917" y="436" width="140" height="30"/>
+          <dc:Bounds x="8654" y="436" width="140" height="30"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_FSReceivesHandoff" bpmnElement="Task_FSReceivesHandoff">
-        <dc:Bounds x="10168" y="2229" width="140" height="80"/>
+        <dc:Bounds x="9090" y="1629" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Task_SWReceivesHandoff" bpmnElement="Task_SWReceivesHandoff">
-        <dc:Bounds x="10386" y="1719" width="140" height="80"/>
+        <dc:Bounds x="8872" y="1269" width="140" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Gateway_HandoffJoin" bpmnElement="Gateway_HandoffJoin" isMarkerVisible="true">
-        <dc:Bounds x="10604" y="774" width="50" height="50"/>
+        <dc:Bounds x="9308" y="474" width="50" height="50"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_EndEvent_Complete" bpmnElement="EndEvent_Complete">
-        <dc:Bounds x="10732" y="481" width="36" height="36"/>
+        <dc:Bounds x="9436" y="481" width="36" height="36"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="10695" y="522" width="110" height="43"/>
+          <dc:Bounds x="9399" y="522" width="110" height="43"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Ann_Task_RecordRestrictedPerson" bpmnElement="Ann_Task_RecordRestrictedPerson">
@@ -666,16 +666,16 @@
         <dc:Bounds x="2826" y="303" width="280" height="93"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Ann_Task_ScanDocumentation" bpmnElement="Ann_Task_ScanDocumentation">
-        <dc:Bounds x="4430" y="310" width="280" height="78"/>
+        <dc:Bounds x="3698" y="310" width="280" height="78"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Ann_Task_ProcessAdvocateChange" bpmnElement="Ann_Task_ProcessAdvocateChange">
-        <dc:Bounds x="4994" y="310" width="280" height="78"/>
+        <dc:Bounds x="4340" y="310" width="280" height="78"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Ann_Task_ConfirmContactSheet" bpmnElement="Ann_Task_ConfirmContactSheet">
-        <dc:Bounds x="7764" y="310" width="280" height="78"/>
+        <dc:Bounds x="6814" y="310" width="280" height="78"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Shape_Ann_Task_DocumentInAvatar" bpmnElement="Ann_Task_DocumentInAvatar">
-        <dc:Bounds x="8546" y="288" width="280" height="123"/>
+        <dc:Bounds x="7892" y="288" width="280" height="123"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Edge_Flow_StartEvent_AdmissionNotification__Task_BeginElopementForm" bpmnElement="Flow_StartEvent_AdmissionNotification__Task_BeginElopementForm">
         <di:waypoint x="344" y="499"/>
@@ -695,11 +695,9 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ProtectiveOrder__Gateway_ProtectiveOrderJoin" bpmnElement="Flow_Gateway_ProtectiveOrder__Gateway_ProtectiveOrderJoin">
         <di:waypoint x="1126" y="499"/>
-        <di:waypoint x="1941" y="499"/>
-        <di:waypoint x="1941" y="649"/>
-        <di:waypoint x="1986" y="649"/>
+        <di:waypoint x="1986" y="499"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1518" y="505" width="30" height="18"/>
+          <dc:Bounds x="1541" y="475" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ProtectiveOrder__Task_RecordRestrictedPerson" bpmnElement="Flow_Gateway_ProtectiveOrder__Task_RecordRestrictedPerson">
@@ -721,9 +719,11 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsumerRequestsRestricted__Gateway_ProtectiveOrderJoin" bpmnElement="Flow_Gateway_ConsumerRequestsRestricted__Gateway_ProtectiveOrderJoin">
         <di:waypoint x="1690" y="649"/>
-        <di:waypoint x="1986" y="649"/>
+        <di:waypoint x="1941" y="649"/>
+        <di:waypoint x="1941" y="499"/>
+        <di:waypoint x="1986" y="499"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1823" y="625" width="30" height="18"/>
+          <dc:Bounds x="1800" y="625" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsumerRequestsRestricted__Task_InformConsumerOfRestriction" bpmnElement="Flow_Gateway_ConsumerRequestsRestricted__Task_InformConsumerOfRestriction">
@@ -738,13 +738,11 @@
       <bpmndi:BPMNEdge id="Edge_Flow_Task_InformConsumerOfRestriction__Gateway_ProtectiveOrderJoin" bpmnElement="Flow_Task_InformConsumerOfRestriction__Gateway_ProtectiveOrderJoin">
         <di:waypoint x="1908" y="799"/>
         <di:waypoint x="1953" y="799"/>
-        <di:waypoint x="1953" y="649"/>
-        <di:waypoint x="1986" y="649"/>
+        <di:waypoint x="1953" y="499"/>
+        <di:waypoint x="1986" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ProtectiveOrderJoin__Task_ObtainRemainingInfo" bpmnElement="Flow_Gateway_ProtectiveOrderJoin__Task_ObtainRemainingInfo">
-        <di:waypoint x="2036" y="649"/>
-        <di:waypoint x="2075" y="649"/>
-        <di:waypoint x="2075" y="499"/>
+        <di:waypoint x="2036" y="499"/>
         <di:waypoint x="2114" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ObtainRemainingInfo__Task_EmailElopementForm" bpmnElement="Flow_Task_ObtainRemainingInfo__Task_EmailElopementForm">
@@ -757,24 +755,24 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ReviewTAFormWithConsumer__Gateway_ConsumerAbleToParticipate" bpmnElement="Flow_Task_ReviewTAFormWithConsumer__Gateway_ConsumerAbleToParticipate">
         <di:waypoint x="2690" y="499"/>
-        <di:waypoint x="2768" y="499"/>
+        <di:waypoint x="2729" y="499"/>
+        <di:waypoint x="2729" y="649"/>
+        <di:waypoint x="2768" y="649"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsumerAbleToParticipate__Task_ConsumerIdentifiesAdvocate" bpmnElement="Flow_Gateway_ConsumerAbleToParticipate__Task_ConsumerIdentifiesAdvocate">
-        <di:waypoint x="2818" y="499"/>
-        <di:waypoint x="3511" y="499"/>
-        <di:waypoint x="3511" y="1129"/>
-        <di:waypoint x="3550" y="1129"/>
+        <di:waypoint x="2818" y="649"/>
+        <di:waypoint x="2857" y="649"/>
+        <di:waypoint x="2857" y="979"/>
+        <di:waypoint x="2896" y="979"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="3150" y="505" width="30" height="18"/>
+          <dc:Bounds x="2822" y="655" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsumerAbleToParticipate__Task_PostponeActivity" bpmnElement="Flow_Gateway_ConsumerAbleToParticipate__Task_PostponeActivity">
-        <di:waypoint x="2818" y="499"/>
-        <di:waypoint x="2857" y="499"/>
-        <di:waypoint x="2857" y="649"/>
+        <di:waypoint x="2818" y="649"/>
         <di:waypoint x="2896" y="649"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2822" y="505" width="30" height="18"/>
+          <dc:Bounds x="2842" y="625" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_PostponeActivity__Task_ReturnWhenAble" bpmnElement="Flow_Task_PostponeActivity__Task_ReturnWhenAble">
@@ -792,270 +790,260 @@
         <di:waypoint x="2620" y="539"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ConsumerIdentifiesAdvocate__Task_ContactAdvocate" bpmnElement="Flow_Task_ConsumerIdentifiesAdvocate__Task_ContactAdvocate">
-        <di:waypoint x="3690" y="1129"/>
-        <di:waypoint x="3729" y="1129"/>
+        <di:waypoint x="3036" y="979"/>
+        <di:waypoint x="3075" y="979"/>
+        <di:waypoint x="3075" y="499"/>
+        <di:waypoint x="3114" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ContactAdvocate__Task_AdvocateSignsForm" bpmnElement="Flow_Task_ContactAdvocate__Task_AdvocateSignsForm">
+        <di:waypoint x="3254" y="499"/>
+        <di:waypoint x="3293" y="499"/>
+        <di:waypoint x="3293" y="1849"/>
+        <di:waypoint x="3332" y="1849"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI" bpmnElement="Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI">
+        <di:waypoint x="3472" y="1849"/>
+        <di:waypoint x="3511" y="1849"/>
+        <di:waypoint x="3511" y="979"/>
+        <di:waypoint x="3550" y="979"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ConsumerSignsROI__Task_ScanDocumentation" bpmnElement="Flow_Task_ConsumerSignsROI__Task_ScanDocumentation">
+        <di:waypoint x="3690" y="979"/>
+        <di:waypoint x="3729" y="979"/>
         <di:waypoint x="3729" y="499"/>
         <di:waypoint x="3768" y="499"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_Task_ContactAdvocate__Task_AdvocateSignsForm" bpmnElement="Flow_Task_ContactAdvocate__Task_AdvocateSignsForm">
-        <di:waypoint x="3908" y="499"/>
-        <di:waypoint x="4025" y="499"/>
-        <di:waypoint x="4025" y="2449"/>
-        <di:waypoint x="4064" y="2449"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI" bpmnElement="Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI">
-        <di:waypoint x="4204" y="2449"/>
-        <di:waypoint x="4243" y="2449"/>
-        <di:waypoint x="4243" y="1279"/>
-        <di:waypoint x="4282" y="1279"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_Task_ConsumerSignsROI__Task_ScanDocumentation" bpmnElement="Flow_Task_ConsumerSignsROI__Task_ScanDocumentation">
-        <di:waypoint x="4422" y="1279"/>
-        <di:waypoint x="4461" y="1279"/>
-        <di:waypoint x="4461" y="499"/>
-        <di:waypoint x="4500" y="499"/>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ScanDocumentation__Task_MailCopyToAdvocate" bpmnElement="Flow_Task_ScanDocumentation__Task_MailCopyToAdvocate">
-        <di:waypoint x="4640" y="499"/>
-        <di:waypoint x="4718" y="499"/>
+        <di:waypoint x="3908" y="499"/>
+        <di:waypoint x="3986" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_MailCopyToAdvocate__Gateway_AdvocateChangeRequested" bpmnElement="Flow_Task_MailCopyToAdvocate__Gateway_AdvocateChangeRequested">
-        <di:waypoint x="4858" y="499"/>
-        <di:waypoint x="4936" y="499"/>
+        <di:waypoint x="4126" y="499"/>
+        <di:waypoint x="4204" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdvocateChangeRequested__Gateway_AdvocateChangeJoin" bpmnElement="Flow_Gateway_AdvocateChangeRequested__Gateway_AdvocateChangeJoin">
-        <di:waypoint x="4986" y="499"/>
-        <di:waypoint x="5243" y="499"/>
-        <di:waypoint x="5243" y="649"/>
-        <di:waypoint x="5282" y="649"/>
+        <di:waypoint x="4254" y="499"/>
+        <di:waypoint x="4628" y="499"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="5100" y="505" width="30" height="18"/>
+          <dc:Bounds x="4426" y="475" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdvocateChangeRequested__Task_ProcessAdvocateChange" bpmnElement="Flow_Gateway_AdvocateChangeRequested__Task_ProcessAdvocateChange">
-        <di:waypoint x="4986" y="499"/>
-        <di:waypoint x="5025" y="499"/>
-        <di:waypoint x="5025" y="649"/>
-        <di:waypoint x="5064" y="649"/>
+        <di:waypoint x="4254" y="499"/>
+        <di:waypoint x="4371" y="499"/>
+        <di:waypoint x="4371" y="649"/>
+        <di:waypoint x="4410" y="649"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="4990" y="505" width="30" height="18"/>
+          <dc:Bounds x="4298" y="505" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ProcessAdvocateChange__Gateway_AdvocateChangeJoin" bpmnElement="Flow_Task_ProcessAdvocateChange__Gateway_AdvocateChangeJoin">
-        <di:waypoint x="5204" y="649"/>
-        <di:waypoint x="5282" y="649"/>
+        <di:waypoint x="4550" y="649"/>
+        <di:waypoint x="4589" y="649"/>
+        <di:waypoint x="4589" y="499"/>
+        <di:waypoint x="4628" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdvocateChangeJoin__Task_NursingCompletesAdmission" bpmnElement="Flow_Gateway_AdvocateChangeJoin__Task_NursingCompletesAdmission">
-        <di:waypoint x="5332" y="649"/>
-        <di:waypoint x="5371" y="649"/>
-        <di:waypoint x="5371" y="1939"/>
-        <di:waypoint x="5410" y="1939"/>
+        <di:waypoint x="4678" y="499"/>
+        <di:waypoint x="4717" y="499"/>
+        <di:waypoint x="4717" y="1489"/>
+        <di:waypoint x="4756" y="1489"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_NursingCompletesAdmission__Task_CheckAdditionalContacts" bpmnElement="Flow_Task_NursingCompletesAdmission__Task_CheckAdditionalContacts">
-        <di:waypoint x="5550" y="1939"/>
-        <di:waypoint x="5589" y="1939"/>
-        <di:waypoint x="5589" y="499"/>
-        <di:waypoint x="5628" y="499"/>
+        <di:waypoint x="4896" y="1489"/>
+        <di:waypoint x="4935" y="1489"/>
+        <di:waypoint x="4935" y="499"/>
+        <di:waypoint x="4974" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_CheckAdditionalContacts__Gateway_AdditionalContactRequested" bpmnElement="Flow_Task_CheckAdditionalContacts__Gateway_AdditionalContactRequested">
-        <di:waypoint x="5768" y="499"/>
-        <di:waypoint x="5846" y="499"/>
+        <di:waypoint x="5114" y="499"/>
+        <di:waypoint x="5192" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdditionalContactRequested__Gateway_ContactJoin" bpmnElement="Flow_Gateway_AdditionalContactRequested__Gateway_ContactJoin">
-        <di:waypoint x="5896" y="499"/>
-        <di:waypoint x="7655" y="499"/>
-        <di:waypoint x="7655" y="649"/>
-        <di:waypoint x="7706" y="649"/>
+        <di:waypoint x="5242" y="499"/>
+        <di:waypoint x="6756" y="499"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="6760" y="505" width="30" height="18"/>
+          <dc:Bounds x="5984" y="475" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdditionalContactRequested__Task_CompleteROI" bpmnElement="Flow_Gateway_AdditionalContactRequested__Task_CompleteROI">
-        <di:waypoint x="5896" y="499"/>
-        <di:waypoint x="5935" y="499"/>
-        <di:waypoint x="5935" y="649"/>
-        <di:waypoint x="5974" y="649"/>
+        <di:waypoint x="5242" y="499"/>
+        <di:waypoint x="5281" y="499"/>
+        <di:waypoint x="5281" y="649"/>
+        <di:waypoint x="5320" y="649"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="5900" y="505" width="30" height="18"/>
+          <dc:Bounds x="5246" y="505" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteROI__Task_RecordROIPurpose" bpmnElement="Flow_Task_CompleteROI__Task_RecordROIPurpose">
-        <di:waypoint x="6114" y="649"/>
-        <di:waypoint x="6192" y="649"/>
+        <di:waypoint x="5460" y="649"/>
+        <di:waypoint x="5538" y="649"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_RecordROIPurpose__Task_ContactProspectiveContact" bpmnElement="Flow_Task_RecordROIPurpose__Task_ContactProspectiveContact">
-        <di:waypoint x="6332" y="649"/>
-        <di:waypoint x="6410" y="649"/>
+        <di:waypoint x="5678" y="649"/>
+        <di:waypoint x="5756" y="649"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ContactProspectiveContact__Task_ProspectiveContactResponds" bpmnElement="Flow_Task_ContactProspectiveContact__Task_ProspectiveContactResponds">
-        <di:waypoint x="6550" y="649"/>
-        <di:waypoint x="6589" y="649"/>
-        <di:waypoint x="6589" y="2779"/>
-        <di:waypoint x="6628" y="2779"/>
+        <di:waypoint x="5896" y="649"/>
+        <di:waypoint x="5935" y="649"/>
+        <di:waypoint x="5935" y="2179"/>
+        <di:waypoint x="5974" y="2179"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ProspectiveContactResponds__Gateway_ContactAgrees" bpmnElement="Flow_Task_ProspectiveContactResponds__Gateway_ContactAgrees">
-        <di:waypoint x="6768" y="2779"/>
-        <di:waypoint x="6807" y="2779"/>
-        <di:waypoint x="6807" y="649"/>
-        <di:waypoint x="6846" y="649"/>
+        <di:waypoint x="6114" y="2179"/>
+        <di:waypoint x="6153" y="2179"/>
+        <di:waypoint x="6153" y="649"/>
+        <di:waypoint x="6192" y="649"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ContactAgrees__Task_InformFloorStaffNewContact" bpmnElement="Flow_Gateway_ContactAgrees__Task_InformFloorStaffNewContact">
-        <di:waypoint x="6896" y="649"/>
-        <di:waypoint x="6935" y="649"/>
-        <di:waypoint x="6935" y="799"/>
-        <di:waypoint x="6974" y="799"/>
+        <di:waypoint x="6242" y="649"/>
+        <di:waypoint x="6320" y="649"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="6900" y="655" width="30" height="18"/>
+          <dc:Bounds x="6266" y="625" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ContactAgrees__Task_InformConsumerDeclined" bpmnElement="Flow_Gateway_ContactAgrees__Task_InformConsumerDeclined">
-        <di:waypoint x="6896" y="649"/>
-        <di:waypoint x="7371" y="649"/>
-        <di:waypoint x="7371" y="949"/>
-        <di:waypoint x="7410" y="949"/>
+        <di:waypoint x="6242" y="649"/>
+        <di:waypoint x="6281" y="649"/>
+        <di:waypoint x="6281" y="799"/>
+        <di:waypoint x="6320" y="799"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="7118" y="655" width="30" height="18"/>
+          <dc:Bounds x="6246" y="655" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_InformFloorStaffNewContact__Task_PlaceROIInChartOptionA" bpmnElement="Flow_Task_InformFloorStaffNewContact__Task_PlaceROIInChartOptionA">
-        <di:waypoint x="7114" y="799"/>
-        <di:waypoint x="7192" y="799"/>
+        <di:waypoint x="6460" y="649"/>
+        <di:waypoint x="6538" y="649"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_PlaceROIInChartOptionA__Gateway_ContactJoin" bpmnElement="Flow_Task_PlaceROIInChartOptionA__Gateway_ContactJoin">
-        <di:waypoint x="7332" y="799"/>
-        <di:waypoint x="7667" y="799"/>
-        <di:waypoint x="7667" y="649"/>
-        <di:waypoint x="7706" y="649"/>
+        <di:waypoint x="6678" y="649"/>
+        <di:waypoint x="6711" y="649"/>
+        <di:waypoint x="6711" y="499"/>
+        <di:waypoint x="6756" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_InformConsumerDeclined__Gateway_ContactJoin" bpmnElement="Flow_Task_InformConsumerDeclined__Gateway_ContactJoin">
-        <di:waypoint x="7550" y="949"/>
-        <di:waypoint x="7679" y="949"/>
-        <di:waypoint x="7679" y="649"/>
-        <di:waypoint x="7706" y="649"/>
+        <di:waypoint x="6460" y="799"/>
+        <di:waypoint x="6723" y="799"/>
+        <di:waypoint x="6723" y="499"/>
+        <di:waypoint x="6756" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ContactJoin__Task_ConfirmContactSheet" bpmnElement="Flow_Gateway_ContactJoin__Task_ConfirmContactSheet">
-        <di:waypoint x="7756" y="649"/>
-        <di:waypoint x="7795" y="649"/>
-        <di:waypoint x="7795" y="499"/>
-        <di:waypoint x="7834" y="499"/>
+        <di:waypoint x="6806" y="499"/>
+        <di:waypoint x="6884" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ConfirmContactSheet__Task_CommunicateVerifiedContacts" bpmnElement="Flow_Task_ConfirmContactSheet__Task_CommunicateVerifiedContacts">
-        <di:waypoint x="7974" y="499"/>
-        <di:waypoint x="8052" y="499"/>
+        <di:waypoint x="7024" y="499"/>
+        <di:waypoint x="7102" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_CommunicateVerifiedContacts__Task_FloorStaffMaintainsSheet" bpmnElement="Flow_Task_CommunicateVerifiedContacts__Task_FloorStaffMaintainsSheet">
-        <di:waypoint x="8192" y="499"/>
-        <di:waypoint x="8202" y="499"/>
-        <di:waypoint x="8202" y="2119"/>
-        <di:waypoint x="8052" y="2119"/>
+        <di:waypoint x="7242" y="499"/>
+        <di:waypoint x="7281" y="499"/>
+        <di:waypoint x="7281" y="1669"/>
+        <di:waypoint x="7320" y="1669"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_FloorStaffMaintainsSheet__Task_FileApprovedROIs" bpmnElement="Flow_Task_FloorStaffMaintainsSheet__Task_FileApprovedROIs">
-        <di:waypoint x="8192" y="2119"/>
-        <di:waypoint x="8231" y="2119"/>
-        <di:waypoint x="8231" y="499"/>
-        <di:waypoint x="8270" y="499"/>
+        <di:waypoint x="7460" y="1669"/>
+        <di:waypoint x="7499" y="1669"/>
+        <di:waypoint x="7499" y="499"/>
+        <di:waypoint x="7538" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_FileApprovedROIs__Gateway_ClinicalEventWitnessed" bpmnElement="Flow_Task_FileApprovedROIs__Gateway_ClinicalEventWitnessed">
-        <di:waypoint x="8410" y="499"/>
-        <di:waypoint x="8488" y="499"/>
+        <di:waypoint x="7678" y="499"/>
+        <di:waypoint x="7756" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalEventWitnessed__Gateway_ClinicalEventJoin" bpmnElement="Flow_Gateway_ClinicalEventWitnessed__Gateway_ClinicalEventJoin">
-        <di:waypoint x="8538" y="499"/>
-        <di:waypoint x="8795" y="499"/>
-        <di:waypoint x="8795" y="649"/>
-        <di:waypoint x="8834" y="649"/>
+        <di:waypoint x="7806" y="499"/>
+        <di:waypoint x="8180" y="499"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="8652" y="505" width="30" height="18"/>
+          <dc:Bounds x="7978" y="475" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalEventWitnessed__Task_DocumentInAvatar" bpmnElement="Flow_Gateway_ClinicalEventWitnessed__Task_DocumentInAvatar">
-        <di:waypoint x="8538" y="499"/>
-        <di:waypoint x="8577" y="499"/>
-        <di:waypoint x="8577" y="649"/>
-        <di:waypoint x="8616" y="649"/>
+        <di:waypoint x="7806" y="499"/>
+        <di:waypoint x="7923" y="499"/>
+        <di:waypoint x="7923" y="649"/>
+        <di:waypoint x="7962" y="649"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="8542" y="505" width="30" height="18"/>
+          <dc:Bounds x="7850" y="505" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_DocumentInAvatar__Gateway_ClinicalEventJoin" bpmnElement="Flow_Task_DocumentInAvatar__Gateway_ClinicalEventJoin">
-        <di:waypoint x="8756" y="649"/>
-        <di:waypoint x="8834" y="649"/>
+        <di:waypoint x="8102" y="649"/>
+        <di:waypoint x="8141" y="649"/>
+        <di:waypoint x="8141" y="499"/>
+        <di:waypoint x="8180" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalEventJoin__Gateway_PostAdmissionChange" bpmnElement="Flow_Gateway_ClinicalEventJoin__Gateway_PostAdmissionChange">
-        <di:waypoint x="8884" y="649"/>
-        <di:waypoint x="8923" y="649"/>
-        <di:waypoint x="8923" y="499"/>
-        <di:waypoint x="8962" y="499"/>
+        <di:waypoint x="8230" y="499"/>
+        <di:waypoint x="8308" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_PostAdmissionChange__Task_DeliverOngoingIssues" bpmnElement="Flow_Gateway_PostAdmissionChange__Task_DeliverOngoingIssues">
-        <di:waypoint x="9012" y="499"/>
-        <di:waypoint x="9744" y="499"/>
+        <di:waypoint x="8358" y="499"/>
+        <di:waypoint x="8436" y="499"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="9363" y="475" width="30" height="18"/>
+          <dc:Bounds x="8382" y="475" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_PostAdmissionChange__Task_ProcessContactChange" bpmnElement="Flow_Gateway_PostAdmissionChange__Task_ProcessContactChange">
-        <di:waypoint x="9012" y="499"/>
-        <di:waypoint x="9051" y="499"/>
-        <di:waypoint x="9051" y="649"/>
-        <di:waypoint x="9090" y="649"/>
+        <di:waypoint x="8358" y="499"/>
+        <di:waypoint x="8397" y="499"/>
+        <di:waypoint x="8397" y="649"/>
+        <di:waypoint x="8436" y="649"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="9016" y="505" width="30" height="18"/>
+          <dc:Bounds x="8362" y="505" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_ProcessContactChange__Task_VerifyROIForChange" bpmnElement="Flow_Task_ProcessContactChange__Task_VerifyROIForChange">
-        <di:waypoint x="9230" y="649"/>
-        <di:waypoint x="9308" y="649"/>
+        <di:waypoint x="8576" y="649"/>
+        <di:waypoint x="8654" y="649"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_VerifyROIForChange__Task_CommunicateChangeToFloorStaff" bpmnElement="Flow_Task_VerifyROIForChange__Task_CommunicateChangeToFloorStaff">
-        <di:waypoint x="9448" y="649"/>
-        <di:waypoint x="9526" y="649"/>
+        <di:waypoint x="8794" y="649"/>
+        <di:waypoint x="8872" y="649"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_CommunicateChangeToFloorStaff__Gateway_PostAdmissionChange" bpmnElement="Flow_Task_CommunicateChangeToFloorStaff__Gateway_PostAdmissionChange">
-        <di:waypoint x="9596" y="689"/>
-        <di:waypoint x="9596" y="724"/>
-        <di:waypoint x="8987" y="724"/>
-        <di:waypoint x="8987" y="524"/>
+        <di:waypoint x="8942" y="689"/>
+        <di:waypoint x="8942" y="724"/>
+        <di:waypoint x="8333" y="724"/>
+        <di:waypoint x="8333" y="524"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_DeliverOngoingIssues__Gateway_HandoffTarget" bpmnElement="Flow_Task_DeliverOngoingIssues__Gateway_HandoffTarget">
-        <di:waypoint x="9884" y="499"/>
-        <di:waypoint x="9962" y="499"/>
+        <di:waypoint x="8576" y="499"/>
+        <di:waypoint x="8699" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_HandoffTarget__Task_FSReceivesHandoff" bpmnElement="Flow_Gateway_HandoffTarget__Task_FSReceivesHandoff">
-        <di:waypoint x="10012" y="499"/>
-        <di:waypoint x="10129" y="499"/>
-        <di:waypoint x="10129" y="2269"/>
-        <di:waypoint x="10168" y="2269"/>
+        <di:waypoint x="8749" y="499"/>
+        <di:waypoint x="9051" y="499"/>
+        <di:waypoint x="9051" y="1669"/>
+        <di:waypoint x="9090" y="1669"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="10056" y="505" width="30" height="18"/>
+          <dc:Bounds x="8885" y="505" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_HandoffTarget__Task_SWReceivesHandoff" bpmnElement="Flow_Gateway_HandoffTarget__Task_SWReceivesHandoff">
-        <di:waypoint x="10012" y="499"/>
-        <di:waypoint x="10347" y="499"/>
-        <di:waypoint x="10347" y="1759"/>
-        <di:waypoint x="10386" y="1759"/>
+        <di:waypoint x="8749" y="499"/>
+        <di:waypoint x="8833" y="499"/>
+        <di:waypoint x="8833" y="1309"/>
+        <di:waypoint x="8872" y="1309"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="10164" y="505" width="30" height="18"/>
+          <dc:Bounds x="8776" y="505" width="30" height="18"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_FSReceivesHandoff__Gateway_HandoffJoin" bpmnElement="Flow_Task_FSReceivesHandoff__Gateway_HandoffJoin">
-        <di:waypoint x="10308" y="2269"/>
-        <di:waypoint x="10559" y="2269"/>
-        <di:waypoint x="10559" y="799"/>
-        <di:waypoint x="10604" y="799"/>
+        <di:waypoint x="9230" y="1669"/>
+        <di:waypoint x="9263" y="1669"/>
+        <di:waypoint x="9263" y="499"/>
+        <di:waypoint x="9308" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Task_SWReceivesHandoff__Gateway_HandoffJoin" bpmnElement="Flow_Task_SWReceivesHandoff__Gateway_HandoffJoin">
-        <di:waypoint x="10526" y="1759"/>
-        <di:waypoint x="10571" y="1759"/>
-        <di:waypoint x="10571" y="799"/>
-        <di:waypoint x="10604" y="799"/>
+        <di:waypoint x="9012" y="1309"/>
+        <di:waypoint x="9275" y="1309"/>
+        <di:waypoint x="9275" y="499"/>
+        <di:waypoint x="9308" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Flow_Gateway_HandoffJoin__EndEvent_Complete" bpmnElement="Flow_Gateway_HandoffJoin__EndEvent_Complete">
-        <di:waypoint x="10654" y="799"/>
-        <di:waypoint x="10693" y="799"/>
-        <di:waypoint x="10693" y="499"/>
-        <di:waypoint x="10732" y="499"/>
+        <di:waypoint x="9358" y="499"/>
+        <di:waypoint x="9436" y="499"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Assoc_Task_RecordRestrictedPerson" bpmnElement="Assoc_Task_RecordRestrictedPerson">
         <di:waypoint x="1274" y="609"/>
@@ -1066,20 +1054,20 @@
         <di:waypoint x="2966" y="396"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Assoc_Task_ScanDocumentation" bpmnElement="Assoc_Task_ScanDocumentation">
-        <di:waypoint x="4570" y="459"/>
-        <di:waypoint x="4570" y="388"/>
+        <di:waypoint x="3838" y="459"/>
+        <di:waypoint x="3838" y="388"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Assoc_Task_ProcessAdvocateChange" bpmnElement="Assoc_Task_ProcessAdvocateChange">
-        <di:waypoint x="5134" y="609"/>
-        <di:waypoint x="5134" y="388"/>
+        <di:waypoint x="4480" y="609"/>
+        <di:waypoint x="4480" y="388"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Assoc_Task_ConfirmContactSheet" bpmnElement="Assoc_Task_ConfirmContactSheet">
-        <di:waypoint x="7904" y="459"/>
-        <di:waypoint x="7904" y="388"/>
+        <di:waypoint x="6954" y="459"/>
+        <di:waypoint x="6954" y="388"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Edge_Assoc_Task_DocumentInAvatar" bpmnElement="Assoc_Task_DocumentInAvatar">
-        <di:waypoint x="8686" y="609"/>
-        <di:waypoint x="8686" y="411"/>
+        <di:waypoint x="8032" y="609"/>
+        <di:waypoint x="8032" y="411"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

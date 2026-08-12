@@ -171,12 +171,12 @@ achievable, so do not let it slip past.
 - [x] Add unit and regression coverage for model consumption, options,
   dynamic documents/downloads, and bundle validation.
 
-## Phase 2 — Auto layout (remove hand-tuned columns/subrows)
+## Phase 2 — Auto layout (remove hand-tuned columns/subrows) [x]
 
 Manual `col`/`subrow` assignment is the main source of iteration pain (most
 of the fix-up work on OFC-004 was nudging these numbers).
 
-**Column** — longest-path distance from the start event via a topological
+- [x] **Column** — longest-path distance from the start event via a topological
 pass over `EDGES`, ignoring `loop=True` back-edges. Branch nodes on the
 same logical step naturally land in the same column. Add one constraint the
 original plan missed: **`phase` order is a hard monotonic bound on column
@@ -186,53 +186,57 @@ dragging a late-phase node left of an early-phase one. If graph depth and
 phase order disagree, that is a modeling error worth reporting, not
 silently resolving.
 
-**Subrow** — derived from branch nesting depth within a lane: the default
+- [x] **Subrow** — derived from branch nesting depth within a lane: the default
 path stays on subrow 0; each nested `Yes`/option branch increments the
 subrow for the duration of its branch, matching what was done by hand.
 
-Both run **per scope**: a subprocess's children are laid out in their own
+- [x] Both run **per scope**: a subprocess's children are laid out in their own
 coordinate space, and depth/phase constraints restart at that scope's own
 start event.
 
-**Collision handling** — the original plan proposed a hill-climbing loop
+- [x] **Collision handling** — the original plan proposed a hill-climbing loop
 that bumps a node's col/subrow by one whenever the validator complains.
 Two problems with that as written:
 
-- `Validator` reports failures as **formatted strings** (`"shapes A and B
+- [x] `Validator` reports failures as **formatted strings** (`"shapes A and B
   overlap"`, `"edge X passes through Y"`), and it parses a file from disk.
   A repair loop cannot consume that. It needs structured findings
   (element ids, kind, offending geometry) from an in-memory model. See
   Phase 2b.
-- Nudging one node at a time against a global layout is a weak search: a
+- [x] Nudging one node at a time against a global layout is a weak search: a
   col bump reshuffles every column width downstream, so each nudge
   invalidates the evidence that motivated it, and the loop can oscillate.
 
 Prefer **collision-free by construction**, with the validator as a gate
 rather than as the search oracle:
 
-- Assign subrows per lane by conflict-graph coloring over branch column
+- [x] Assign subrows per lane by conflict-graph coloring over branch column
   spans (two branches that overlap in columns must not share a subrow).
   This is the rule that was being applied by hand anyway.
-- Reserve the routing corridor before the target column as layout-owned
+- [x] Reserve the routing corridor before the target column as layout-owned
   space, so `edge_waypoints`' dog-leg never has to be repaired after the
   fact.
-- Keep a *bounded, deterministic* nudge loop as a fallback only, with a
+- [x] Keep a *bounded, deterministic* nudge loop as a fallback only, with a
   fixed visitation order so the same input always produces the same
   output. Non-deterministic layout would make every golden diff unusable.
-- Surface any still-unresolved collision as a clear error naming the two
+- [x] Surface any still-unresolved collision as a clear error naming the two
   elements — never emit a broken diagram.
 
-**Watch the cost:** `check_geometry` is O(shapes × edge segments) and
+- [x] **Watch the cost:** `check_geometry` is O(shapes × edge segments) and
 already fires 17.5k assertions on a 55-node diagram. That is milliseconds
 today, but a nudge loop that re-validates from disk on every attempt
 multiplies it by the attempt count *and* by XML serialize/parse round
 trips. Run the geometry pass in memory.
 
-One caveat to state plainly: if the generator optimizes against the
+- [x] One caveat to state plainly: if the generator optimizes against the
 validator, it inherits the validator's blind spots (axis-aligned boxes
 only, `pad = 4.0`, no text-metric checks). Passing validation stops meaning
 "looks right" and starts meaning "satisfies these checks." Keep a human
 spot-check via `build_preview.py` in the loop at Phase 6.
+
+- [x] Unit and regression coverage verifies automatic placement, phase
+  constraints, scope-local layout, deterministic geometry, collision findings,
+  and validation of both current processes.
 
 ## Phase 2b — Validator rework
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 import xml.dom.minidom as minidom
 import xml.etree.ElementTree as ET
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -55,10 +56,8 @@ class Node:
     kind: str  # task | gateway_x | gateway_p | start_message
                # | catch_timer | catch_message | end
     lane: str
-    col: int
     name: str
     phase: str
-    subrow: int = 0
     ttype: str = "manual"  # manual | user | send | receive (task kinds only)
     doc: list[str] = field(default_factory=list)
     note: str | None = None
@@ -208,6 +207,7 @@ class Scope:
 class Layout:
     """Absolute geometry for one scope."""
 
+    placements: dict[str, "Placement"]
     bounds: dict[str, tuple[float, float, float, float]]
     ann_bounds: dict[str, tuple[float, float, float, float]]
     lane_box: dict[str, tuple[float, float]]
@@ -215,9 +215,34 @@ class Layout:
     pool: tuple[float, float, float, float] | None
     col_center: list[float]
     offsets: dict[tuple[str, str], float]
+    corridors: dict[tuple[str, str], float]
 
     def row_center(self, lane_id: str, subrow: int) -> float:
         return self.row_top[lane_id] + subrow * ROW_PITCH + ROW_PITCH / 2
+
+    def placement(self, node_id: str) -> "Placement":
+        return self.placements[node_id]
+
+
+@dataclass(frozen=True)
+class Placement:
+    """Automatically computed column and sub-row for one node."""
+
+    col: int
+    subrow: int = 0
+
+
+class LayoutError(ValueError):
+    """Raised when a process cannot be laid out safely."""
+
+
+@dataclass(frozen=True)
+class GeometryFinding:
+    """Structured in-memory geometry issue used by the layout fallback."""
+
+    kind: str
+    first: str
+    second: str
 
 
 N = Node
@@ -261,18 +286,245 @@ def annotation_height(note: str) -> float:
     return max(50, lines * ANN_LINE + 18)
 
 
-def compute_layout(model: ProcessModel, scope: Scope | None = None) -> Layout:
-    """Assign absolute geometry to every node, lane, and pool in a scope."""
-    scope = scope or Scope.top_level(model)
+def _topological_layout_data(
+    model: ProcessModel, scope: Scope
+) -> tuple[dict[str, int], list[str]]:
+    """Return longest-path columns and a deterministic forward topological order."""
+    nodes = _scope_nodes(model, scope)
+    if not nodes:
+        raise LayoutError(f"scope {scope.id} contains no nodes")
+
+    by_id = {node.id: node for node in nodes}
+    forward = [edge for edge in _scope_edges(model, scope) if not edge.loop]
+    adjacency: dict[str, list[str]] = {node.id: [] for node in nodes}
+    incoming: dict[str, list[Edge]] = {node.id: [] for node in nodes}
+    indegree = {node.id: 0 for node in nodes}
+    for edge in forward:
+        adjacency[edge.source].append(edge.target)
+        incoming[edge.target].append(edge)
+        indegree[edge.target] += 1
+
+    starts = [node for node in nodes if node.kind == "start_message"]
+    if len(starts) != 1:
+        raise LayoutError(
+            f"scope {scope.id} must have exactly one start event; "
+            f"found {len(starts)}"
+        )
+    start = starts[0]
+    roots = [node.id for node in nodes if indegree[node.id] == 0]
+    if roots != [start.id]:
+        raise LayoutError(
+            f"scope {scope.id} has forward roots besides {start.id}: "
+            f"{[root for root in roots if root != start.id]}"
+        )
+
+    phase_order = {phase_id: index for index, (phase_id, _) in enumerate(model.phases)}
+    if len(phase_order) != len(model.phases):
+        raise LayoutError(f"scope {scope.id} has duplicate phase identifiers")
+    for node in nodes:
+        if node.phase not in phase_order:
+            raise LayoutError(
+                f"node {node.id} refers to unknown phase {node.phase}"
+            )
+    for edge in forward:
+        source_phase = phase_order[by_id[edge.source].phase]
+        target_phase = phase_order[by_id[edge.target].phase]
+        if source_phase > target_phase:
+            raise LayoutError(
+                f"edge {edge.source}->{edge.target} moves from later phase "
+                f"{by_id[edge.source].phase} to earlier phase "
+                f"{by_id[edge.target].phase}"
+            )
+
+    queue = deque([start.id])
+    columns = {start.id: 0}
+    order: list[str] = []
+    while queue:
+        source = queue.popleft()
+        order.append(source)
+        for target in adjacency[source]:
+            columns[target] = max(
+                columns.get(target, 0), columns[source] + 1
+            )
+            indegree[target] -= 1
+            if indegree[target] == 0:
+                queue.append(target)
+
+    if len(order) != len(nodes):
+        remaining = [node.id for node in nodes if node.id not in order]
+        raise LayoutError(
+            f"scope {scope.id} has a cycle after loop edges are ignored: "
+            f"{remaining}"
+        )
+
+    # A later phase may share a column with the immediately preceding phase,
+    # but it may not begin to the left of any earlier phase. Equality keeps
+    # compact diagrams compact while still enforcing the authored ordering.
+    latest_previous = -1
+    for phase_id, _ in model.phases:
+        members = [node for node in nodes if node.phase == phase_id]
+        if not members:
+            continue
+        minimum = min(columns[node.id] for node in members)
+        if minimum < latest_previous:
+            offender = min(members, key=lambda node: columns[node.id])
+            raise LayoutError(
+                f"phase {phase_id} places {offender.id} at column "
+                f"{columns[offender.id]}, left of an earlier phase ending "
+                f"at column {latest_previous}"
+            )
+        latest_previous = max(columns[node.id] for node in members)
+
+    return columns, order
+
+
+def _reachable(start: str, adjacency: dict[str, list[str]]) -> set[str]:
+    seen: set[str] = set()
+    stack = [start]
+    while stack:
+        current = stack.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        stack.extend(adjacency[current])
+    return seen
+
+
+def _auto_placements(model: ProcessModel, scope: Scope) -> dict[str, Placement]:
+    """Compute columns, semantic branch depth, and deterministic row colors."""
+    columns, order = _topological_layout_data(model, scope)
+    nodes = _scope_nodes(model, scope)
+    by_id = {node.id: node for node in nodes}
+    forward = [edge for edge in _scope_edges(model, scope) if not edge.loop]
+    adjacency: dict[str, list[str]] = {node.id: [] for node in nodes}
+    incoming: dict[str, list[Edge]] = {node.id: [] for node in nodes}
+    for edge in forward:
+        adjacency[edge.source].append(edge.target)
+        incoming[edge.target].append(edge)
+
+    # Propagate branch nesting through the DAG. A conditioned exclusive
+    # branch increases depth; an unconditioned/default edge preserves it. At
+    # a reconvergence, the shallowest incoming path is the shared baseline.
+    branch_depth: dict[str, int] = {}
+    for node_id in order:
+        if not incoming[node_id]:
+            branch_depth[node_id] = 0
+            continue
+        candidates: list[int] = []
+        for edge in incoming[node_id]:
+            source = by_id[edge.source]
+            increment = int(source.kind == "gateway_x" and bool(edge.condition))
+            candidates.append(branch_depth[edge.source] + increment)
+        branch_depth[node_id] = min(candidates) if len(candidates) > 1 else candidates[0]
+
+    # Build branch regions from unique forward reachability. Shared join nodes
+    # are excluded, so branch depth naturally ends at the join. The branch
+    # depth threshold also trims loop-backed option paths whose forward graph
+    # has no ordinary reconvergence.
+    branch_tokens: list[dict[str, object]] = []
+    for gateway in nodes:
+        outgoing = [edge for edge in forward if edge.source == gateway.id]
+        if len(outgoing) < 2:
+            continue
+        if gateway.kind == "gateway_x":
+            branches = [edge for edge in outgoing if edge.condition]
+        elif gateway.kind == "gateway_p":
+            branches = outgoing
+        else:
+            branches = []
+        if not branches:
+            continue
+        reach_by_edge = {
+            id(edge): _reachable(edge.target, adjacency) for edge in outgoing
+        }
+        for edge in branches:
+            other_reach: set[str] = set()
+            for other in outgoing:
+                if other != edge:
+                    other_reach.update(reach_by_edge[id(other)])
+            unique = reach_by_edge[id(edge)] - other_reach
+            desired = branch_depth[gateway.id]
+            if gateway.kind == "gateway_x" and edge.condition:
+                desired += 1
+                unique = {
+                    node_id for node_id in unique
+                    if branch_depth[node_id] >= desired
+                }
+            if not unique:
+                continue
+            for lane_id, _ in _scope_lanes(model, scope):
+                lane_nodes = unique & {
+                    node.id for node in nodes if node.lane == lane_id
+                }
+                if not lane_nodes:
+                    continue
+                branch_tokens.append({
+                    "key": (gateway.id, edge.target, lane_id),
+                    "start": min(columns[node_id] for node_id in lane_nodes),
+                    "end": max(columns[node_id] for node_id in lane_nodes),
+                    "desired": desired,
+                    "nodes": lane_nodes,
+                })
+
+    # Interval coloring is deterministic and keeps overlapping option spans
+    # on separate rows even when their individual nodes do not share a column.
+    colors: dict[tuple[str, str, str], int] = {}
+    for lane_id, _ in _scope_lanes(model, scope):
+        tokens = [token for token in branch_tokens if token["key"][2] == lane_id]
+        tokens.sort(key=lambda token: (token["start"], token["end"], token["key"]))
+        assigned: list[tuple[int, int, int]] = []
+        for token in tokens:
+            color = int(token["desired"])
+            while any(
+                color == previous_color
+                and token["start"] <= previous_end
+                and previous_start <= token["end"]
+                for previous_start, previous_end, previous_color in assigned
+            ):
+                color += 1
+            key = token["key"]
+            colors[key] = color
+            assigned.append((token["start"], token["end"], color))
+
+    subrows = dict(branch_depth)
+    for token in branch_tokens:
+        color = colors[token["key"]]
+        for node_id in token["nodes"]:
+            subrows[node_id] = max(subrows[node_id], color)
+
+    # Resolve any same-lane/same-column point conflict left by unusual graph
+    # shapes or parallel branches. The first model node keeps the lower row;
+    # later nodes take the next free row in stable model order.
+    by_lane_col: dict[tuple[str, int], list[Node]] = {}
+    for node in nodes:
+        by_lane_col.setdefault((node.lane, columns[node.id]), []).append(node)
+    for group in by_lane_col.values():
+        used: set[int] = set()
+        for node in group:
+            row = subrows[node.id]
+            while row in used:
+                row += 1
+            subrows[node.id] = row
+            used.add(row)
+
+    return {
+        node.id: Placement(columns[node.id], subrows[node.id])
+        for node in nodes
+    }
+
+
+def _build_layout(
+    model: ProcessModel, scope: Scope, placements: dict[str, Placement]
+) -> Layout:
+    """Build absolute geometry from already-computed placements."""
     nodes = _scope_nodes(model, scope)
     lanes = _scope_lanes(model, scope)
 
-    # Column widths are driven by the widest element in each column, so
-    # gateway-only and event-only columns stay narrow.
-    max_col = max(node.col for node in nodes)
+    max_col = max(placement.col for placement in placements.values())
     col_w = [0] * (max_col + 1)
     for node in nodes:
-        col_w[node.col] = max(col_w[node.col], node_size(node)[0])
+        col = placements[node.id].col
+        col_w[col] = max(col_w[col], node_size(node)[0])
 
     col_center = []
     x = POOL_X + POOL_HEADER + COL_GAP
@@ -281,13 +533,11 @@ def compute_layout(model: ProcessModel, scope: Scope | None = None) -> Layout:
         x += col_w[column] + COL_GAP
     pool_w = x - POOL_X
 
-    # A lane is tall enough for its deepest sub-row, plus one extra sub-row
-    # for text annotations when the lane carries any. The annotation-band
-    # placement is process data because each process can need a different
-    # corridor strategy.
     base_rows: dict[str, int] = {lane_id: 1 for lane_id, _ in lanes}
     for node in nodes:
-        base_rows[node.lane] = max(base_rows[node.lane], node.subrow + 1)
+        base_rows[node.lane] = max(
+            base_rows[node.lane], placements[node.id].subrow + 1
+        )
 
     ann_band: dict[str, float] = {lane_id: 0.0 for lane_id, _ in lanes}
     for node in nodes:
@@ -319,48 +569,90 @@ def compute_layout(model: ProcessModel, scope: Scope | None = None) -> Layout:
     bounds: dict[str, tuple[float, float, float, float]] = {}
     for node in nodes:
         width, height = node_size(node)
-        cx = col_center[node.col]
-        cy = row_top[node.lane] + node.subrow * ROW_PITCH + ROW_PITCH / 2
+        placement = placements[node.id]
+        cx = col_center[placement.col]
+        cy = row_top[node.lane] + placement.subrow * ROW_PITCH + ROW_PITCH / 2
         bounds[node.id] = (cx - width / 2, cy - height / 2, width, height)
 
-    # Text annotations sit in their lane's reserved band.
     ann_bounds: dict[str, tuple[float, float, float, float]] = {}
     for node in nodes:
         if not node.note:
             continue
         height = annotation_height(node.note)
-        cx = col_center[node.col]
+        cx = col_center[placements[node.id].col]
         cy = ann_center[node.lane]
         ann_bounds[node.id] = (cx - ANN_W / 2, cy - height / 2, ANN_W, height)
 
-    # A wide annotation on a narrow trailing column can overhang the pool.
     if ann_bounds:
         right = max(x + width for x, _, width, _ in ann_bounds.values())
         pool_w = max(pool_w, right + COL_GAP - POOL_X)
 
+    offsets = corridor_offsets(model, scope, placements)
+    corridors: dict[tuple[str, str], float] = {}
+    by_id = model.by_id()
+    for edge in _scope_edges(model, scope):
+        if edge.loop:
+            continue
+        source, target = by_id[edge.source], by_id[edge.target]
+        source_place = placements[source.id]
+        target_place = placements[target.id]
+        if source.lane == target.lane and source_place.subrow == target_place.subrow:
+            continue
+        sx, sy, sw, sh = bounds[source.id]
+        tx, _, _, _ = bounds[target.id]
+        corridors[(edge.source, edge.target)] = max(
+            tx - COL_GAP / 2 + offsets.get((edge.source, edge.target), 0),
+            sx + sw + 10,
+        )
+
     return Layout(
+        placements=placements,
         bounds=bounds,
         ann_bounds=ann_bounds,
         lane_box=lane_box,
         row_top=row_top,
         pool=(POOL_X, POOL_Y, pool_w, pool_h) if scope.include_pool else None,
         col_center=col_center,
-        offsets=corridor_offsets(model, scope),
+        offsets=offsets,
+        corridors=corridors,
     )
 
 
+def compute_layout(model: ProcessModel, scope: Scope | None = None) -> Layout:
+    """Compute deterministic, collision-safe geometry for one scope."""
+    scope = scope or Scope.top_level(model)
+    placements = _auto_placements(model, scope)
+    layout = _build_layout(model, scope, placements)
+    findings = layout_findings(model, scope, layout)
+    if findings:
+        placements = _repair_placements(model, scope, placements, findings)
+        layout = _build_layout(model, scope, placements)
+        findings = layout_findings(model, scope, layout)
+        if findings:
+            first = findings[0]
+            raise LayoutError(
+                f"unresolved layout collision ({first.kind}) between "
+                f"{first.first} and {first.second} in scope {scope.id}"
+            )
+    return layout
+
+
 def corridor_offsets(
-    model: ProcessModel, scope: Scope | None = None
+    model: ProcessModel,
+    scope: Scope | None = None,
+    placements: dict[str, Placement] | None = None,
 ) -> dict[tuple[str, str], float]:
     """Stagger vertical runs of edges converging on one target."""
     scope = scope or Scope.top_level(model)
+    placements = placements or _auto_placements(model, scope)
     nodes = model.by_id()
     grouped: dict[str, list[Edge]] = {}
     for edge in _scope_edges(model, scope):
         if edge.loop:
             continue
         if (nodes[edge.source].lane != nodes[edge.target].lane
-                or nodes[edge.source].subrow != nodes[edge.target].subrow):
+                or placements[edge.source].subrow
+                != placements[edge.target].subrow):
             grouped.setdefault(edge.target, []).append(edge)
     out: dict[tuple[str, str], float] = {}
     for target, group in grouped.items():
@@ -384,7 +676,10 @@ def edge_waypoints(
     if edge.loop:
         # Route backwards underneath the source sub-row, along the empty
         # boundary the layout leaves between sub-rows.
-        loop_y = lay.row_top[src.lane] + (src.subrow + 1) * ROW_PITCH
+        loop_y = (
+            lay.row_top[src.lane]
+            + (lay.placement(src.id).subrow + 1) * ROW_PITCH
+        )
         return [(scx, sy + sh), (scx, loop_y), (tcx, loop_y), (tcx, ty + th)]
 
     if abs(scy - tcy) < 1:
@@ -393,8 +688,10 @@ def edge_waypoints(
     # Orthogonal dog-leg. The long horizontal run stays on the source's own
     # sub-row, and the vertical run drops through the empty column gap
     # immediately before the target.
-    corridor = tx - COL_GAP / 2 + lay.offsets.get((src.id, tgt.id), 0)
-    corridor = max(corridor, sx + sw + 10)
+    corridor = lay.corridors.get((src.id, tgt.id))
+    if corridor is None:
+        corridor = tx - COL_GAP / 2 + lay.offsets.get((src.id, tgt.id), 0)
+        corridor = max(corridor, sx + sw + 10)
     return [(sx + sw, scy), (corridor, scy), (corridor, tcy), (tx, tcy)]
 
 
@@ -404,17 +701,18 @@ def event_label_bounds(
     """Fit event captions between neighboring columns."""
     centers = lay.col_center
     room = []
-    if node.col > 0:
-        room.append(centers[node.col] - centers[node.col - 1])
-    if node.col + 1 < len(centers):
-        room.append(centers[node.col + 1] - centers[node.col])
+    col = lay.placement(node.id).col
+    if col > 0:
+        room.append(centers[col] - centers[col - 1])
+    if col + 1 < len(centers):
+        room.append(centers[col + 1] - centers[col])
     width = max(70.0, min(110.0, min(room) - 8)) if room else 110.0
     lines = max(1, -(-len(node.name) // max(8, int(width / 6.4))))
     height = lines * 13 + 4
 
     # On a branch sub-row the space below carries return traffic, so the
     # caption goes above the event instead.
-    if node.subrow > 0:
+    if lay.placement(node.id).subrow > 0:
         return (x + w / 2 - width / 2, y - height - 5, width, height)
     return (x + w / 2 - width / 2, y + h + 5, width, height)
 
@@ -441,6 +739,288 @@ def edge_label_bounds(
     y = scy + 6 if tcy > scy else scy - LBL_H - 6
     return ((pts[0][0] + pts[1][0]) / 2 - LBL_W / 2,
             y, LBL_W, LBL_H)
+
+
+# --------------------------------------------------------------------------
+# In-memory geometry gate and deterministic repair
+# --------------------------------------------------------------------------
+
+
+def _overlaps(
+    first: tuple[float, float, float, float],
+    second: tuple[float, float, float, float],
+    pad: float = 0.0,
+) -> bool:
+    return (
+        first[0] < second[0] + second[2] - pad
+        and second[0] + pad < first[0] + first[2]
+        and first[1] < second[1] + second[3] - pad
+        and second[1] + pad < first[1] + first[3]
+    )
+
+
+def _segment_crosses(
+    first: tuple[float, float],
+    second: tuple[float, float],
+    box: tuple[float, float, float, float],
+    pad: float = 4.0,
+) -> bool:
+    lo_x, hi_x = sorted((first[0], second[0]))
+    lo_y, hi_y = sorted((first[1], second[1]))
+    return (
+        lo_x < box[0] + box[2] - pad
+        and box[0] + pad < hi_x
+        and lo_y < box[1] + box[3] - pad
+        and box[1] + pad < hi_y
+    )
+
+
+def _layout_labels(
+    model: ProcessModel, scope: Scope, lay: Layout
+) -> dict[str, tuple[float, float, float, float]]:
+    labels: dict[str, tuple[float, float, float, float]] = {}
+    for node in _scope_nodes(model, scope):
+        x, y, w, h = lay.bounds[node.id]
+        if node.name and node.kind in (
+            "start_message", "end", "catch_timer", "catch_message"
+        ):
+            labels[f"{node.id} label"] = event_label_bounds(
+                node, x, y, w, h, lay
+            )
+        elif node.name and node.kind.startswith("gateway"):
+            lines = max(1, -(-len(node.name) // 21))
+            height = lines * 13 + 4
+            labels[f"{node.id} label"] = (
+                x + w / 2 - GW_LBL_W / 2,
+                y - height - 8,
+                GW_LBL_W,
+                height,
+            )
+
+    for edge in _scope_edges(model, scope):
+        points = edge_waypoints(model, edge, lay)
+        if edge.label:
+            labels[f"{flow_id(edge)} label"] = edge_label_bounds(
+                model, edge, points, lay
+            )
+
+    if scope.include_pool:
+        external_bounds = {
+            pool.id: _external_pool_bounds(model, pool, lay)
+            for pool in model.external_pools
+        }
+        by_id = model.by_id()
+        for message in model.message_flows:
+            source = external_bounds.get(message.source)
+            if source is None:
+                source = lay.bounds.get(message.source)
+            target = lay.bounds.get(message.target)
+            if target is None:
+                target = external_bounds.get(message.target)
+            if source is None or target is None:
+                continue
+            sx, sy, sw, sh = source
+            tx, ty, tw, th = target
+            points = [(sx + sw / 2, sy + sh), (tx + tw / 2, ty)]
+            if message.name:
+                labels[f"{message.id} label"] = (
+                    sx + sw / 2 + message.label_dx,
+                    sy + sh + message.label_dy,
+                    message.label_width,
+                    message.label_height,
+                )
+    return labels
+
+
+def _layout_edges(
+    model: ProcessModel, scope: Scope, lay: Layout
+) -> list[tuple[str, list[tuple[float, float]]]]:
+    edges = [
+        (flow_id(edge), edge_waypoints(model, edge, lay))
+        for edge in _scope_edges(model, scope)
+    ]
+    by_id = model.by_id()
+    for node in _scope_nodes(model, scope):
+        if not node.note:
+            continue
+        nx, ny, nw, nh = lay.bounds[node.id]
+        ax, ay, aw, ah = lay.ann_bounds[node.id]
+        if ay < ny:
+            points = [(nx + nw / 2, ny), (ax + aw / 2, ay + ah)]
+        else:
+            points = [(nx + nw / 2, ny + nh), (ax + aw / 2, ay)]
+        edges.append((f"Assoc_{node.id}", points))
+
+    if scope.include_pool:
+        external_bounds = {
+            pool.id: _external_pool_bounds(model, pool, lay)
+            for pool in model.external_pools
+        }
+        for message in model.message_flows:
+            source = external_bounds.get(message.source) or lay.bounds.get(message.source)
+            target = lay.bounds.get(message.target) or external_bounds.get(message.target)
+            if source is None or target is None:
+                continue
+            sx, sy, sw, sh = source
+            tx, ty, tw, th = target
+            edges.append((
+                message.id,
+                [(sx + sw / 2, sy + sh), (tx + tw / 2, ty)],
+            ))
+    return edges
+
+
+def layout_findings(
+    model: ProcessModel, scope: Scope, lay: Layout
+) -> list[GeometryFinding]:
+    """Return validator-like geometry findings without XML round trips."""
+    boxes = dict(lay.bounds)
+    boxes.update({f"Ann_{node_id}": bounds for node_id, bounds in lay.ann_bounds.items()})
+    labels = _layout_labels(model, scope, lay)
+    findings: list[GeometryFinding] = []
+
+    box_items = sorted(boxes.items())
+    for index, (first_id, first_box) in enumerate(box_items):
+        for second_id, second_box in box_items[index + 1:]:
+            if _overlaps(first_box, second_box):
+                findings.append(GeometryFinding("shape overlap", first_id, second_id))
+
+    obstacles = dict(boxes)
+    obstacles.update(labels)
+    for edge_id, points in _layout_edges(model, scope, lay):
+        for first, second in zip(points, points[1:]):
+            for obstacle_id, box in sorted(obstacles.items()):
+                owner = obstacle_id.split(" label", 1)[0]
+                if owner in edge_id:
+                    continue
+                if _segment_crosses(first, second, box):
+                    findings.append(
+                        GeometryFinding("edge crossing", edge_id, obstacle_id)
+                    )
+
+    for label_id, label_box in sorted(labels.items()):
+        owner = label_id.split(" label", 1)[0]
+        for obstacle_id, obstacle_box in sorted(obstacles.items()):
+            if obstacle_id == label_id or obstacle_id.split(" label", 1)[0] == owner:
+                continue
+            if _overlaps(label_box, obstacle_box, pad=4.0):
+                findings.append(
+                    GeometryFinding("label overlap", label_id, obstacle_id)
+                )
+
+    return findings
+
+
+def _placement_order_valid(
+    model: ProcessModel, scope: Scope, placements: dict[str, Placement]
+) -> bool:
+    by_id = model.by_id()
+    for edge in _scope_edges(model, scope):
+        if edge.loop:
+            continue
+        if placements[edge.source].col >= placements[edge.target].col:
+            return False
+    phase_order = {phase_id: index for index, (phase_id, _) in enumerate(model.phases)}
+    latest_previous = -1
+    nodes = _scope_nodes(model, scope)
+    for phase_id, _ in model.phases:
+        members = [node for node in nodes if node.phase == phase_id]
+        if not members:
+            continue
+        minimum = min(placements[node.id].col for node in members)
+        if minimum < latest_previous:
+            return False
+        latest_previous = max(placements[node.id].col for node in members)
+    return all(
+        by_id[node.id].phase in phase_order
+        for node in nodes
+    )
+
+
+def _repair_placements(
+    model: ProcessModel,
+    scope: Scope,
+    initial: dict[str, Placement],
+    initial_findings: list[GeometryFinding],
+) -> dict[str, Placement]:
+    """Use a bounded, stable fallback for geometry the construction misses."""
+    nodes = _scope_nodes(model, scope)
+    node_index = {node.id: index for index, node in enumerate(nodes)}
+    current = dict(initial)
+    current_findings = initial_findings
+    max_attempts = max(32, 4 * len(nodes))
+    forward_adjacency: dict[str, list[str]] = {node.id: [] for node in nodes}
+    for edge in _scope_edges(model, scope):
+        if not edge.loop:
+            forward_adjacency[edge.source].append(edge.target)
+
+    def node_candidates(finding: GeometryFinding) -> list[str]:
+        candidates: list[str] = []
+        for value in (finding.first, finding.second):
+            owner = value.split(" label", 1)[0]
+            if owner.startswith("Ann_"):
+                owner = owner.removeprefix("Ann_")
+            if owner in node_index and owner not in candidates:
+                candidates.append(owner)
+            if owner.startswith("Flow_"):
+                flow = owner.removeprefix("Flow_")
+                source, separator, target = flow.partition("__")
+                for endpoint in (source, target) if separator else ():
+                    if endpoint in node_index and endpoint not in candidates:
+                        candidates.append(endpoint)
+            if owner.startswith("Assoc_"):
+                endpoint = owner.removeprefix("Assoc_")
+                if endpoint in node_index and endpoint not in candidates:
+                    candidates.append(endpoint)
+        return sorted(candidates, key=lambda node_id: node_index[node_id])
+
+    def score(findings: list[GeometryFinding], placements: dict[str, Placement]):
+        return (
+            len(findings),
+            sum(placement.subrow for placement in placements.values()),
+            max(placement.col for placement in placements.values()),
+        )
+
+    for _ in range(max_attempts):
+        current_score = score(current_findings, current)
+        candidates = node_candidates(current_findings[0])
+        if not candidates:
+            break
+        improved = False
+        for node_id in candidates:
+            old = current[node_id]
+            proposals = [
+                (node_id, Placement(old.col, old.subrow + 1)),
+                (node_id, Placement(old.col + 1, old.subrow)),
+            ]
+            for proposal_node, proposal in proposals:
+                candidate = dict(current)
+                if proposal.col != old.col:
+                    descendants = _reachable(proposal_node, forward_adjacency)
+                else:
+                    descendants = {proposal_node}
+                for descendant in descendants:
+                    placement = candidate[descendant]
+                    candidate[descendant] = Placement(
+                        placement.col + (proposal.col - old.col),
+                        placement.subrow if descendant != proposal_node else proposal.subrow,
+                    )
+                if not _placement_order_valid(model, scope, candidate):
+                    continue
+                candidate_layout = _build_layout(model, scope, candidate)
+                candidate_findings = layout_findings(model, scope, candidate_layout)
+                if score(candidate_findings, candidate) < current_score:
+                    current = candidate
+                    current_findings = candidate_findings
+                    improved = True
+                    break
+            if improved:
+                break
+        if not improved:
+            break
+        if not current_findings:
+            return current
+    return current
 
 
 # --------------------------------------------------------------------------
