@@ -144,7 +144,17 @@ builds validated BPMN files beside the Markdown source, reports the number
 created, and opens the output folder. No network access or additional package
 is required.
 
-## Example
+Run the regression suite with:
+
+```bash
+python -m unittest discover -s tests -t .
+```
+
+## Command-line / Developer Workflow
+
+The desktop UI above is the recommended path for guided local use. These
+commands are optional for automation, troubleshooting, and working with
+individual pipeline stages.
 
 ```bash
 # Extract and validate an SOP Markdown file
@@ -158,10 +168,4 @@ python src/validate_bpmn.py examples/bpmn/OFC-004.bpmn
 
 # Generate an interactive HTML preview
 python src/build_preview.py
-```
-
-Run the regression suite with:
-
-```bash
-python -m unittest discover -s tests -t .
 ```
