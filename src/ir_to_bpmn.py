@@ -13,7 +13,7 @@ from cli_support import run_cli
 from decomposition import PreparedBundle, prepare_bundle_for_build, write_prepared_bundle
 from ir import IRValidationError, load_bundle, validate_document_manifest
 from logging_setup import configure
-from validate_bpmn import FLOW_NODE_TAGS, local, validate_bundle
+from validate_bpmn import BpmnParseError, FLOW_NODE_TAGS, local, validate_bundle
 
 configure()
 logger = logging.getLogger(__name__)
@@ -86,7 +86,10 @@ def _default_documents(
 
 
 def _plane_node_counts(path: Path) -> list[tuple[str, int]]:
-    root = ET.parse(path).getroot()
+    try:
+        root = ET.parse(path).getroot()
+    except ET.ParseError as exc:
+        raise CLIError(f"could not parse {path}: {exc}") from exc
     flow_node_ids = {
         element.get("id")
         for process in root
@@ -160,10 +163,13 @@ def publish_bundle(directory: Path, prepared: PreparedBundle) -> list[Path]:
 
         # validate_bundle constructs Validator once per emitted file and
         # supplies the complete process-id set for cross-document checks.
-        if not validate_bundle(staged_paths):
-            raise CLIError(
-                "BPMN bundle validation failed; no successful output was reported"
-            )
+        try:
+            if not validate_bundle(staged_paths):
+                raise CLIError(
+                    "BPMN bundle validation failed; no successful output was reported"
+                )
+        except BpmnParseError as exc:
+            raise CLIError(str(exc)) from exc
 
         paths = []
         for staged_path in staged_paths:

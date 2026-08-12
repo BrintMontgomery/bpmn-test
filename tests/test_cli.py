@@ -4,6 +4,7 @@ import io
 import json
 import sys
 import unittest
+import xml.etree.ElementTree as ET
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -234,6 +235,32 @@ class IRToBPMNTests(unittest.TestCase):
                         ir_to_bpmn.run([ir_path])
             self.assertNotIn("wrote", output.getvalue())
             self.assertFalse((root / "Process.bpmn").exists())
+
+    def test_publish_bundle_wraps_validator_parse_error_as_cli_error(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            ir_path = self.write_ir(root, "Process.ir.json", valid_ir())
+            _bundle, prepared = ir_to_bpmn.preflight([ir_path])
+            parse_error = ir_to_bpmn.BpmnParseError("could not parse staged BPMN")
+
+            with patch.object(ir_to_bpmn, "validate_bundle", side_effect=parse_error):
+                with self.assertRaises(ir_to_bpmn.CLIError) as raised:
+                    ir_to_bpmn.publish_bundle(root, prepared)
+
+            self.assertNotIsInstance(raised.exception, ir_to_bpmn.BpmnParseError)
+            self.assertIs(raised.exception.__cause__, parse_error)
+            self.assertIn("could not parse staged BPMN", str(raised.exception))
+
+    def test_plane_node_counts_rejects_malformed_xml(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "malformed.bpmn"
+            path.write_text("<definitions>", encoding="utf-8")
+
+            with self.assertRaises(ir_to_bpmn.CLIError) as raised:
+                ir_to_bpmn._plane_node_counts(path)
+
+            self.assertIn(str(path), str(raised.exception))
+            self.assertIsInstance(raised.exception.__cause__, ET.ParseError)
 
     def test_buildability_preflight_rejects_phase_backtracking_before_output(self) -> None:
         with TemporaryDirectory() as directory:

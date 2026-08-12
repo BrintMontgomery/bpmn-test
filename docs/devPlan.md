@@ -217,7 +217,7 @@ currently lets it escape unguarded.
 
 ---
 
-## [ ] Phase 3: `ir_to_bpmn.py` — close the publish-path and plane-count gaps
+## [x] Phase 3: `ir_to_bpmn.py` — close the publish-path and plane-count gaps
 *Catch `BpmnParseError`/`ET.ParseError` at the two unguarded call sites inside `ir_to_bpmn.py` and
 translate both into this module's own `CLIError`, so the CLI and the desktop UI both already handle
 them for free. Complexity of coding: Low. Depends on Phase 2 (`BpmnParseError`).*
@@ -236,16 +236,16 @@ them for free. Complexity of coding: Low. Depends on Phase 2 (`BpmnParseError`).
   automatically once `ir_to_bpmn.py` raises `CLIError` instead of letting the parse error escape.
 
 ### 2. Implementation Checklist
-- [ ] **Task 1:** Change the import at `ir_to_bpmn.py:16` to
+- [x] **Task 1:** Change the import at `ir_to_bpmn.py:16` to
   `from validate_bpmn import BpmnParseError, FLOW_NODE_TAGS, local, validate_bundle`.
-- [ ] **Task 2:** In `publish_bundle` (`ir_to_bpmn.py:150-174`), wrap the
+- [x] **Task 2:** In `publish_bundle` (`ir_to_bpmn.py:150-174`), wrap the
   `if not validate_bundle(staged_paths):` check (163) so a `BpmnParseError` raised out of
   `validate_bundle` is caught and re-raised as `raise CLIError(str(exc)) from exc`, consistent with
   the `write_prepared_bundle` catch immediately above it (157-159).
-- [ ] **Task 3:** In `_plane_node_counts` (`ir_to_bpmn.py:88-109`), wrap
+- [x] **Task 3:** In `_plane_node_counts` (`ir_to_bpmn.py:88-109`), wrap
   `root = ET.parse(path).getroot()` (89) in
   `try/except ET.ParseError as exc: raise CLIError(f"could not parse {path}: {exc}") from exc`.
-- [ ] **Task 4:** Add the two regression tests listed under Testing & Verification below.
+- [x] **Task 4:** Add the two regression tests listed under Testing & Verification below.
 
 ### Implementation Notes
 * `publish_bundle` and `report_published` are called from two places today: `run()`
@@ -279,14 +279,14 @@ changes needed. No later phase in this plan builds on this one.
 ### 3. Testing & Verification
 * **Test Location:** `tests/test_cli.py` (covers `ir_to_bpmn.py`'s CLI/library functions)
 * **Unit Tests to Write:**
-    * [ ] `test_publish_bundle_wraps_validator_parse_error_as_cli_error`: with `validate_bundle`
+    * [x] `test_publish_bundle_wraps_validator_parse_error_as_cli_error`: with `validate_bundle`
       made to raise `BpmnParseError` for one call, call `publish_bundle` and assert `CLIError` is
       raised (not `BpmnParseError`).
-    * [ ] `test_plane_node_counts_rejects_malformed_xml`: write a malformed `.bpmn` file directly
+    * [x] `test_plane_node_counts_rejects_malformed_xml`: write a malformed `.bpmn` file directly
       to disk and call `ir_to_bpmn._plane_node_counts(path)`, asserting `CLIError` is raised.
 * **Integration/Regression Tests to Run:**
-    * [ ] `pytest` (full suite)
-    * [ ] `python scripts/check_golden.py`
+    * [x] `pytest` (full suite)
+    * [x] `python scripts/check_golden.py`
 * **Acceptance Criteria:** both new tests pass; `pytest`'s full-suite pass count does not drop; no
   observable behavior change for well-formed input (golden check untouched); a malformed staged
   BPMN file surfaces as `WorkflowError` in the desktop UI and as a single `error: …` CLI line,
