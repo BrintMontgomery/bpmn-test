@@ -1,20 +1,18 @@
-"""Structural validation for a generated BPMN 2.0 file.
-
-Checks referential integrity and the invariants a BPMN modeller will
-complain about, without needing a BPMN toolchain installed.
-
-    py validate_bpmn.py OFC-001.bpmn
-"""
+"""Structural validation for generated BPMN 2.0 documents and bundles."""
 
 from __future__ import annotations
 
 import sys
 import xml.etree.ElementTree as ET
-from collections import Counter
+from collections import Counter, defaultdict
+from dataclasses import dataclass
 from pathlib import Path
+
+from geometry import Bounds, check_geometry, format_finding
 
 BPMN = "{http://www.omg.org/spec/BPMN/20100524/MODEL}"
 BPMNDI = "{http://www.omg.org/spec/BPMN/20100524/DI}"
+DC = "{http://www.omg.org/spec/DD/20100524/DC}"
 
 FLOW_NODE_TAGS = {
     "task", "manualTask", "userTask", "sendTask", "receiveTask",
@@ -34,12 +32,90 @@ def local(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
 
 
+@dataclass(frozen=True)
+class ScopeInfo:
+    element: ET.Element
+    process: ET.Element
+    parent: "ScopeInfo | None"
+
+    @property
+    def id(self) -> str:
+        return self.element.get("id") or ""
+
+
+def _scope_tree(process: ET.Element) -> list[ScopeInfo]:
+    scopes: list[ScopeInfo] = []
+
+    def visit(element: ET.Element, parent: ScopeInfo | None) -> None:
+        info = ScopeInfo(element, process, parent)
+        scopes.append(info)
+        for child in element:
+            if local(child.tag) == "subProcess":
+                visit(child, info)
+
+    visit(process, None)
+    return scopes
+
+
+def _direct_scope_items(scope: ScopeInfo):
+    nodes = {
+        child.get("id"): child
+        for child in scope.element
+        if local(child.tag) in FLOW_NODE_TAGS and child.get("id")
+    }
+    flows = [child for child in scope.element
+             if local(child.tag) == "sequenceFlow"]
+    annotations = {
+        child.get("id") for child in scope.element
+        if local(child.tag) == "textAnnotation" and child.get("id")
+    }
+    associations = [child for child in scope.element
+                    if local(child.tag) == "association"]
+    return nodes, flows, annotations, associations
+
+
+def _link_definition(event: ET.Element) -> ET.Element | None:
+    if local(event.tag) not in ("intermediateThrowEvent", "intermediateCatchEvent"):
+        return None
+    return next((child for child in event
+                 if local(child.tag) == "linkEventDefinition"), None)
+
+
+def _bounds(element: ET.Element) -> Bounds | None:
+    value = element if local(element.tag) == "Bounds" else element.find(f"{DC}Bounds")
+    if value is None:
+        return None
+    try:
+        return tuple(float(value.get(key, "0"))
+                     for key in ("x", "y", "width", "height"))  # type: ignore[return-value]
+    except (TypeError, ValueError):
+        return None
+
+
 class Validator:
-    def __init__(self, path: Path) -> None:
-        self.path = path
-        self.root = ET.parse(path).getroot()
+    def __init__(
+        self,
+        path: Path,
+        *,
+        bundle_process_ids: set[str] | None = None,
+        called_process_ids: set[str] | None = None,
+    ) -> None:
+        self.path = Path(path)
+        self.root = ET.parse(self.path).getroot()
         self.errors: list[str] = []
         self.checks = 0
+
+        local_processes = [el for el in self.root
+                           if local(el.tag) == "process"]
+        local_ids = {el.get("id") for el in local_processes if el.get("id")}
+        local_called = {
+            el.get("calledElement")
+            for process in local_processes
+            for el in process.iter()
+            if local(el.tag) == "callActivity" and el.get("calledElement")
+        }
+        self.bundle_process_ids = bundle_process_ids or local_ids
+        self.called_process_ids = called_process_ids or local_called
 
     def fail(self, msg: str) -> None:
         self.errors.append(msg)
@@ -49,184 +125,410 @@ class Validator:
         if not condition:
             self.fail(msg)
 
-    # ------------------------------------------------------------------
     def run(self) -> bool:
-        proc = self.root.find(f"{BPMN}process")
-        collab = self.root.find(f"{BPMN}collaboration")
-        if proc is None or collab is None:
-            self.fail("missing bpmn:process or bpmn:collaboration")
+        processes = [el for el in self.root
+                     if local(el.tag) == "process"]
+        collab = next((el for el in self.root
+                       if local(el.tag) == "collaboration"), None)
+        if not processes:
+            self.fail("missing bpmn:process")
             return self.report()
 
-        nodes = {el.get("id"): el for el in proc
-                 if local(el.tag) in FLOW_NODE_TAGS}
-        flows = [el for el in proc if local(el.tag) == "sequenceFlow"]
-        annotations = {el.get("id") for el in proc
-                       if local(el.tag) == "textAnnotation"}
-        associations = [el for el in proc if local(el.tag) == "association"]
-        msg_flows = [el for el in collab if local(el.tag) == "messageFlow"]
-        participants = {el.get("id"): el for el in collab
-                        if local(el.tag) == "participant"}
-
+        participants = {
+            el.get("id"): el for el in (collab if collab is not None else [])
+            if local(el.tag) == "participant" and el.get("id")
+        }
+        msg_flows = [el for el in (collab if collab is not None else [])
+                     if local(el.tag) == "messageFlow"]
         self.check_unique_ids()
-        self.check_flow_refs(nodes, flows, participants, msg_flows,
-                             annotations, associations)
-        self.check_connectivity(nodes, flows)
-        self.check_lanes(proc, nodes)
-        self.check_gateways(nodes, flows)
-        self.check_di(nodes, flows, annotations, associations, msg_flows,
-                      participants, proc)
-        self.check_geometry(nodes, annotations)
-        self.check_process_ref(collab, proc)
 
-        print(f"{self.path.name}: {len(nodes)} flow nodes, {len(flows)} "
-              f"sequence flows, {len(annotations)} annotations, "
-              f"{self.checks} assertions")
+        all_scopes = [scope for process in processes
+                      for scope in _scope_tree(process)]
+        scope_by_id = {scope.id: scope for scope in all_scopes if scope.id}
+        all_nodes = {
+            node_id: node
+            for scope in all_scopes
+            for node_id, node in _direct_scope_items(scope)[0].items()
+        }
+        self.check_message_refs(all_nodes)
+        self.check_called_elements()
+        for process in processes:
+            process_scopes = [scope for scope in all_scopes
+                              if scope.process is process]
+            top = next(scope for scope in process_scopes
+                       if scope.element is process)
+            self.check_processes(process_scopes, all_nodes)
+            self.check_di(
+                process_scopes, scope_by_id, participants, msg_flows,
+                collab,
+            )
+            self.check_process_ref(collab, process)
+
+            top_nodes, top_flows, top_annotations, _ = _direct_scope_items(top)
+            print(f"{self.path.name}: {len(top_nodes)} flow nodes, "
+                  f"{len(top_flows)} sequence flows, "
+                  f"{len(top_annotations)} annotations, "
+                  f"{self.checks} assertions")
+
         return self.report()
 
-    # ------------------------------------------------------------------
     def check_unique_ids(self) -> None:
         ids = [el.get("id") for el in self.root.iter() if el.get("id")]
-        dupes = [i for i, c in Counter(ids).items() if c > 1]
+        dupes = [i for i, count in Counter(ids).items() if count > 1]
         self.check(not dupes, f"duplicate ids: {dupes[:5]}")
 
-    def check_flow_refs(self, nodes, flows, participants, msg_flows,
-                        annotations, associations) -> None:
-        for f in flows:
-            for attr in ("sourceRef", "targetRef"):
-                ref = f.get(attr)
-                self.check(ref in nodes,
-                           f"sequenceFlow {f.get('id')} {attr}={ref} "
-                           f"does not resolve to a flow node")
-        for mf in msg_flows:
-            for attr in ("sourceRef", "targetRef"):
-                ref = mf.get(attr)
-                self.check(ref in nodes or ref in participants,
-                           f"messageFlow {mf.get('id')} {attr}={ref} "
-                           f"does not resolve")
-        for a in associations:
-            self.check(a.get("sourceRef") in nodes,
-                       f"association {a.get('id')} sourceRef does not "
-                       f"resolve to a flow node")
-            self.check(a.get("targetRef") in annotations,
-                       f"association {a.get('id')} targetRef does not "
-                       f"resolve to a text annotation")
+    def check_processes(
+        self,
+        scopes: list[ScopeInfo],
+        all_nodes: dict[str, ET.Element],
+    ) -> None:
+        owner_by_node = {
+            node_id: scope.id
+            for scope in scopes
+            for node_id in _direct_scope_items(scope)[0]
+        }
+        for scope in scopes:
+            nodes, flows, annotations, associations = _direct_scope_items(scope)
+            self.check_flow_refs(
+                nodes, flows, all_nodes, owner_by_node, annotations,
+                associations,
+            )
+            self.check_connectivity(scope, nodes, flows)
+            self.check_lanes(scope, nodes)
+            self.check_gateways(nodes, flows)
+            self.check_links(scope, nodes)
 
-    def check_connectivity(self, nodes, flows) -> None:
-        incoming = Counter(f.get("targetRef") for f in flows)
-        outgoing = Counter(f.get("sourceRef") for f in flows)
-        for nid, el in nodes.items():
-            tag = local(el.tag)
-            if tag != "startEvent":
-                self.check(incoming[nid] > 0,
-                           f"{tag} {nid} has no incoming sequence flow")
-            else:
-                self.check(incoming[nid] == 0,
-                           f"startEvent {nid} must not have an incoming flow")
-            if tag != "endEvent":
-                self.check(outgoing[nid] > 0,
-                           f"{tag} {nid} has no outgoing sequence flow")
-            else:
-                self.check(outgoing[nid] == 0,
-                           f"endEvent {nid} must not have an outgoing flow")
+    def check_message_refs(self, all_nodes: dict[str, ET.Element]) -> None:
+        for message in [el for el in self.root.iter()
+                        if local(el.tag) == "messageFlow"]:
+            for attr in ("sourceRef", "targetRef"):
+                ref = message.get(attr)
+                self.check(
+                    ref in all_nodes or self._participant_exists(ref),
+                    f"messageFlow {message.get('id')} {attr}={ref} "
+                    "does not resolve",
+                )
 
-            # The <incoming>/<outgoing> child references must match the flows.
-            declared_in = {c.text for c in el if local(c.tag) == "incoming"}
-            declared_out = {c.text for c in el if local(c.tag) == "outgoing"}
-            actual_in = {f.get("id") for f in flows
-                         if f.get("targetRef") == nid}
-            actual_out = {f.get("id") for f in flows
-                          if f.get("sourceRef") == nid}
+    def check_called_elements(self) -> None:
+        for process in self.root:
+            if local(process.tag) != "process":
+                continue
+            for element in process.iter():
+                if local(element.tag) != "callActivity":
+                    continue
+                target = element.get("calledElement")
+                self.check(
+                    target in self.bundle_process_ids,
+                    f"callActivity {element.get('id')} calledElement={target} "
+                    "does not resolve to a process in the bundle",
+                )
+
+    def check_flow_refs(
+        self,
+        nodes: dict[str, ET.Element],
+        flows: list[ET.Element],
+        all_nodes: dict[str, ET.Element],
+        owner_by_node: dict[str, str],
+        annotations: set[str],
+        associations: list[ET.Element],
+    ) -> None:
+        for flow in flows:
+            for attr in ("sourceRef", "targetRef"):
+                ref = flow.get(attr)
+                if ref not in nodes and ref in all_nodes:
+                    self.check(
+                        False,
+                        f"sequenceFlow {flow.get('id')} crosses scope boundary "
+                        f"via {attr}={ref}",
+                    )
+                else:
+                    self.check(
+                        ref in nodes,
+                        f"sequenceFlow {flow.get('id')} {attr}={ref} "
+                        "does not resolve to a flow node",
+                    )
+        for association in associations:
+            self.check(
+                association.get("sourceRef") in nodes,
+                f"association {association.get('id')} sourceRef does not "
+                "resolve to a flow node",
+            )
+            self.check(
+                association.get("targetRef") in annotations,
+                f"association {association.get('id')} targetRef does not "
+                "resolve to a text annotation",
+            )
+
+    def _participant_exists(self, participant_id: str | None) -> bool:
+        collab = next((el for el in self.root
+                       if local(el.tag) == "collaboration"), None)
+        return any(el.get("id") == participant_id
+                   for el in (collab if collab is not None else [])
+                   if local(el.tag) == "participant")
+
+    def check_connectivity(
+        self,
+        scope: ScopeInfo,
+        nodes: dict[str, ET.Element],
+        flows: list[ET.Element],
+    ) -> None:
+        incoming = Counter(flow.get("targetRef") for flow in flows)
+        outgoing = Counter(flow.get("sourceRef") for flow in flows)
+        for node_id, element in nodes.items():
+            tag = local(element.tag)
+            link = _link_definition(element)
+            if link is not None:
+                is_throw = tag == "intermediateThrowEvent"
+                self.check(
+                    incoming[node_id] > 0 if is_throw else incoming[node_id] == 0,
+                    f"{tag} {node_id} has invalid incoming sequence flow "
+                    "for a link event",
+                )
+                self.check(
+                    outgoing[node_id] == 0 if is_throw else outgoing[node_id] > 0,
+                    f"{tag} {node_id} has invalid outgoing sequence flow "
+                    "for a link event",
+                )
+            else:
+                if tag != "startEvent":
+                    self.check(incoming[node_id] > 0,
+                               f"{tag} {node_id} has no incoming sequence flow")
+                else:
+                    self.check(incoming[node_id] == 0,
+                               f"startEvent {node_id} must not have an incoming flow")
+                if tag != "endEvent":
+                    self.check(outgoing[node_id] > 0,
+                               f"{tag} {node_id} has no outgoing sequence flow")
+                else:
+                    self.check(outgoing[node_id] == 0,
+                               f"endEvent {node_id} must not have an outgoing flow")
+
+            declared_in = {child.text for child in element
+                           if local(child.tag) == "incoming"}
+            declared_out = {child.text for child in element
+                            if local(child.tag) == "outgoing"}
+            actual_in = {flow.get("id") for flow in flows
+                         if flow.get("targetRef") == node_id}
+            actual_out = {flow.get("id") for flow in flows
+                          if flow.get("sourceRef") == node_id}
             self.check(declared_in == actual_in,
-                       f"{nid} <incoming> refs disagree with sequenceFlows")
+                       f"{node_id} <incoming> refs disagree with sequenceFlows")
             self.check(declared_out == actual_out,
-                       f"{nid} <outgoing> refs disagree with sequenceFlows")
+                       f"{node_id} <outgoing> refs disagree with sequenceFlows")
 
-        # Every node must be reachable from the start event.
-        starts = [n for n, el in nodes.items()
-                  if local(el.tag) == "startEvent"]
-        self.check(len(starts) == 1, f"expected exactly 1 start event, "
-                                     f"found {len(starts)}")
-        adjacency: dict[str, list[str]] = {n: [] for n in nodes}
-        for f in flows:
-            if f.get("sourceRef") in adjacency:
-                adjacency[f.get("sourceRef")].append(f.get("targetRef"))
-        seen, stack = set(starts), list(starts)
+        starts = [node_id for node_id, element in nodes.items()
+                  if local(element.tag) == "startEvent"]
+        self.check(len(starts) == 1,
+                   f"expected exactly 1 start event, found {len(starts)}")
+
+        adjacency: dict[str, list[str]] = {node_id: [] for node_id in nodes}
+        for flow in flows:
+            source, target = flow.get("sourceRef"), flow.get("targetRef")
+            if source in adjacency and target in nodes:
+                adjacency[source].append(target)
+
+        links: dict[str, list[str]] = defaultdict(list)
+        for node_id, element in nodes.items():
+            definition = _link_definition(element)
+            if definition is not None and definition.get("name"):
+                links[definition.get("name")].append(node_id)
+        for node_id, element in nodes.items():
+            definition = _link_definition(element)
+            if definition is None:
+                continue
+            name = definition.get("name")
+            if name:
+                paired = [candidate for candidate in links[name]
+                          if _link_definition(nodes[candidate]) is not None
+                          and local(nodes[candidate].tag) != local(element.tag)]
+                adjacency[node_id].extend(paired)
+
+        seen: set[str] = set(starts)
+        stack = list(starts)
         while stack:
-            cur = stack.pop()
-            for nxt in adjacency.get(cur, []):
-                if nxt not in seen:
-                    seen.add(nxt)
-                    stack.append(nxt)
+            current = stack.pop()
+            for next_node in adjacency.get(current, []):
+                if next_node not in seen:
+                    seen.add(next_node)
+                    stack.append(next_node)
         unreachable = sorted(set(nodes) - seen)
         self.check(not unreachable, f"unreachable nodes: {unreachable}")
 
-    def check_lanes(self, proc, nodes) -> None:
-        lane_set = proc.find(f"{BPMN}laneSet")
-        self.check(lane_set is not None, "process has no laneSet")
+    def check_lanes(self, scope: ScopeInfo, nodes: dict[str, ET.Element]) -> None:
+        lane_set = next((child for child in scope.element
+                         if local(child.tag) == "laneSet"), None)
         if lane_set is None:
+            if scope.parent is None and scope.id not in self.called_process_ids:
+                self.check(False, "process has no laneSet")
             return
         assigned: Counter = Counter()
         for lane in lane_set:
             for ref in lane:
                 if local(ref.tag) == "flowNodeRef":
                     self.check(ref.text in nodes,
-                               f"lane {lane.get('id')} references unknown "
-                               f"node {ref.text}")
+                               f"lane {lane.get('id')} references unknown node "
+                               f"{ref.text}")
                     assigned[ref.text] += 1
-        for nid in nodes:
-            self.check(assigned[nid] == 1,
-                       f"{nid} appears in {assigned[nid]} lanes, expected 1")
+        for node_id in nodes:
+            self.check(assigned[node_id] == 1,
+                       f"{node_id} appears in {assigned[node_id]} lanes, expected 1")
 
     def check_gateways(self, nodes, flows) -> None:
-        for nid, el in nodes.items():
-            tag = local(el.tag)
+        for node_id, element in nodes.items():
+            tag = local(element.tag)
             if tag not in GATEWAY_TAGS:
                 continue
-            outs = [f for f in flows if f.get("sourceRef") == nid]
-            if len(outs) < 2:
+            outgoing = [flow for flow in flows
+                        if flow.get("sourceRef") == node_id]
+            if len(outgoing) < 2 or tag != "exclusiveGateway":
                 continue
-            if tag != "exclusiveGateway":
-                continue
-            for f in outs:
-                self.check(bool(f.get("name")),
-                           f"branch {f.get('id')} out of {nid} has no label")
-            default = el.get("default")
+            for flow in outgoing:
+                self.check(bool(flow.get("name")),
+                           f"branch {flow.get('id')} out of {node_id} has no label")
+            default = element.get("default")
             self.check(default is not None,
-                       f"exclusiveGateway {nid} splits without a default flow")
-            self.check(default in {f.get("id") for f in outs},
-                       f"exclusiveGateway {nid} default={default} is not one "
-                       f"of its outgoing flows")
-            for f in outs:
-                has_cond = any(local(c.tag) == "conditionExpression"
-                               for c in f)
-                if f.get("id") == default:
-                    self.check(not has_cond,
-                               f"default flow {f.get('id')} must not carry a "
-                               f"conditionExpression")
+                       f"exclusiveGateway {node_id} splits without a default flow")
+            self.check(default in {flow.get("id") for flow in outgoing},
+                       f"exclusiveGateway {node_id} default={default} is not one "
+                       "of its outgoing flows")
+            for flow in outgoing:
+                has_condition = any(local(child.tag) == "conditionExpression"
+                                    for child in flow)
+                if flow.get("id") == default:
+                    self.check(not has_condition,
+                               f"default flow {flow.get('id')} must not carry a "
+                               "conditionExpression")
                 else:
-                    self.check(has_cond,
-                               f"non-default branch {f.get('id')} out of "
-                               f"{nid} has no conditionExpression")
+                    self.check(has_condition,
+                               f"non-default branch {flow.get('id')} out of "
+                               f"{node_id} has no conditionExpression")
 
-    def check_di(self, nodes, flows, annotations, associations, msg_flows,
-                 participants, proc) -> None:
-        plane = self.root.find(f"{BPMNDI}BPMNDiagram/{BPMNDI}BPMNPlane")
-        self.check(plane is not None, "no BPMNPlane")
-        if plane is None:
-            return
-        shaped = {el.get("bpmnElement") for el in plane
-                  if local(el.tag) == "BPMNShape"}
-        edged = {el.get("bpmnElement") for el in plane
-                 if local(el.tag) == "BPMNEdge"}
+    def check_links(self, scope: ScopeInfo, nodes: dict[str, ET.Element]) -> None:
+        throws: defaultdict[str, list[str]] = defaultdict(list)
+        catches: defaultdict[str, list[str]] = defaultdict(list)
+        for node_id, element in nodes.items():
+            definition = _link_definition(element)
+            if definition is None:
+                continue
+            name = definition.get("name")
+            if not name:
+                self.check(False, f"link event {node_id} has no name")
+            elif local(element.tag) == "intermediateThrowEvent":
+                throws[name].append(node_id)
+            else:
+                catches[name].append(node_id)
+        for name in sorted(set(throws) | set(catches)):
+            self.check(
+                len(throws[name]) == 1 and len(catches[name]) == 1,
+                f"link {name} must have exactly 1 throw and 1 catch "
+                f"within scope {scope.id}",
+            )
 
-        lane_set = proc.find(f"{BPMN}laneSet")
-        lane_ids = {lane.get("id") for lane in lane_set} if lane_set is not None else set()
+    def check_di(
+        self,
+        scopes: list[ScopeInfo],
+        scope_by_id: dict[str, ScopeInfo],
+        participants: dict[str, ET.Element],
+        msg_flows: list[ET.Element],
+        collab: ET.Element | None,
+    ) -> None:
+        planes = [element for element in self.root.iter()
+                  if local(element.tag) == "BPMNPlane"]
+        by_scope: defaultdict[str, list[ET.Element]] = defaultdict(list)
+        for plane in planes:
+            owner = plane.get("bpmnElement")
+            scope = scope_by_id.get(owner or "")
+            if scope is None and collab is not None and owner == collab.get("id"):
+                scope = next((candidate for candidate in scopes
+                              if candidate.parent is None), None)
+            self.check(scope is not None,
+                       f"BPMNPlane {plane.get('id')} bpmnElement={owner} "
+                       "does not resolve")
+            if scope is not None:
+                by_scope[scope.id].append(plane)
 
-        need_shape = set(nodes) | annotations | set(participants) | lane_ids
-        need_edge = ({f.get("id") for f in flows}
-                     | {a.get("id") for a in associations}
-                     | {m.get("id") for m in msg_flows})
+        for scope in scopes:
+            scope_planes = by_scope[scope.id]
+            expanded_child = False
+            if scope.parent is not None:
+                parent_planes = by_scope.get(scope.parent.id, [])
+                expanded_child = (
+                    not parent_planes
+                    or self._expanded(scope, parent_planes[0])
+                )
+            expected_planes = 0 if expanded_child else 1
+            self.check(len(scope_planes) == expected_planes,
+                       f"scope {scope.id} has {len(scope_planes)} BPMNPlane(s), "
+                       f"expected exactly {expected_planes}")
+            for plane in scope_planes:
+                self._check_plane(
+                    plane, scope, scopes, participants, msg_flows, collab,
+                )
+        self._check_subprocess_planes(scopes, by_scope)
 
+    def _expanded(self, subprocess: ScopeInfo, parent_plane: ET.Element) -> bool:
+        shape = next((child for child in parent_plane
+                      if local(child.tag) == "BPMNShape"
+                      and child.get("bpmnElement") == subprocess.id), None)
+        return shape is None or shape.get("isExpanded") != "false"
+
+    def _visible_scope_items(self, scope: ScopeInfo, plane: ET.Element):
+        nodes, flows, annotations, associations = _direct_scope_items(scope)
+        visible_nodes = set(nodes)
+        visible_flows = {flow.get("id") for flow in flows if flow.get("id")}
+        visible_annotations = set(annotations)
+        visible_associations = {association.get("id") for association in associations
+                                if association.get("id")}
+        for child in scope.element:
+            if local(child.tag) != "subProcess":
+                continue
+            child_scope = ScopeInfo(child, scope.process, scope)
+            if self._expanded(child_scope, plane):
+                nested = self._visible_scope_items(child_scope, plane)
+                visible_nodes.update(nested[0])
+                visible_flows.update(nested[1])
+                visible_annotations.update(nested[2])
+                visible_associations.update(nested[3])
+        return (visible_nodes, visible_flows, visible_annotations,
+                visible_associations)
+
+    def _visible_lane_ids(self, scope: ScopeInfo, plane: ET.Element) -> set[str]:
+        lane_set = next((child for child in scope.element
+                         if local(child.tag) == "laneSet"), None)
+        lane_ids = {lane.get("id") for lane in
+                    (lane_set if lane_set is not None else [])
+                    if lane.get("id")}
+        for child in scope.element:
+            if local(child.tag) != "subProcess":
+                continue
+            child_scope = ScopeInfo(child, scope.process, scope)
+            if self._expanded(child_scope, plane):
+                lane_ids.update(self._visible_lane_ids(child_scope, plane))
+        return lane_ids
+
+    def _check_plane(
+        self,
+        plane: ET.Element,
+        scope: ScopeInfo,
+        scopes: list[ScopeInfo],
+        participants: dict[str, ET.Element],
+        msg_flows: list[ET.Element],
+        collab: ET.Element | None,
+    ) -> None:
+        nodes, flows, annotations, associations = self._visible_scope_items(scope, plane)
+        lane_ids = self._visible_lane_ids(scope, plane)
+        is_collaboration_plane = collab is not None and plane.get("bpmnElement") == collab.get("id")
+        need_shape = set(nodes) | annotations | lane_ids
+        if is_collaboration_plane:
+            need_shape |= set(participants)
+        need_edge = set(flows) | set(associations)
+        if is_collaboration_plane:
+            need_edge |= {flow.get("id") for flow in msg_flows if flow.get("id")}
+
+        shaped = {child.get("bpmnElement") for child in plane
+                  if local(child.tag) == "BPMNShape"}
+        edged = {child.get("bpmnElement") for child in plane
+                 if local(child.tag) == "BPMNEdge"}
         missing_shapes = sorted(need_shape - shaped)
         missing_edges = sorted(need_edge - edged)
         self.check(not missing_shapes, f"missing BPMNShape: {missing_shapes}")
@@ -240,109 +542,133 @@ class Validator:
         self.check(not orphan_edges,
                    f"BPMNEdge for unknown element: {orphan_edges}")
 
-        for el in plane:
-            if local(el.tag) == "BPMNShape":
-                b = el.find(f"{{http://www.omg.org/spec/DD/20100524/DC}}Bounds")
-                self.check(b is not None and float(b.get("width", 0)) > 0
-                           and float(b.get("height", 0)) > 0,
-                           f"shape {el.get('bpmnElement')} has no positive "
-                           f"bounds")
-            else:
-                wps = [c for c in el if local(c.tag) == "waypoint"]
-                self.check(len(wps) >= 2,
-                           f"edge {el.get('bpmnElement')} has "
-                           f"{len(wps)} waypoints, needs at least 2")
+        for child in plane:
+            kind = local(child.tag)
+            if kind == "BPMNShape":
+                bounds = _bounds(child)
+                self.check(bounds is not None and bounds[2] > 0 and bounds[3] > 0,
+                           f"shape {child.get('bpmnElement')} has no positive bounds")
+            elif kind == "BPMNEdge":
+                waypoints = [
+                    (float(point.get("x")), float(point.get("y")))
+                    for point in child if local(point.tag) == "waypoint"
+                ]
+                self.check(len(waypoints) >= 2,
+                           f"edge {child.get('bpmnElement')} has "
+                           f"{len(waypoints)} waypoints, needs at least 2")
 
-    def check_geometry(self, nodes, annotations) -> None:
-        """No shape may overlap another, and no connector may run through
-        a shape it is not attached to. A modeller will render either, but
-        both make the diagram unreadable."""
-        plane = self.root.find(f"{BPMNDI}BPMNDiagram/{BPMNDI}BPMNPlane")
-        if plane is None:
-            return
-        dc = "{http://www.omg.org/spec/DD/20100524/DC}Bounds"
-        drawn = set(nodes) | set(annotations)
+        boxes: dict[str, Bounds] = {}
+        labels: dict[str, Bounds] = {}
+        edges: dict[str, list[tuple[float, float]]] = {}
+        drawn = set(nodes) | annotations
+        for child in plane:
+            ref = child.get("bpmnElement")
+            if local(child.tag) == "BPMNShape" and ref in drawn:
+                bounds = _bounds(child)
+                if bounds is not None:
+                    boxes[ref] = bounds
+            label = child.find(f"{BPMNDI}BPMNLabel/{DC}Bounds")
+            if label is not None and ref:
+                bounds = _bounds(label)
+                if bounds is not None:
+                    labels[ref + " label"] = bounds
+            if local(child.tag) == "BPMNEdge" and ref:
+                edges[ref] = [
+                    (float(point.get("x")), float(point.get("y")))
+                    for point in child if local(point.tag) == "waypoint"
+                ]
+        report = check_geometry(boxes, labels, edges)
+        self.checks += report.checks
+        self.errors.extend(format_finding(finding) for finding in report.findings)
 
-        def bounds_of(el):
-            b = el.find(dc)
-            return (float(b.get("x")), float(b.get("y")),
-                    float(b.get("width")), float(b.get("height")))
-
-        boxes: dict[str, tuple[float, ...]] = {}
-        labels: dict[str, tuple[float, ...]] = {}
-        for el in plane:
-            ref = el.get("bpmnElement")
-            kind = local(el.tag)
-            if kind == "BPMNShape" and ref in drawn:
-                boxes[ref] = bounds_of(el)
-            # An explicit label box is as much an obstacle as the shape.
-            lbl = el.find(f"{BPMNDI}BPMNLabel/{dc}")
-            if lbl is not None and ref:
-                labels[ref + " label"] = (
-                    float(lbl.get("x")), float(lbl.get("y")),
-                    float(lbl.get("width")), float(lbl.get("height")))
-
-        items = sorted(boxes.items())
-        for i, (aid, a) in enumerate(items):
-            for bid, b in items[i + 1:]:
-                overlap = (a[0] < b[0] + b[2] and b[0] < a[0] + a[2]
-                           and a[1] < b[1] + b[3] and b[1] < a[1] + a[3])
-                self.check(not overlap, f"shapes {aid} and {bid} overlap")
-
-        obstacles = dict(boxes)
-        obstacles.update(labels)
-
-        pad = 4.0
-        for el in plane:
-            if local(el.tag) != "BPMNEdge":
-                continue
-            ref = el.get("bpmnElement") or ""
-            pts = [(float(w.get("x")), float(w.get("y")))
-                   for w in el if local(w.tag) == "waypoint"]
-            for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
-                lo_x, hi_x = min(x1, x2), max(x1, x2)
-                lo_y, hi_y = min(y1, y2), max(y1, y2)
-                for nid, (bx, by, bw, bh) in obstacles.items():
-                    if nid.split(" label")[0] in ref:
-                        continue    # attached to this shape, or its own label
-                    if (lo_x < bx + bw - pad and bx + pad < hi_x
-                            and lo_y < by + bh - pad and by + pad < hi_y):
-                        self.fail(f"edge {ref} passes through {nid}")
-                    self.checks += 1
-
-        # Labels must not land on a shape or on another label.
-        for lid, (lx, ly, lw, lh) in sorted(labels.items()):
-            owner = lid.split(" label")[0]
-            for oid, (bx, by, bw, bh) in sorted(obstacles.items()):
-                if oid == lid or oid.split(" label")[0] == owner:
+    def _check_subprocess_planes(
+        self,
+        scopes: list[ScopeInfo],
+        by_scope: dict[str, list[ET.Element]],
+    ) -> None:
+        for scope in scopes:
+            for child in scope.element:
+                if local(child.tag) != "subProcess" or not child.get("id"):
                     continue
-                self.checks += 1
-                if (lx < bx + bw - pad and bx + pad < lx + lw
-                        and ly < by + bh - pad and by + pad < ly + lh):
-                    self.fail(f"{lid} overlaps {oid}")
+                child_scope = next(candidate for candidate in scopes
+                                   if candidate.element is child)
+                parent_planes = by_scope.get(scope.id, [])
+                parent_plane = parent_planes[0] if parent_planes else None
+                expanded = parent_plane is None or self._expanded(child_scope, parent_plane)
+                child_planes = by_scope.get(child_scope.id, [])
+                if expanded:
+                    self.check(not child_planes,
+                               f"expanded subprocess {child_scope.id} must not "
+                               "have a child BPMNPlane")
+                else:
+                    self.check(len(child_planes) == 1,
+                               f"collapsed subprocess {child_scope.id} must "
+                               "have exactly one child BPMNPlane")
 
-    def check_process_ref(self, collab, proc) -> None:
-        refs = [p.get("processRef") for p in collab
-                if local(p.tag) == "participant" and p.get("processRef")]
-        self.check(proc.get("id") in refs,
-                   "no participant references the process")
+    def check_process_ref(
+        self,
+        collab: ET.Element | None,
+        process: ET.Element,
+    ) -> None:
+        process_id = process.get("id")
+        if process_id in self.called_process_ids:
+            return
+        refs = [participant.get("processRef") for participant in
+                (collab if collab is not None else [])
+                if local(participant.tag) == "participant"
+                and participant.get("processRef")]
+        self.check(process_id in refs, "no participant references the process")
 
     def report(self) -> bool:
         if self.errors:
             print(f"\nFAILED with {len(self.errors)} error(s):")
-            for e in self.errors:
-                print(f"  - {e}")
+            for error in self.errors:
+                print(f"  - {error}")
             return False
         print("all checks passed")
         return True
 
 
-def main() -> int:
-    path = Path(sys.argv[1] if len(sys.argv) > 1 else "OFC-001.bpmn")
-    if not path.exists():
-        print(f"no such file: {path}")
+def validate_bundle(paths: list[Path]) -> bool:
+    """Validate all documents together so cross-file calls can resolve."""
+
+    process_ids: set[str] = set()
+    called_ids: set[str] = set()
+    for path in paths:
+        root = ET.parse(path).getroot()
+        process_ids.update(
+            element.get("id") for element in root
+            if local(element.tag) == "process" and element.get("id")
+        )
+        called_ids.update(
+            element.get("calledElement") for element in root.iter()
+            if local(element.tag) == "callActivity"
+            and element.get("calledElement")
+        )
+
+    valid = True
+    for path in paths:
+        validator = Validator(
+            path,
+            bundle_process_ids=process_ids,
+            called_process_ids=called_ids,
+        )
+        valid = validator.run() and valid
+    return valid
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    if not args:
+        print("usage: validate_bpmn.py <file.bpmn> [<file.bpmn> ...]")
         return 2
-    return 0 if Validator(path).run() else 1
+    paths = [Path(arg) for arg in args]
+    missing = [path for path in paths if not path.exists()]
+    if missing:
+        for path in missing:
+            print(f"no such file: {path}")
+        return 2
+    return 0 if validate_bundle(paths) else 1
 
 
 if __name__ == "__main__":

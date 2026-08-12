@@ -15,6 +15,8 @@ from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from geometry import GeometryFinding, check_geometry
+
 
 # --------------------------------------------------------------------------
 # Geometry defaults
@@ -234,15 +236,6 @@ class Placement:
 
 class LayoutError(ValueError):
     """Raised when a process cannot be laid out safely."""
-
-
-@dataclass(frozen=True)
-class GeometryFinding:
-    """Structured in-memory geometry issue used by the layout fallback."""
-
-    kind: str
-    first: str
-    second: str
 
 
 N = Node
@@ -746,35 +739,6 @@ def edge_label_bounds(
 # --------------------------------------------------------------------------
 
 
-def _overlaps(
-    first: tuple[float, float, float, float],
-    second: tuple[float, float, float, float],
-    pad: float = 0.0,
-) -> bool:
-    return (
-        first[0] < second[0] + second[2] - pad
-        and second[0] + pad < first[0] + first[2]
-        and first[1] < second[1] + second[3] - pad
-        and second[1] + pad < first[1] + first[3]
-    )
-
-
-def _segment_crosses(
-    first: tuple[float, float],
-    second: tuple[float, float],
-    box: tuple[float, float, float, float],
-    pad: float = 4.0,
-) -> bool:
-    lo_x, hi_x = sorted((first[0], second[0]))
-    lo_y, hi_y = sorted((first[1], second[1]))
-    return (
-        lo_x < box[0] + box[2] - pad
-        and box[0] + pad < hi_x
-        and lo_y < box[1] + box[3] - pad
-        and box[1] + pad < hi_y
-    )
-
-
 def _layout_labels(
     model: ProcessModel, scope: Scope, lay: Layout
 ) -> dict[str, tuple[float, float, float, float]]:
@@ -877,38 +841,8 @@ def layout_findings(
     boxes = dict(lay.bounds)
     boxes.update({f"Ann_{node_id}": bounds for node_id, bounds in lay.ann_bounds.items()})
     labels = _layout_labels(model, scope, lay)
-    findings: list[GeometryFinding] = []
-
-    box_items = sorted(boxes.items())
-    for index, (first_id, first_box) in enumerate(box_items):
-        for second_id, second_box in box_items[index + 1:]:
-            if _overlaps(first_box, second_box):
-                findings.append(GeometryFinding("shape overlap", first_id, second_id))
-
-    obstacles = dict(boxes)
-    obstacles.update(labels)
-    for edge_id, points in _layout_edges(model, scope, lay):
-        for first, second in zip(points, points[1:]):
-            for obstacle_id, box in sorted(obstacles.items()):
-                owner = obstacle_id.split(" label", 1)[0]
-                if owner in edge_id:
-                    continue
-                if _segment_crosses(first, second, box):
-                    findings.append(
-                        GeometryFinding("edge crossing", edge_id, obstacle_id)
-                    )
-
-    for label_id, label_box in sorted(labels.items()):
-        owner = label_id.split(" label", 1)[0]
-        for obstacle_id, obstacle_box in sorted(obstacles.items()):
-            if obstacle_id == label_id or obstacle_id.split(" label", 1)[0] == owner:
-                continue
-            if _overlaps(label_box, obstacle_box, pad=4.0):
-                findings.append(
-                    GeometryFinding("label overlap", label_id, obstacle_id)
-                )
-
-    return findings
+    edges = dict(_layout_edges(model, scope, lay))
+    return list(check_geometry(boxes, labels, edges).findings)
 
 
 def _placement_order_valid(

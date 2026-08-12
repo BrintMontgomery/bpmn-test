@@ -238,19 +238,19 @@ spot-check via `build_preview.py` in the loop at Phase 6.
   constraints, scope-local layout, deterministic geometry, collision findings,
   and validation of both current processes.
 
-## Phase 2b — Validator rework
+## Phase 2b — Validator rework [x]
 
 The original plan said `validate_bpmn.py` needs no changes. Between the
 repair loop (Phase 2) and decomposition (Phase 3b), it needs a fair amount.
 Do this before Phase 3b lands, or every sub-diagram ships unchecked.
 
-**Structured findings.** Factor the geometry checks into a `geometry.py`
+- [x] **Structured findings.** Factor the geometry checks into a `geometry.py`
 that returns records (element ids, kind, offending bounds) instead of
 strings, and have `Validator` format those records into its existing
 messages. CLI output stays byte-compatible; the repair loop gets something
 it can act on.
 
-**Multi-scope traversal.** Each of these was confirmed against the current
+- [x] **Multi-scope traversal.** Each of these was confirmed against the current
 code, and each breaks the moment a subprocess or link event appears:
 
 | Current behaviour | Breaks because | Fix |
@@ -264,22 +264,27 @@ code, and each breaks the moment a subprocess or link event appears:
 | `check_connectivity` requires outgoing on every non-`endEvent` and incoming on every non-`startEvent` | a **link throw** event has incoming but no outgoing; a **link catch** has outgoing but no incoming — both are `intermediateThrow/CatchEvent`, already in `FLOW_NODE_TAGS`, so both hit the failing branch | exempt link events, and instead pair-check them (below) |
 | `check_process_ref` requires a participant referencing the process | a called global process has no pool | require it for the top-level process only |
 
-**New checks decomposition needs:**
+- [x] **New checks decomposition needs:**
 
-- every `callActivity`'s `calledElement` resolves to a process that exists
+- [x] every `callActivity`'s `calledElement` resolves to a process that exists
   in the bundle;
-- link throw/catch events pair **exactly 1:1 by name** within a scope — an
+- [x] link throw/catch events pair **exactly 1:1 by name** within a scope — an
   unmatched throw is a dead end and an unmatched catch is unreachable, and
   neither is caught by any check today;
-- every collapsed subprocess (`isExpanded="false"` on its `BPMNShape`) has
+- [x] every collapsed subprocess (`isExpanded="false"` on its `BPMNShape`) has
   a matching child `BPMNPlane`, and an expanded one has its children on the
   parent plane instead — mismatch here is the single most common way a
   hand-built hierarchical file renders blank;
-- no sequence flow crosses a scope boundary (illegal in BPMN, and a
+- [x] no sequence flow crosses a scope boundary (illegal in BPMN, and a
   plausible mistake for a generator that flattens ids).
 
-Also drop the `"OFC-001.bpmn"` default in `main()` and take a bundle of
+- [x] Drop the `"OFC-001.bpmn"` default in `main()` and take a bundle of
 paths, so one invocation validates a whole multi-file output.
+
+- [x] Unit and regression coverage verifies structured geometry findings,
+  nested and parallel scope traversal, multiple-plane geometry isolation,
+  link pairing and reachability, subprocess DI placement, scope-boundary
+  flows, called-process bundles, global-process lane rules, and CLI behavior.
 
 ## Phase 3 — Define the intermediate representation (IR)
 

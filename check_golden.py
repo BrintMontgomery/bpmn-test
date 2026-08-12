@@ -17,6 +17,9 @@ GENERATORS = {
 SHARED_MODEL_FILES = {
     "ofc001_model.py",
 }
+SHARED_ENGINE_FILES = {
+    "geometry.py",
+}
 
 
 def main() -> int:
@@ -24,6 +27,8 @@ def main() -> int:
         work = Path(temp_dir)
         shutil.copy2(ROOT / "bpmn_engine.py", work / "bpmn_engine.py")
         shutil.copy2(ROOT / "validate_bpmn.py", work / "validate_bpmn.py")
+        for engine_file in SHARED_ENGINE_FILES:
+            shutil.copy2(ROOT / engine_file, work / engine_file)
         for model_file in SHARED_MODEL_FILES:
             shutil.copy2(ROOT / model_file, work / model_file)
         for generator, outputs in GENERATORS.items():
