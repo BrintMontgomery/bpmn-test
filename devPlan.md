@@ -103,23 +103,23 @@ change." That criterion is unenforceable right now.
    goldens. This is the gate that every phase below runs against.
 5. [x] Add `__pycache__/` to `.gitignore`.
 
-## Phase 1 — Extract the shared engine
+## Phase 1 — Extract the shared engine [x]
 
 Pull the layout algorithm and BPMN XML/DI emitter out of `generate_bpmn.py`
 (the commented copy — see Current State) into `bpmn_engine.py`:
 
-- `Node` / `Edge` dataclasses (already process-agnostic)
-- `node_size()`, `annotation_height()`, `compute_layout()`,
+- [x] `Node` / `Edge` dataclasses (already process-agnostic)
+- [x] `node_size()`, `annotation_height()`, `compute_layout()`,
   `corridor_offsets()`, `edge_waypoints()`, `event_label_bounds()`,
   `edge_label_bounds()`
-- `q()`, `element_tag()`, `flow_id()`, `add_doc()`, `build_xml()`,
+- [x] `q()`, `element_tag()`, `flow_id()`, `add_doc()`, `build_xml()`,
   `write_bpmn()`
-- `build_mermaid()` and its helpers (`mermaid_label`, `wrap`,
+- [x] `build_mermaid()` and its helpers (`mermaid_label`, `wrap`,
   `mermaid_node`) — optional per caller, but it must move too, or OFC-001
   loses its preview and the "the two can never drift apart" guarantee in
   that file's own docstring.
 
-Input becomes a plain data bundle: `lanes`, `phases`, `nodes`, `edges`,
+- [x] Input becomes a plain data bundle: `lanes`, `phases`, `nodes`, `edges`,
 `process_id`, `participant_name`, `process_doc` — no process-specific
 constants baked in (today's `POOL_X`, `TASK_W`, etc. stay as engine
 defaults, but lane lists / phase lists / the model itself move to the
@@ -128,17 +128,17 @@ caller).
 Three things the original plan treated as out of scope but that Phase 1
 cannot avoid, because `generate_bpmn.py` uses all three:
 
-- `ann_above` — the set of lanes whose annotation band sits above their
+- [x] `ann_above` — the set of lanes whose annotation band sits above their
   tasks. Today a module constant; becomes a per-process input.
-- **External participants and message flows** — OFC-001's collapsed
+- [x] **External participants and message flows** — OFC-001's collapsed
   Admissions Coordinator pool and its message flow are currently hardcoded
   inside `build_xml`, including hand-computed geometry and a hand-placed
   label box. These must become first-class engine inputs
   (`external_pools`, `message_flows`), not a special case. This was listed
   as an Open Question; it is actually a Phase 1 blocker.
-- The Mermaid emitter, per above.
+- [x] The Mermaid emitter, per above.
 
-**Build for scopes now, even though Phase 1 emits only one.** Decomposition
+- [x] **Build for scopes now, even though Phase 1 emits only one.** Decomposition
 (Phase 3b) needs `compute_layout()` and `build_xml()` to run once per
 *scope* — the top-level process plus each collapsed subprocess plus each
 separate called process — with each scope owning its own coordinate space,
@@ -149,10 +149,12 @@ single scope. Keep pool/participant emission separate from process
 emission: a called global process has no pool, and a subprocess plane has
 no pool of its own.
 
-**Exit criterion:** both generators re-pointed at the shared module, and
+- [x] **Exit criterion:** both generators re-pointed at the shared module, and
 `check_golden.py` from Phase 0 reports byte-identical output for OFC-001
 and OFC-004. Commit here. This is the last point where byte-identity is
 achievable, so do not let it slip past.
+- [x] Unit and regression tests cover the shared engine, external message
+  flows, scope-aware layout, Mermaid output, and preview compatibility.
 
 ## Phase 1b — Unbreak `build_preview.py`
 

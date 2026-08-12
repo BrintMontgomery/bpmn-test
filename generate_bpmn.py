@@ -16,35 +16,16 @@ hand-edit OFC-001.bpmn -- it is overwritten.
 
 from __future__ import annotations
 
-import re
-import xml.dom.minidom as minidom
-import xml.etree.ElementTree as ET
-from dataclasses import dataclass, field
 from pathlib import Path
 
-# --------------------------------------------------------------------------
-# Geometry constants
-# --------------------------------------------------------------------------
+from bpmn_engine import (
+    E, N, Edge, ExternalPool, MessageFlow, Node, ProcessModel, Scope,
+    build_mermaid, compute_layout, write_bpmn,
+)
 
-TASK_W, TASK_H = 140, 80
-GW_W, GW_H = 50, 50
-EV_W, EV_H = 36, 36
-ANN_W = 280           # text annotations wrap to this width
-ANN_LINE = 15         # bpmn-js renders annotation text at ~15px per line
-ANN_CHARS = 44        # characters that fit on one line at ANN_W
-
-COL_GAP = 78          # horizontal gap between columns; wide enough that a
-                      # branch label fits between a gateway and the vertical
-                      # corridor that carries the branch to the next row
-ROW_PITCH = 150       # vertical distance between sub-rows inside a lane
-GW_LBL_W = 140        # explicit label box for a named gateway; the height
-                      # is derived from how many lines the name wraps to
-LANE_PAD = 15         # padding at top and bottom of every lane
-POOL_HEADER = 30      # width of the vertical name band on the left of a pool
-POOL_X = 200          # left edge of the main pool
-POOL_Y = 260          # top edge of the main pool
-AC_POOL_H = 60        # height of the collapsed Admissions Coordinator pool
-AC_POOL_W = 320
+# --------------------------------------------------------------------------
+# Process model
+# --------------------------------------------------------------------------
 
 LANES = [
     ("Lane_SO", "Security Officer"),
@@ -77,33 +58,8 @@ PHASES = [
 
 
 # --------------------------------------------------------------------------
-# Model
+# Process model data
 # --------------------------------------------------------------------------
-
-
-@dataclass
-class Node:
-    id: str
-    kind: str          # task | gateway_x | gateway_p | start_message
-                       # | catch_timer | catch_message | end
-    lane: str
-    col: int
-    name: str
-    phase: str
-    subrow: int = 0
-    ttype: str = "manual"   # manual | user | send | receive (task kinds only)
-    doc: list[str] = field(default_factory=list)
-    note: str | None = None  # becomes an associated BPMN text annotation
-
-
-@dataclass
-class Edge:
-    source: str
-    target: str
-    label: str = ""
-    condition: str = ""      # empty -> this branch is the gateway default
-    loop: bool = False       # route backwards, underneath the sub-row
-
 
 N = Node
 E = Edge
@@ -398,6 +354,7 @@ NODES: list[Node] = [
     # -- 10. Complete Shower and Unit Transfer ----------------------------
     N("Task_Shower", "task", CON, 56,
       "Complete the shower under required supervision", "P10",
+
       doc=["The shower is completed under the required security and "
            "clinical supervision."]),
     N("Task_EscortToUnit", "task", SO, 57,
@@ -551,578 +508,86 @@ PROCESS_DOC = (
     "staff."
 )
 
-BY_ID = {n.id: n for n in NODES}
-
-
 # --------------------------------------------------------------------------
-# Layout
-# --------------------------------------------------------------------------
-
-
-def node_size(node: Node) -> tuple[int, int]:
-    if node.kind == "task":
-        return TASK_W, TASK_H
-    if node.kind.startswith("gateway"):
-        return GW_W, GW_H
-    return EV_W, EV_H
-
-
-def annotation_height(note: str) -> float:
-    """Tall enough that bpmn-js's wrapped text stays inside the bracket."""
-    lines = -(-len(note) // ANN_CHARS)        # ceiling division
-    return max(50, lines * ANN_LINE + 18)
-
-
-def compute_layout() -> dict:
-    """Assign an absolute (x, y, w, h) to every node, lane, and pool."""
-    # Column widths are driven by the widest element in each column, so
-    # gateway-only and event-only columns stay narrow.
-    max_col = max(n.col for n in NODES)
-    col_w = [0] * (max_col + 1)
-    for n in NODES:
-        col_w[n.col] = max(col_w[n.col], node_size(n)[0])
-
-    col_center = []
-    x = POOL_X + POOL_HEADER + COL_GAP
-    for c in range(max_col + 1):
-        col_center.append(x + col_w[c] / 2)
-        x += col_w[c] + COL_GAP
-    pool_w = x - POOL_X
-
-    # A lane is tall enough for its deepest sub-row, plus one extra sub-row
-    # for text annotations when the lane carries any. The Security Officer
-    # lane takes its annotation band above its tasks rather than below:
-    # every edge arriving from a lower lane climbs into that lane, and a
-    # band underneath would sit directly in the path.
-    base_rows: dict[str, int] = {lid: 1 for lid, _ in LANES}
-    for n in NODES:
-        base_rows[n.lane] = max(base_rows[n.lane], n.subrow + 1)
-
-    # The annotation band is sized by the tallest note in the lane.
-    ann_band: dict[str, float] = {lid: 0.0 for lid, _ in LANES}
-    for n in NODES:
-        if n.note:
-            ann_band[n.lane] = max(ann_band[n.lane],
-                                   annotation_height(n.note) + 26)
-
-    lane_box: dict[str, tuple[float, float]] = {}   # lane -> (top, height)
-    row_top: dict[str, float] = {}                  # lane -> y of sub-row 0
-    ann_center: dict[str, float] = {}
-    y = POOL_Y
-    for lane_id, _ in LANES:
-        band = ann_band[lane_id]
-        h = LANE_PAD * 2 + base_rows[lane_id] * ROW_PITCH + band
-        lane_box[lane_id] = (y, h)
-        if band and lane_id in ANN_ABOVE:
-            ann_center[lane_id] = y + LANE_PAD + band / 2
-            row_top[lane_id] = y + LANE_PAD + band
-        else:
-            row_top[lane_id] = y + LANE_PAD
-            if band:
-                ann_center[lane_id] = (y + LANE_PAD
-                                       + base_rows[lane_id] * ROW_PITCH
-                                       + band / 2)
-        y += h
-    pool_h = y - POOL_Y
-
-    def row_center(lane_id: str, subrow: int) -> float:
-        return row_top[lane_id] + subrow * ROW_PITCH + ROW_PITCH / 2
-
-    bounds: dict[str, tuple[float, float, float, float]] = {}
-    for n in NODES:
-        w, h = node_size(n)
-        cx = col_center[n.col]
-        cy = row_center(n.lane, n.subrow)
-        bounds[n.id] = (cx - w / 2, cy - h / 2, w, h)
-
-    # Text annotations sit in their lane's reserved band.
-    ann_bounds: dict[str, tuple[float, float, float, float]] = {}
-    for n in NODES:
-        if not n.note:
-            continue
-        h = annotation_height(n.note)
-        cx = col_center[n.col]
-        cy = ann_center[n.lane]
-        ann_bounds[n.id] = (cx - ANN_W / 2, cy - h / 2, ANN_W, h)
-
-    # A wide annotation on a narrow trailing column can overhang the pool.
-    if ann_bounds:
-        right = max(x + w for x, _, w, _ in ann_bounds.values())
-        pool_w = max(pool_w, right + COL_GAP - POOL_X)
-
-    return {
-        "bounds": bounds,
-        "ann_bounds": ann_bounds,
-        "lane_box": lane_box,
-        "row_top": row_top,
-        "row_center": row_center,
-        "pool": (POOL_X, POOL_Y, pool_w, pool_h),
-        "col_center": col_center,
-        "offsets": corridor_offsets(),
-    }
-
-
-def corridor_offsets() -> dict[tuple[str, str], float]:
-    """Stagger the vertical run of edges that converge on the same target.
-
-    Two branches joining one gateway from different lanes would otherwise
-    drop down the exact same x and render as a single line.
-    """
-    grouped: dict[str, list[Edge]] = {}
-    for e in EDGES:
-        if e.loop:
-            continue
-        if BY_ID[e.source].lane != BY_ID[e.target].lane \
-                or BY_ID[e.source].subrow != BY_ID[e.target].subrow:
-            grouped.setdefault(e.target, []).append(e)
-    out: dict[tuple[str, str], float] = {}
-    for target, group in grouped.items():
-        for i, e in enumerate(group):
-            out[(e.source, target)] = (i - (len(group) - 1) / 2) * 12
-    return out
-
-
-def edge_waypoints(edge: Edge, lay: dict) -> list[tuple[float, float]]:
-    src, tgt = BY_ID[edge.source], BY_ID[edge.target]
-    sx, sy, sw, sh = lay["bounds"][src.id]
-    tx, ty, tw, th = lay["bounds"][tgt.id]
-    scy, tcy = sy + sh / 2, ty + th / 2
-    scx, tcx = sx + sw / 2, tx + tw / 2
-
-    if edge.loop:
-        # Route backwards underneath the source sub-row, along the empty
-        # boundary the layout leaves between sub-rows.
-        loop_y = lay["row_top"][src.lane] + (src.subrow + 1) * ROW_PITCH
-        return [(scx, sy + sh), (scx, loop_y), (tcx, loop_y), (tcx, ty + th)]
-
-    if abs(scy - tcy) < 1:
-        return [(sx + sw, scy), (tx, tcy)]
-
-    # Orthogonal dog-leg. The long horizontal run stays on the source's own
-    # sub-row -- where the layout guarantees a clear span, since the source
-    # is what occupies that row -- and the vertical run drops through the
-    # empty column gap immediately before the target.
-    corridor = tx - COL_GAP / 2 + lay["offsets"].get((src.id, tgt.id), 0)
-    corridor = max(corridor, sx + sw + 10)
-    return [(sx + sw, scy), (corridor, scy), (corridor, tcy), (tx, tcy)]
-
-
-LBL_W, LBL_H = 30, 18
-
-
-def event_label_bounds(node: Node, x: float, y: float, w: float, h: float,
-                       lay: dict) -> tuple[float, float, float, float]:
-    """An event's caption is wider than the event itself, so it has to fit
-    the space between neighbouring columns or it collides with the caption
-    next door."""
-    centers = lay["col_center"]
-    room = []
-    if node.col > 0:
-        room.append(centers[node.col] - centers[node.col - 1])
-    if node.col + 1 < len(centers):
-        room.append(centers[node.col + 1] - centers[node.col])
-    width = max(70.0, min(110.0, min(room) - 8)) if room else 110.0
-    lines = max(1, -(-len(node.name) // max(8, int(width / 6.4))))
-    height = lines * 13 + 4
-
-    # On a branch sub-row the space below carries return traffic, so the
-    # caption goes above the event instead.
-    if node.subrow > 0:
-        return (x + w / 2 - width / 2, y - height - 5, width, height)
-    return (x + w / 2 - width / 2, y + h + 5, width, height)
-
-
-def edge_label_bounds(edge: Edge, pts: list[tuple[float, float]],
-                      lay: dict) -> tuple[float, float, float, float]:
-    """Both branches of a gateway leave from the same edge of the same
-    shape, so anchoring every label to the first waypoint stacks them on
-    top of each other. Place each label on the segment that distinguishes
-    the branch instead."""
-    src, tgt = BY_ID[edge.source], BY_ID[edge.target]
-
-    if edge.loop:
-        # On the return run, below the line.
-        mx = (pts[1][0] + pts[2][0]) / 2
-        return (mx - LBL_W / 2, pts[1][1] + 3, LBL_W, LBL_H)
-
-    if len(pts) == 2:
-        # Straight through: centred above the connector.
-        mx = (pts[0][0] + pts[1][0]) / 2
-        return (mx - LBL_W / 2, pts[0][1] - LBL_H - 6, LBL_W, LBL_H)
-
-    # Dog-leg: on the side the branch turns towards, centred in the clear
-    # span between the source and the vertical corridor -- clear of the
-    # source shape, of the corridor, and of whatever the branch bypasses.
-    scy, tcy = pts[0][1], pts[-1][1]
-    y = scy + 6 if tcy > scy else scy - LBL_H - 6
-    return ((pts[0][0] + pts[1][0]) / 2 - LBL_W / 2, y, LBL_W, LBL_H)
-
-
-# --------------------------------------------------------------------------
-# BPMN XML emitter
-# --------------------------------------------------------------------------
-
-NS = {
-    "bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL",
-    "bpmndi": "http://www.omg.org/spec/BPMN/20100524/DI",
-    "dc": "http://www.omg.org/spec/DD/20100524/DC",
-    "di": "http://www.omg.org/spec/DD/20100524/DI",
-}
-for prefix, uri in NS.items():
-    ET.register_namespace(prefix, uri)
-
-
-def q(prefix: str, tag: str) -> str:
-    return f"{{{NS[prefix]}}}{tag}"
-
-
-TASK_ELEMENT = {
-    "manual": "manualTask",
-    "user": "userTask",
-    "send": "sendTask",
-    "receive": "receiveTask",
-}
-
-
-def element_tag(node: Node) -> str:
-    if node.kind == "task":
-        return TASK_ELEMENT[node.ttype]
-    if node.kind == "gateway_x":
-        return "exclusiveGateway"
-    if node.kind == "gateway_p":
-        return "parallelGateway"
-    if node.kind == "start_message":
-        return "startEvent"
-    if node.kind == "end":
-        return "endEvent"
-    return "intermediateCatchEvent"
-
-
-def flow_id(edge: Edge) -> str:
-    return f"Flow_{edge.source}__{edge.target}"
-
-
-def add_doc(parent: ET.Element, lines: list[str]) -> None:
-    if not lines:
-        return
-    doc = ET.SubElement(parent, q("bpmn", "documentation"))
-    doc.text = "\n".join(f"- {line}" for line in lines)
-
-
-def build_xml(lay: dict) -> ET.Element:
-    defs = ET.Element(q("bpmn", "definitions"), {
-        "id": "Definitions_OFC001",
-        "targetNamespace": "http://oklahoma.gov/odmhsas/ofc/bpmn",
-        "exporter": "generate_bpmn.py",
-        "exporterVersion": "1.0",
-    })
-
-    # -- collaboration ----------------------------------------------------
-    collab = ET.SubElement(defs, q("bpmn", "collaboration"), {"id": COLLAB_ID})
-    ET.SubElement(collab, q("bpmn", "participant"), {
-        "id": AC_PARTICIPANT,
-        "name": "Admissions Coordinator",
-    })
-    ET.SubElement(collab, q("bpmn", "participant"), {
-        "id": MAIN_PARTICIPANT,
-        "name": "Oklahoma Forensic Center — Security Intake",
-        "processRef": PROCESS_ID,
-    })
-    ET.SubElement(collab, q("bpmn", "messageFlow"), {
-        "id": AC_MESSAGE_FLOW,
-        "name": "Scheduled admission email",
-        "sourceRef": AC_PARTICIPANT,
-        "targetRef": "StartEvent_ScheduledAdmission",
-    })
-
-    # -- process ----------------------------------------------------------
-    proc = ET.SubElement(defs, q("bpmn", "process"), {
-        "id": PROCESS_ID,
-        "name": "OFC-001 — Security Intakes Consumer",
-        "isExecutable": "false",
-    })
-    add_doc(proc, [PROCESS_DOC])
-
-    lane_set = ET.SubElement(proc, q("bpmn", "laneSet"),
-                             {"id": "LaneSet_OFC001"})
-    for lane_id, lane_name in LANES:
-        lane = ET.SubElement(lane_set, q("bpmn", "lane"),
-                             {"id": lane_id, "name": lane_name})
-        for n in NODES:
-            if n.lane == lane_id:
-                ref = ET.SubElement(lane, q("bpmn", "flowNodeRef"))
-                ref.text = n.id
-
-    incoming: dict[str, list[str]] = {n.id: [] for n in NODES}
-    outgoing: dict[str, list[str]] = {n.id: [] for n in NODES}
-    for e in EDGES:
-        outgoing[e.source].append(flow_id(e))
-        incoming[e.target].append(flow_id(e))
-
-    # An exclusive gateway's unconditioned branch is its default flow.
-    defaults: dict[str, str] = {}
-    for e in EDGES:
-        src = BY_ID[e.source]
-        if src.kind == "gateway_x" and len(outgoing[src.id]) > 1 \
-                and not e.condition:
-            defaults[src.id] = flow_id(e)
-
-    for n in NODES:
-        attrs = {"id": n.id}
-        if n.name:
-            attrs["name"] = n.name
-        if n.id in defaults:
-            attrs["default"] = defaults[n.id]
-        el = ET.SubElement(proc, q("bpmn", element_tag(n)), attrs)
-        add_doc(el, n.doc)
-        for fid in incoming[n.id]:
-            ET.SubElement(el, q("bpmn", "incoming")).text = fid
-        for fid in outgoing[n.id]:
-            ET.SubElement(el, q("bpmn", "outgoing")).text = fid
-        if n.kind == "start_message" or n.kind == "catch_message":
-            ET.SubElement(el, q("bpmn", "messageEventDefinition"),
-                          {"id": f"MsgDef_{n.id}"})
-        elif n.kind == "catch_timer":
-            timer = ET.SubElement(el, q("bpmn", "timerEventDefinition"),
-                                  {"id": f"TimerDef_{n.id}"})
-            date = ET.SubElement(timer, q("bpmn", "timeDate"))
-            date.text = "Day of the scheduled admission"
-
-    for e in EDGES:
-        attrs = {
-            "id": flow_id(e),
-            "sourceRef": e.source,
-            "targetRef": e.target,
-        }
-        if e.label:
-            attrs["name"] = e.label
-        flow = ET.SubElement(proc, q("bpmn", "sequenceFlow"), attrs)
-        if e.condition:
-            cond = ET.SubElement(flow, q("bpmn", "conditionExpression"))
-            cond.text = e.condition
-
-    # -- text annotations -------------------------------------------------
-    for n in NODES:
-        if not n.note:
-            continue
-        ann = ET.SubElement(proc, q("bpmn", "textAnnotation"),
-                            {"id": f"Ann_{n.id}"})
-        ET.SubElement(ann, q("bpmn", "text")).text = n.note
-        ET.SubElement(proc, q("bpmn", "association"), {
-            "id": f"Assoc_{n.id}",
-            "sourceRef": n.id,
-            "targetRef": f"Ann_{n.id}",
-        })
-
-    # -- diagram interchange ----------------------------------------------
-    diagram = ET.SubElement(defs, q("bpmndi", "BPMNDiagram"),
-                            {"id": "BPMNDiagram_OFC001"})
-    plane = ET.SubElement(diagram, q("bpmndi", "BPMNPlane"),
-                          {"id": "BPMNPlane_OFC001", "bpmnElement": COLLAB_ID})
-
-    px, py, pw, ph = lay["pool"]
-
-    def shape(bpmn_element: str, x: float, y: float, w: float, h: float,
-              *, horizontal: bool | None = None, marker: bool = False,
-              label: tuple[float, float, float, float] | None = None) -> None:
-        attrs = {
-            "id": f"Shape_{bpmn_element}",
-            "bpmnElement": bpmn_element,
-        }
-        if horizontal is not None:
-            attrs["isHorizontal"] = "true" if horizontal else "false"
-        if marker:
-            attrs["isMarkerVisible"] = "true"
-        sh = ET.SubElement(plane, q("bpmndi", "BPMNShape"), attrs)
-        ET.SubElement(sh, q("dc", "Bounds"), {
-            "x": f"{x:.0f}", "y": f"{y:.0f}",
-            "width": f"{w:.0f}", "height": f"{h:.0f}",
-        })
-        if label:
-            lbl = ET.SubElement(sh, q("bpmndi", "BPMNLabel"))
-            ET.SubElement(lbl, q("dc", "Bounds"), {
-                "x": f"{label[0]:.0f}", "y": f"{label[1]:.0f}",
-                "width": f"{label[2]:.0f}", "height": f"{label[3]:.0f}",
-            })
-
-    # Collapsed Admissions Coordinator pool, centred over the start event.
-    sx, sy, sw, sh_ = lay["bounds"]["StartEvent_ScheduledAdmission"]
-    ac_x = sx + sw / 2 - AC_POOL_W / 2
-    ac_y = POOL_Y - AC_POOL_H - 110
-    shape(AC_PARTICIPANT, ac_x, ac_y, AC_POOL_W, AC_POOL_H, horizontal=True)
-    shape(MAIN_PARTICIPANT, px, py, pw, ph, horizontal=True)
-
-    for lane_id, _ in LANES:
-        top, h = lay["lane_box"][lane_id]
-        shape(lane_id, px + POOL_HEADER, top, pw - POOL_HEADER, h,
-              horizontal=True)
-
-    for n in NODES:
-        x, y, w, h = lay["bounds"][n.id]
-        label = None
-        if n.name and n.kind in ("start_message", "end", "catch_timer",
-                                 "catch_message"):
-            label = event_label_bounds(n, x, y, w, h, lay)
-        elif n.name and n.kind.startswith("gateway"):
-            # Above the diamond, not below: below is where the branch
-            # labels sit and where a loop-back connector runs.
-            lines = max(1, -(-len(n.name) // 21))
-            gh = lines * 13 + 4
-            label = (x + w / 2 - GW_LBL_W / 2, y - gh - 8, GW_LBL_W, gh)
-        shape(n.id, x, y, w, h,
-              marker=(n.kind == "gateway_x"), label=label)
-
-    for n in NODES:
-        if n.note:
-            x, y, w, h = lay["ann_bounds"][n.id]
-            shape(f"Ann_{n.id}", x, y, w, h)
-
-    def edge_di(bpmn_element: str, points: list[tuple[float, float]],
-                label: tuple[float, float, float, float] | None = None) -> None:
-        ed = ET.SubElement(plane, q("bpmndi", "BPMNEdge"), {
-            "id": f"Edge_{bpmn_element}",
-            "bpmnElement": bpmn_element,
-        })
-        for wx, wy in points:
-            ET.SubElement(ed, q("di", "waypoint"),
-                          {"x": f"{wx:.0f}", "y": f"{wy:.0f}"})
-        if label:
-            lbl = ET.SubElement(ed, q("bpmndi", "BPMNLabel"))
-            ET.SubElement(lbl, q("dc", "Bounds"), {
-                "x": f"{label[0]:.0f}", "y": f"{label[1]:.0f}",
-                "width": f"{label[2]:.0f}", "height": f"{label[3]:.0f}",
-            })
-
-    # Message flow from the collapsed pool down into the start event.
-    edge_di(AC_MESSAGE_FLOW, [
-        (ac_x + AC_POOL_W / 2, ac_y + AC_POOL_H),
-        (ac_x + AC_POOL_W / 2, sy),
-    ], label=(ac_x + AC_POOL_W / 2 + 6, ac_y + AC_POOL_H + 22, 140, 27))
-
-    for e in EDGES:
-        pts = edge_waypoints(e, lay)
-        label = edge_label_bounds(e, pts, lay) if e.label else None
-        edge_di(flow_id(e), pts, label)
-
-    for n in NODES:
-        if not n.note:
-            continue
-        nx, ny, nw, nh = lay["bounds"][n.id]
-        ax, ay, aw, ah = lay["ann_bounds"][n.id]
-        if ay < ny:     # annotation band sits above the task
-            edge_di(f"Assoc_{n.id}", [(nx + nw / 2, ny),
-                                      (ax + aw / 2, ay + ah)])
-        else:
-            edge_di(f"Assoc_{n.id}", [(nx + nw / 2, ny + nh),
-                                      (ax + aw / 2, ay)])
-
-    return defs
-
-
-def write_bpmn(path: Path, lay: dict) -> None:
-    raw = ET.tostring(build_xml(lay), encoding="utf-8")
-    pretty = minidom.parseString(raw).toprettyxml(indent="  ", encoding="UTF-8")
-    text = pretty.decode("utf-8")
-    text = "\n".join(line for line in text.splitlines() if line.strip())
-    path.write_text(text + "\n", encoding="utf-8")
-
-
-# --------------------------------------------------------------------------
-# Mermaid emitter -- same graph, for the preview page
+# Shared engine model and entry point
 # --------------------------------------------------------------------------
 
 LANE_CLASS = {
     SO: "so", LED: "led", CON: "con", UN: "un", MHT: "mht",
 }
 
-
-def mermaid_label(text: str) -> str:
-    """Mermaid chokes on quotes, brackets and parentheses inside labels."""
-    text = text.replace('"', "'")
-    text = re.sub(r"[\[\]{}()<>|]", "", text)
-    return text
-
-
-def wrap(text: str, width: int = 26) -> str:
-    words, lines, cur = text.split(), [], ""
-    for w in words:
-        if cur and len(cur) + 1 + len(w) > width:
-            lines.append(cur)
-            cur = w
-        else:
-            cur = f"{cur} {w}".strip()
-    if cur:
-        lines.append(cur)
-    return "<br/>".join(lines)
-
-
-def mermaid_node(n: Node) -> str:
-    if n.kind.startswith("gateway"):
-        label = n.name or ("Merge" if n.kind == "gateway_x" else "Join")
-        return f'{n.id}{{"{wrap(mermaid_label(label), 20)}"}}'
-    if n.kind in ("start_message", "end", "catch_timer", "catch_message"):
-        return f'{n.id}(["{wrap(mermaid_label(n.name), 24)}"])'
-    return f'{n.id}["{wrap(mermaid_label(n.name))}"]'
-
-
-def build_mermaid() -> str:
-    out = ["flowchart TB"]
-    phase_names = dict(PHASES)
-    for phase_id, phase_name in PHASES:
-        members = [n for n in NODES if n.phase == phase_id]
-        if not members:
-            continue
-        out.append(f'  subgraph {phase_id}["{phase_names[phase_id]}"]')
-        out.append("    direction LR")
-        for n in members:
-            out.append(f"    {mermaid_node(n)}")
-        out.append("  end")
-
-    out.append("  AC([Admissions Coordinator]):::ext")
-    out.append("  AC -. scheduled admission email .-> "
-               "StartEvent_ScheduledAdmission")
-    for e in EDGES:
-        if e.label:
-            out.append(f"  {e.source} -->|{mermaid_label(e.label)}| "
-                       f"{e.target}")
-        else:
-            out.append(f"  {e.source} --> {e.target}")
-
-    out += [
+MODEL = ProcessModel(
+    lanes=LANES,
+    phases=PHASES,
+    nodes=NODES,
+    edges=EDGES,
+    process_id=PROCESS_ID,
+    participant_name="Oklahoma Forensic Center — Security Intake",
+    process_doc=PROCESS_DOC,
+    process_name="OFC-001 — Security Intakes Consumer",
+    participant_id=MAIN_PARTICIPANT,
+    collaboration_id=COLLAB_ID,
+    definitions_id="Definitions_OFC001",
+    exporter="generate_bpmn.py",
+    ann_above=ANN_ABOVE,
+    lane_classes=LANE_CLASS,
+    mermaid_class_defs=[
         "  classDef so fill:#dbeafe,stroke:#1d4ed8,color:#0f172a;",
         "  classDef led fill:#fee2e2,stroke:#b91c1c,color:#0f172a;",
         "  classDef con fill:#fef3c7,stroke:#b45309,color:#0f172a;",
         "  classDef un fill:#dcfce7,stroke:#15803d,color:#0f172a;",
         "  classDef mht fill:#f3e8ff,stroke:#7e22ce,color:#0f172a;",
         "  classDef ext fill:#e2e8f0,stroke:#475569,color:#0f172a;",
-    ]
-    for lane_id, cls in LANE_CLASS.items():
-        ids = [n.id for n in NODES if n.lane == lane_id]
-        if ids:
-            out.append(f"  class {','.join(ids)} {cls};")
-    return "\n".join(out)
+    ],
+    external_pools=[ExternalPool(
+        id=AC_PARTICIPANT,
+        name="Admissions Coordinator",
+        anchor="StartEvent_ScheduledAdmission",
+        width=320,
+        height=60,
+        gap_above=110,
+        mermaid_id="AC",
+    )],
+    message_flows=[MessageFlow(
+        id=AC_MESSAGE_FLOW,
+        source=AC_PARTICIPANT,
+        target="StartEvent_ScheduledAdmission",
+        name="Scheduled admission email",
+        mermaid_name="scheduled admission email",
+        label_width=140,
+        label_height=27,
+        label_dx=6,
+        label_dy=22,
+    )],
+)
 
+NODES = MODEL.nodes
+EDGES = MODEL.edges
+LANES = MODEL.lanes
+PHASES = MODEL.phases
+ANN_ABOVE = MODEL.ann_above
+BY_ID = MODEL.by_id()
 
-# --------------------------------------------------------------------------
 
 def main() -> None:
     here = Path(__file__).parent
-    lay = compute_layout()
+    scope = Scope.top_level(MODEL)
+    lay = compute_layout(MODEL, scope)
 
     bpmn_path = here / "OFC-001.bpmn"
-    write_bpmn(bpmn_path, lay)
+    write_bpmn(bpmn_path, MODEL, lay, scope)
 
     mmd_path = here / "OFC-001.mmd"
-    mmd_path.write_text(build_mermaid() + "\n", encoding="utf-8")
+    mmd_path.write_text(build_mermaid(MODEL, scope) + "\n", encoding="utf-8")
 
-    px, py, pw, ph = lay["pool"]
-    tasks = sum(1 for n in NODES if n.kind == "task")
-    gws = sum(1 for n in NODES if n.kind.startswith("gateway"))
-    evs = len(NODES) - tasks - gws
-    print(f"wrote {bpmn_path.name}: {len(NODES)} flow nodes "
+    px, py, pw, ph = lay.pool or (0, 0, 0, 0)
+    tasks = sum(1 for n in MODEL.nodes if n.kind == "task")
+    gws = sum(1 for n in MODEL.nodes if n.kind.startswith("gateway"))
+    evs = len(MODEL.nodes) - tasks - gws
+    print(f"wrote {bpmn_path.name}: {len(MODEL.nodes)} flow nodes "
           f"({tasks} tasks, {gws} gateways, {evs} events), "
-          f"{len(EDGES)} sequence flows, "
-          f"{sum(1 for n in NODES if n.note)} annotations")
+          f"{len(MODEL.edges)} sequence flows, "
+          f"{sum(1 for n in MODEL.nodes if n.note)} annotations")
     print(f"pool bounds: {pw:.0f} x {ph:.0f} px")
     print(f"wrote {mmd_path.name}")
 

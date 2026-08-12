@@ -21,6 +21,7 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="bpmn-golden-") as temp_dir:
         work = Path(temp_dir)
+        shutil.copy2(ROOT / "bpmn_engine.py", work / "bpmn_engine.py")
         for generator, outputs in GENERATORS.items():
             shutil.copy2(ROOT / generator, work / generator)
             subprocess.run(
