@@ -434,7 +434,7 @@ def _read_source(source: str | Path) -> tuple[str, str | None]:
     if isinstance(source, Path):
         try:
             return source.read_text(encoding="utf-8"), source.name
-        except OSError as exc:
+        except (OSError, UnicodeDecodeError) as exc:
             raise MarkdownExtractionError(f"could not read Markdown source: {exc}") from exc
     if not isinstance(source, str):
         raise TypeError("source must be Markdown text, a string path, or a Path")
@@ -443,7 +443,7 @@ def _read_source(source: str | Path) -> tuple[str, str | None]:
     path = Path(source)
     try:
         return path.read_text(encoding="utf-8"), path.name
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
         raise MarkdownExtractionError(f"could not read Markdown source: {exc}") from exc
 
 

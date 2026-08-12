@@ -55,6 +55,20 @@ class MarkdownExtractorTests(unittest.TestCase):
             decoded = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual(first.to_dict(), decoded)
 
+    def test_extract_markdown_rejects_non_utf8_source(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "invalid.md"
+            path.write_bytes(b"# invalid UTF-8 source\xff")
+
+            for source in (path, str(path)):
+                with self.subTest(source_type=type(source).__name__):
+                    with self.assertRaisesRegex(
+                        MarkdownExtractionError, "could not read Markdown source"
+                    ) as raised:
+                        extract_markdown(source)
+
+                    self.assertIsInstance(raised.exception.__cause__, UnicodeDecodeError)
+
     def test_bare_note_markers_and_hard_breaks_are_supported(self) -> None:
         source = SOURCE.read_text(encoding="utf-8")
         source = source.replace(r"\[a\]", "[a]")

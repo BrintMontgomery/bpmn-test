@@ -85,7 +85,7 @@ Alternatives considered and rejected:
 
 ---
 
-## [ ] Phase 1: `markdown_extractor.py` — catch non-UTF-8 source files
+## [x] Phase 1: `markdown_extractor.py` — catch non-UTF-8 source files
 *Widen `_read_source`'s exception handling so a non-UTF-8 Markdown file raises this module's own
 `MarkdownExtractionError` instead of an uncaught `UnicodeDecodeError`. Complexity of coding: Low.*
 
@@ -100,13 +100,13 @@ Alternatives considered and rejected:
   style).
 
 ### 2. Implementation Checklist
-- [ ] **Task 1:** Widen `except OSError as exc:` at `markdown_extractor.py:437` (the `Path`-input
+- [x] **Task 1:** Widen `except OSError as exc:` at `markdown_extractor.py:437` (the `Path`-input
   branch) to `except (OSError, UnicodeDecodeError) as exc:`; keep the existing
   `raise MarkdownExtractionError(f"could not read Markdown source: {exc}") from exc` body
   unchanged.
-- [ ] **Task 2:** Apply the identical change to the string-input branch's `except OSError as exc:`
+- [x] **Task 2:** Apply the identical change to the string-input branch's `except OSError as exc:`
   at `markdown_extractor.py:446`.
-- [ ] **Task 3:** Add a regression test that writes a file containing bytes that are not valid
+- [x] **Task 3:** Add a regression test that writes a file containing bytes that are not valid
   UTF-8 (e.g. a bare `0xFF` byte) and asserts `extract_markdown(path)` raises
   `MarkdownExtractionError` with `"could not read Markdown source"` in the message.
 
@@ -130,10 +130,10 @@ this plan sequences it first only because it is the smallest, fully independent 
 ### 3. Testing & Verification
 * **Test Location:** `tests/test_markdown_to_ir.py`
 * **Unit Tests to Write:**
-    * [ ] `test_extract_markdown_rejects_non_utf8_source`: writes invalid UTF-8 bytes to a temp
+    * [x] `test_extract_markdown_rejects_non_utf8_source`: writes invalid UTF-8 bytes to a temp
       `.md` file and asserts `MarkdownExtractionError` is raised, not `UnicodeDecodeError`.
 * **Integration/Regression Tests to Run:**
-    * [ ] `pytest` (full suite; confirm the pass count does not drop)
+    * [x] `pytest` (full suite; confirm the pass count does not drop)
 * **Acceptance Criteria:** `extract_markdown()` given a non-UTF-8 file raises
   `MarkdownExtractionError`; every previously passing test still passes.
 
