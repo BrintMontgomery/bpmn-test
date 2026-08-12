@@ -26,7 +26,7 @@ Your goal is to review the codebase below and refactor it to make it cleaner, mo
 
 #### Refactoring Objectives
 Please refactor the existing code focusing on these core AI-assisted clean code principles:
-1. **Eliminate Code Duplication:** Identify redundant logic (especially common in game rules, state checking, or SSD box manipulations) and abstract them into reusable utility functions.
+1. **Eliminate Code Duplication:** Identify redundant logic  and abstract them into reusable utility functions.
 2. **Reduce Cognitive Complexity:** Flatten deeply nested conditional (`if/else`) statements—particularly common in combat automation or turn flow logic—using guard clauses, early returns, or lookup objects.
 3. **Adhere to SOLID Principles:** Ensure functions follow the Single Responsibility Principle (SRP). If a function is handling both game state mutation and UI rendering adjustments, decouple them.
 4. **Robust Error Handling & Logging:** Improve error reporting and exception management to ensure the automated runtime doesn't silently fail during hands-free turn execution.
