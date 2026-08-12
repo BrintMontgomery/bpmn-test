@@ -8,14 +8,19 @@ prompt with the provider of their choice.
 from __future__ import annotations
 
 import argparse
-import json
+import logging
 import sys
 from pathlib import Path
-from typing import TextIO
+from typing import Any, TextIO
 
-from ir import load_bundle
+from cli_support import run_cli
+from ir import dumps_ir_document, load_bundle
+from logging_setup import configure
 from markdown_extractor import extract_markdown
 from semantic_handoff import build_semantic_prompt, parse_semantic_response
+
+configure()
+logger = logging.getLogger(__name__)
 
 
 class CLIError(ValueError):
@@ -36,6 +41,50 @@ def _read_response(response_file: str, *, input_stream: TextIO | None) -> str:
         return Path(response_file).read_text(encoding="utf-8")
     except OSError as exc:
         raise CLIError(f"could not read semantic response {response_file!r}: {exc}") from exc
+
+
+def _emit_prompt(
+    prompt: str,
+    *,
+    prompt_file: str | Path | None,
+    prompt_stream: TextIO | None,
+) -> None:
+    if prompt_file is not None:
+        prompt_path = Path(prompt_file)
+        try:
+            prompt_path.parent.mkdir(parents=True, exist_ok=True)
+            prompt_path.write_text(prompt, encoding="utf-8")
+        except OSError as exc:
+            raise CLIError(f"could not write prompt {str(prompt_path)!r}: {exc}") from exc
+    else:
+        (prompt_stream if prompt_stream is not None else sys.stderr).write(prompt + "\n")
+
+
+def _resolve_document(
+    response_file: str | None,
+    *,
+    input_stream: TextIO | None,
+) -> dict[str, Any]:
+    if response_file is None:
+        raise CLIError(
+            "a semantic response is required; use --response-file PATH or "
+            "--response-file - for stdin"
+        )
+    response = _read_response(response_file, input_stream=input_stream)
+    try:
+        document = parse_semantic_response(response)
+        load_bundle([document])
+    except (OSError, TypeError, ValueError) as exc:
+        raise CLIError(f"semantic response failed IR validation: {exc}") from exc
+    return document
+
+
+def _write_ir_document(document: dict[str, Any], output_path: Path) -> None:
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(dumps_ir_document(document), encoding="utf-8")
+    except OSError as exc:
+        raise CLIError(f"could not write IR {str(output_path)!r}: {exc}") from exc
 
 
 def run(
@@ -61,38 +110,11 @@ def run(
     except (OSError, ValueError) as exc:
         raise CLIError(str(exc)) from exc
 
-    if prompt_file is not None:
-        prompt_path = Path(prompt_file)
-        try:
-            prompt_path.parent.mkdir(parents=True, exist_ok=True)
-            prompt_path.write_text(prompt, encoding="utf-8")
-        except OSError as exc:
-            raise CLIError(f"could not write prompt {str(prompt_path)!r}: {exc}") from exc
-    else:
-        (prompt_stream if prompt_stream is not None else sys.stderr).write(prompt + "\n")
-
-    if response_file is None:
-        raise CLIError(
-            "a semantic response is required; use --response-file PATH or "
-            "--response-file - for stdin"
-        )
-
-    response = _read_response(response_file, input_stream=input_stream)
-    try:
-        document = parse_semantic_response(response)
-        load_bundle([document])
-    except (OSError, TypeError, ValueError) as exc:
-        raise CLIError(f"semantic response failed IR validation: {exc}") from exc
+    _emit_prompt(prompt, prompt_file=prompt_file, prompt_stream=prompt_stream)
+    document = _resolve_document(response_file, input_stream=input_stream)
 
     output_path = Path(output) if output is not None else default_ir_path(source_path)
-    try:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
-    except OSError as exc:
-        raise CLIError(f"could not write IR {str(output_path)!r}: {exc}") from exc
+    _write_ir_document(document, output_path)
     return output_path
 
 
@@ -116,19 +138,19 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    try:
-        output = run(
+    return run_cli(
+        argv,
+        parser_factory=build_parser,
+        action=lambda args: run(
             args.source,
             output=args.output,
             response_file=args.response_file,
             prompt_file=args.prompt_file,
-        )
-    except CLIError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    print(f"wrote {output}")
-    return 0
+        ),
+        error_types=(CLIError,),
+        logger=logger,
+        on_success=lambda output: logger.info(f"wrote {output}"),
+    )
 
 
 if __name__ == "__main__":

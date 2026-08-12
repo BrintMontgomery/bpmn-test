@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import bpmn_engine as engine
+from geometry import GeometryFinding
 from validate_bpmn import Validator
 
 
@@ -369,6 +370,55 @@ class EngineTests(unittest.TestCase):
         )
         self.assertIn("classDef b fill:#eeeeee", mermaid)
 
+
+
+class RepairPlacementHelperTests(unittest.TestCase):
+    """Direct coverage for the pure helpers hoisted out of _repair_placements."""
+
+    def test_repair_candidates_recovers_owner_from_label_and_annotation_ids(self) -> None:
+        node_index = {"Task_A": 0, "Task_B": 1}
+        finding = GeometryFinding("label overlap", "Task_A label", "Ann_Task_B")
+        self.assertEqual(
+            ["Task_A", "Task_B"], engine._repair_candidates(finding, node_index)
+        )
+
+    def test_repair_candidates_recovers_endpoints_from_flow_and_assoc_ids(self) -> None:
+        node_index = {"Task_A": 0, "Task_B": 1, "Task_C": 2}
+        finding = GeometryFinding("edge crossing", "Flow_Task_B__Task_C", "Assoc_Task_A")
+        self.assertEqual(
+            ["Task_A", "Task_B", "Task_C"],
+            engine._repair_candidates(finding, node_index),
+        )
+
+    def test_repair_score_orders_by_finding_count_then_subrow_sum_then_max_col(self) -> None:
+        placements = {"A": engine.Placement(2, 1), "B": engine.Placement(3, 0)}
+        findings = [GeometryFinding("shape overlap", "A", "B")]
+        self.assertEqual((1, 1, 3), engine._repair_score(findings, placements))
+
+    def test_apply_proposal_shifts_column_for_reachable_descendants_only(self) -> None:
+        current = {
+            "A": engine.Placement(0, 0),
+            "B": engine.Placement(1, 0),
+            "C": engine.Placement(2, 0),
+            "D": engine.Placement(5, 0),
+        }
+        forward_adjacency = {"A": ["B"], "B": ["C"], "C": [], "D": []}
+        old = current["A"]
+        proposal = engine.Placement(old.col + 1, old.subrow)
+        candidate = engine._apply_proposal(current, "A", proposal, old, forward_adjacency)
+        self.assertEqual(engine.Placement(1, 0), candidate["A"])
+        self.assertEqual(engine.Placement(2, 0), candidate["B"])
+        self.assertEqual(engine.Placement(3, 0), candidate["C"])
+        self.assertEqual(engine.Placement(5, 0), candidate["D"])
+
+    def test_apply_proposal_only_shifts_the_node_itself_when_column_is_unchanged(self) -> None:
+        current = {"A": engine.Placement(0, 0), "B": engine.Placement(1, 0)}
+        forward_adjacency = {"A": ["B"], "B": []}
+        old = current["A"]
+        proposal = engine.Placement(old.col, old.subrow + 1)
+        candidate = engine._apply_proposal(current, "A", proposal, old, forward_adjacency)
+        self.assertEqual(engine.Placement(0, 1), candidate["A"])
+        self.assertEqual(engine.Placement(1, 0), candidate["B"])
 
 
 class PreviewTests(unittest.TestCase):

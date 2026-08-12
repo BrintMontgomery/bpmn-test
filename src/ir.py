@@ -121,6 +121,36 @@ def _unique(ids: list[str], path: str) -> None:
         seen.add(item)
 
 
+def _positive_int(value: Any, path: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        _fail(path, "must be a positive integer")
+    return value
+
+
+def _optional_array(container: dict[str, Any], field: str, path: str) -> list[Any]:
+    """Return ``container[field]`` as a list, defaulting to ``[]`` when absent."""
+    return _array(container.get(field, []), path)
+
+
+def _validate_required_array(
+    document: dict[str, Any], field: str, path: str, *, item_name: str
+) -> list[Any]:
+    items = _array(document[field], path)
+    if not items:
+        _fail(path, f"must contain at least one {item_name}")
+    return items
+
+
+def _item_object(
+    raw_item: Any, index: int, base_path: str, *, allowed: set[str], required: set[str]
+) -> tuple[dict[str, Any], str]:
+    path = f"{base_path}[{index}]"
+    item = _object(raw_item, path)
+    _keys(item, allowed, path)
+    _required(item, required, path)
+    return item, path
+
+
 def _read_document(path_or_mapping: str | Path | Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(path_or_mapping, Mapping):
         return _object(path_or_mapping, "IR")
@@ -180,14 +210,14 @@ def _validate_documents(
 ) -> tuple[list[dict[str, str]], list[str]]:
     """Validate the generated-BPMN output manifest."""
 
-    documents_raw = _array(document.get("documents", []), "documents")
+    documents_raw = _optional_array(document, "documents", "documents")
     documents: list[dict[str, str]] = []
     document_ids: list[str] = []
     for index, raw_document in enumerate(documents_raw):
-        path = f"documents[{index}]"
-        item = _object(raw_document, path)
-        _keys(item, {"id", "file", "role"}, path)
-        _required(item, {"id", "file"}, path)
+        item, path = _item_object(
+            raw_document, index, "documents",
+            allowed={"id", "file", "role"}, required={"id", "file"},
+        )
         document_id = _string(item["id"], f"{path}.id", allow_empty=False)
         filename = _string(item["file"], f"{path}.file", allow_empty=False)
         role = _string(item.get("role", "main"), f"{path}.role", allow_empty=False)
@@ -216,20 +246,20 @@ def _validate_decomposition(document: dict[str, Any]) -> dict[str, Any]:
     mode = decomposition_raw.get("mode", "off")
     if mode not in {"off", "auto"}:
         _fail("decomposition.mode", "must be one of ['auto', 'off']")
-    max_nodes = decomposition_raw.get("max_nodes_per_plane", 50)
-    if isinstance(max_nodes, bool) or not isinstance(max_nodes, int) or max_nodes < 1:
-        _fail("decomposition.max_nodes_per_plane", "must be a positive integer")
-    max_columns = decomposition_raw.get("max_columns", 14)
-    if isinstance(max_columns, bool) or not isinstance(max_columns, int) or max_columns < 1:
-        _fail("decomposition.max_columns", "must be a positive integer")
+    max_nodes = _positive_int(
+        decomposition_raw.get("max_nodes_per_plane", 50), "decomposition.max_nodes_per_plane"
+    )
+    max_columns = _positive_int(
+        decomposition_raw.get("max_columns", 14), "decomposition.max_columns"
+    )
     max_width = decomposition_raw.get("max_pool_width", 3200)
     _number(max_width, "decomposition.max_pool_width", minimum=1)
-    max_lanes = decomposition_raw.get("max_lanes_per_collapsed_phase", 3)
-    if isinstance(max_lanes, bool) or not isinstance(max_lanes, int) or max_lanes < 1:
-        _fail("decomposition.max_lanes_per_collapsed_phase", "must be a positive integer")
-    collapse_phases = _array(
-        decomposition_raw.get("collapse_phases", []),
-        "decomposition.collapse_phases",
+    max_lanes = _positive_int(
+        decomposition_raw.get("max_lanes_per_collapsed_phase", 3),
+        "decomposition.max_lanes_per_collapsed_phase",
+    )
+    collapse_phases = _optional_array(
+        decomposition_raw, "collapse_phases", "decomposition.collapse_phases"
     )
     for index, phase_id in enumerate(collapse_phases):
         _string(phase_id, f"decomposition.collapse_phases[{index}]", allow_empty=False)
@@ -248,16 +278,14 @@ def _validate_lanes(
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Validate the lane list and its per-lane annotation placement flag."""
 
-    lanes_raw = _array(document["lanes"], "lanes")
-    if not lanes_raw:
-        _fail("lanes", "must contain at least one lane")
+    lanes_raw = _validate_required_array(document, "lanes", "lanes", item_name="lane")
     lanes: list[dict[str, Any]] = []
     lane_ids: list[str] = []
     for index, raw_lane in enumerate(lanes_raw):
-        path = f"lanes[{index}]"
-        lane = _object(raw_lane, path)
-        _keys(lane, {"id", "name", "ann_above"}, path)
-        _required(lane, {"id", "name"}, path)
+        lane, path = _item_object(
+            raw_lane, index, "lanes",
+            allowed={"id", "name", "ann_above"}, required={"id", "name"},
+        )
         lane_id = _string(lane["id"], f"{path}.id", allow_empty=False)
         name = _string(lane["name"], f"{path}.name")
         ann_above = lane.get("ann_above", False)
@@ -273,22 +301,71 @@ def _validate_phases(
 ) -> tuple[list[dict[str, str]], list[str]]:
     """Validate the ordered phase list."""
 
-    phases_raw = _array(document["phases"], "phases")
-    if not phases_raw:
-        _fail("phases", "must contain at least one phase")
+    phases_raw = _validate_required_array(document, "phases", "phases", item_name="phase")
     phases: list[dict[str, str]] = []
     phase_ids: list[str] = []
     for index, raw_phase in enumerate(phases_raw):
-        path = f"phases[{index}]"
-        phase = _object(raw_phase, path)
-        _keys(phase, {"id", "name"}, path)
-        _required(phase, {"id", "name"}, path)
+        phase, path = _item_object(
+            raw_phase, index, "phases",
+            allowed={"id", "name"}, required={"id", "name"},
+        )
         phase_id = _string(phase["id"], f"{path}.id", allow_empty=False)
         name = _string(phase["name"], f"{path}.name")
         phases.append({"id": phase_id, "name": name})
         phase_ids.append(phase_id)
     _unique(phase_ids, "phases")
     return phases, phase_ids
+
+
+def _validate_task_ttype(node: dict[str, Any], kind: str, path: str) -> str:
+    """Validate the task-only ``ttype`` field; reject it on non-task nodes."""
+    if kind != "task":
+        if "ttype" in node:
+            _fail(f"{path}.ttype", "is only valid for task nodes")
+        return "manual"
+    ttype = node.get("ttype", "manual")
+    _string(ttype, f"{path}.ttype")
+    if ttype not in TASK_TYPES:
+        _fail(f"{path}.ttype", f"must be one of {sorted(TASK_TYPES)}")
+    return ttype
+
+
+def _validate_subprocess_fields(
+    node: dict[str, Any], kind: str, path: str, *, called_element: Any, link_name: Any
+) -> bool:
+    """Validate ``collapsed`` and that only subprocess nodes carry it."""
+    collapsed = node.get("collapsed", False)
+    _bool(collapsed, f"{path}.collapsed")
+    if kind == "subprocess":
+        if called_element is not None or link_name is not None:
+            _fail(path, "subprocess cannot have called_element or link_name")
+    elif collapsed:
+        _fail(f"{path}.collapsed", "is only valid for subprocess nodes")
+    return collapsed
+
+
+def _validate_call_activity_field(node: dict[str, Any], kind: str, path: str) -> str | None:
+    """Validate the call_activity-only ``called_element`` field."""
+    called_element = node.get("called_element")
+    if kind == "call_activity":
+        if called_element is None:
+            _fail(f"{path}.called_element", "is required for call_activity nodes")
+        _string(called_element, f"{path}.called_element", allow_empty=False)
+    elif called_element is not None:
+        _fail(f"{path}.called_element", "is only valid for call_activity nodes")
+    return called_element
+
+
+def _validate_link_name_field(node: dict[str, Any], kind: str, path: str) -> str | None:
+    """Validate the link-event-only ``link_name`` field."""
+    link_name = node.get("link_name")
+    if kind in {"link_throw", "link_catch"}:
+        if link_name is None:
+            _fail(f"{path}.link_name", "is required for link events")
+        _string(link_name, f"{path}.link_name", allow_empty=False)
+    elif link_name is not None:
+        _fail(f"{path}.link_name", "is only valid for link events")
+    return link_name
 
 
 def _validate_nodes(
@@ -301,19 +378,18 @@ def _validate_nodes(
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Validate every node, its kind-specific fields, and its references."""
 
-    nodes_raw = _array(document["nodes"], "nodes")
-    if not nodes_raw:
-        _fail("nodes", "must contain at least one node")
+    nodes_raw = _validate_required_array(document, "nodes", "nodes", item_name="node")
     nodes: list[dict[str, Any]] = []
     node_ids: list[str] = []
     for index, raw_node in enumerate(nodes_raw):
-        path = f"nodes[{index}]"
-        node = _object(raw_node, path)
-        _keys(node, {
-            "id", "kind", "lane", "phase", "name", "ttype", "doc", "note",
-            "parent", "collapsed", "called_element", "link_name",
-        }, path)
-        _required(node, {"id", "kind", "lane", "phase", "name"}, path)
+        node, path = _item_object(
+            raw_node, index, "nodes",
+            allowed={
+                "id", "kind", "lane", "phase", "name", "ttype", "doc", "note",
+                "parent", "collapsed", "called_element", "link_name",
+            },
+            required={"id", "kind", "lane", "phase", "name"},
+        )
         node_id = _string(node["id"], f"{path}.id", allow_empty=False)
         kind = _string(node["kind"], f"{path}.kind")
         if kind not in NODE_KINDS:
@@ -322,15 +398,7 @@ def _validate_nodes(
         phase = _string(node["phase"], f"{path}.phase", allow_empty=False)
         name = _string(node["name"], f"{path}.name")
 
-        if kind == "task":
-            ttype = node.get("ttype", "manual")
-            _string(ttype, f"{path}.ttype")
-            if ttype not in TASK_TYPES:
-                _fail(f"{path}.ttype", f"must be one of {sorted(TASK_TYPES)}")
-        elif "ttype" in node:
-            _fail(f"{path}.ttype", "is only valid for task nodes")
-        else:
-            ttype = "manual"
+        ttype = _validate_task_ttype(node, kind, path)
 
         doc = node.get("doc", [])
         _array(doc, f"{path}.doc")
@@ -343,27 +411,12 @@ def _validate_nodes(
         if parent is not None:
             _string(parent, f"{path}.parent", allow_empty=False)
 
-        collapsed = node.get("collapsed", False)
-        _bool(collapsed, f"{path}.collapsed")
-        called_element = node.get("called_element")
-        link_name = node.get("link_name")
-        if kind == "subprocess":
-            if called_element is not None or link_name is not None:
-                _fail(path, "subprocess cannot have called_element or link_name")
-        elif collapsed:
-            _fail(f"{path}.collapsed", "is only valid for subprocess nodes")
-        if kind == "call_activity":
-            if called_element is None:
-                _fail(f"{path}.called_element", "is required for call_activity nodes")
-            _string(called_element, f"{path}.called_element", allow_empty=False)
-        elif called_element is not None:
-            _fail(f"{path}.called_element", "is only valid for call_activity nodes")
-        if kind in {"link_throw", "link_catch"}:
-            if link_name is None:
-                _fail(f"{path}.link_name", "is required for link events")
-            _string(link_name, f"{path}.link_name", allow_empty=False)
-        elif link_name is not None:
-            _fail(f"{path}.link_name", "is only valid for link events")
+        collapsed = _validate_subprocess_fields(
+            node, kind, path,
+            called_element=node.get("called_element"), link_name=node.get("link_name"),
+        )
+        called_element = _validate_call_activity_field(node, kind, path)
+        link_name = _validate_link_name_field(node, kind, path)
 
         normalized = {
             "id": node_id, "kind": kind, "lane": lane, "phase": phase,
@@ -472,14 +525,15 @@ def _validate_external_pools(
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Validate participant pools drawn outside the process."""
 
-    pools_raw = _array(document.get("external_pools", []), "external_pools")
+    pools_raw = _optional_array(document, "external_pools", "external_pools")
     pools: list[dict[str, Any]] = []
     pool_ids: list[str] = []
     for index, raw_pool in enumerate(pools_raw):
-        path = f"external_pools[{index}]"
-        pool = _object(raw_pool, path)
-        _keys(pool, {"id", "name", "anchor", "width", "height", "gap_above", "mermaid_id"}, path)
-        _required(pool, {"id", "name", "anchor"}, path)
+        pool, path = _item_object(
+            raw_pool, index, "external_pools",
+            allowed={"id", "name", "anchor", "width", "height", "gap_above", "mermaid_id"},
+            required={"id", "name", "anchor"},
+        )
         pool_id = _string(pool["id"], f"{path}.id", allow_empty=False)
         name = _string(pool["name"], f"{path}.name")
         anchor = _string(pool["anchor"], f"{path}.anchor", allow_empty=False)
@@ -507,14 +561,15 @@ def _validate_message_flows(
 ) -> list[dict[str, Any]]:
     """Validate collaboration message flows and their label geometry."""
 
-    message_raw = _array(document.get("message_flows", []), "message_flows")
+    message_raw = _optional_array(document, "message_flows", "message_flows")
     messages: list[dict[str, Any]] = []
     message_ids: list[str] = []
     for index, raw_message in enumerate(message_raw):
-        path = f"message_flows[{index}]"
-        message = _object(raw_message, path)
-        _keys(message, {"id", "source", "target", "name", "mermaid_name", "label_width", "label_height", "label_dx", "label_dy"}, path)
-        _required(message, {"source", "target"}, path)
+        message, path = _item_object(
+            raw_message, index, "message_flows",
+            allowed={"id", "source", "target", "name", "mermaid_name", "label_width", "label_height", "label_dx", "label_dy"},
+            required={"source", "target"},
+        )
         source = _string(message["source"], f"{path}.source", allow_empty=False)
         target = _string(message["target"], f"{path}.target", allow_empty=False)
         if source not in endpoint_ids:
@@ -548,8 +603,7 @@ def _validate_presentation(
 ) -> tuple[list[str], dict[str, Any], list[str]]:
     """Validate the Mermaid/preview styling fields, which are all lane-keyed."""
 
-    ann_above = document.get("ann_above", [])
-    _array(ann_above, "ann_above")
+    ann_above = _optional_array(document, "ann_above", "ann_above")
     for index, lane_id in enumerate(ann_above):
         _string(lane_id, f"ann_above[{index}]", allow_empty=False)
         if lane_id not in lane_id_set:
@@ -560,8 +614,7 @@ def _validate_presentation(
         if lane_id not in lane_id_set:
             _fail("lane_classes", f"unknown lane {lane_id!r}")
         _string(class_name, f"lane_classes.{lane_id}", allow_empty=False)
-    mermaid_class_defs = document.get("mermaid_class_defs", [])
-    _array(mermaid_class_defs, "mermaid_class_defs")
+    mermaid_class_defs = _optional_array(document, "mermaid_class_defs", "mermaid_class_defs")
     for index, class_def in enumerate(mermaid_class_defs):
         _string(class_def, f"mermaid_class_defs[{index}]")
     return list(ann_above), lane_classes, list(mermaid_class_defs)
@@ -762,6 +815,16 @@ def model_to_document(model: ProcessModel) -> dict[str, Any]:
             ),
         },
     }
+
+
+def dumps_ir_document(document: dict[str, Any]) -> str:
+    """Serialize an IR JSON document exactly as every IR writer expects.
+
+    Deterministic key order (``sort_keys``) keeps repeated regenerations of
+    the same IR byte-identical, which downstream diffing and golden-file
+    comparisons rely on.
+    """
+    return json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
 def validate_ir(path_or_mapping: str | Path | Mapping[str, Any]) -> None:

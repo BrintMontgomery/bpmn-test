@@ -56,6 +56,11 @@ def _segment_crosses(
     )
 
 
+def strip_label_suffix(element_id: str) -> str:
+    """Return the owning element id for a synthetic ``"<id> label"`` pseudo-id."""
+    return element_id.split(" label", 1)[0]
+
+
 def _edge_owns(edge_id: str, obstacle_id: str) -> bool:
     """Whether an obstacle is one of the edge's own endpoints or labels.
 
@@ -63,7 +68,7 @@ def _edge_owns(edge_id: str, obstacle_id: str) -> bool:
     ``bpmn_engine.flow_id``), so a substring test identifies the shapes an edge
     is expected to touch and must not be reported as crossing.
     """
-    return obstacle_id.split(" label", 1)[0] in edge_id
+    return strip_label_suffix(obstacle_id) in edge_id
 
 
 def check_geometry(
@@ -110,9 +115,9 @@ def check_geometry(
                     ))
 
     for label_id, label_box in sorted(labels.items()):
-        owner = label_id.split(" label", 1)[0]
+        owner = strip_label_suffix(label_id)
         for obstacle_id, obstacle_box in sorted_obstacles:
-            if obstacle_id == label_id or obstacle_id.split(" label", 1)[0] == owner:
+            if obstacle_id == label_id or strip_label_suffix(obstacle_id) == owner:
                 continue
             checks += 1
             if _overlaps(label_box, obstacle_box, pad=pad):

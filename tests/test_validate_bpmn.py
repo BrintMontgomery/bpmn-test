@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from geometry import GeometryFinding, check_geometry, format_finding
+from geometry import GeometryFinding, check_geometry, format_finding, strip_label_suffix
 from validate_bpmn import Validator, main, validate_bundle
 
 BPMN = "{http://www.omg.org/spec/BPMN/20100524/MODEL}"
@@ -292,6 +292,19 @@ class ValidatorTests(unittest.TestCase):
             result = main([])
         self.assertEqual(2, result)
         self.assertIn("usage:", output.getvalue())
+
+
+class StripLabelSuffixTests(unittest.TestCase):
+    def test_strips_the_label_suffix_when_present(self) -> None:
+        self.assertEqual("Task_1", strip_label_suffix("Task_1 label"))
+
+    def test_leaves_ids_without_a_label_suffix_unchanged(self) -> None:
+        self.assertEqual("Task_1", strip_label_suffix("Task_1"))
+
+    def test_only_strips_the_first_label_occurrence(self) -> None:
+        self.assertEqual(
+            "Flow_A__B", strip_label_suffix("Flow_A__B label")
+        )
 
 
 if __name__ == "__main__":

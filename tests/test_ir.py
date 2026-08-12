@@ -7,7 +7,18 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import bpmn_engine as engine
-from ir import IR_SCHEMA_PATH, IRValidationError, load_bundle, load_ir, validate_ir
+from ir import (
+    IR_SCHEMA_PATH,
+    IRValidationError,
+    _item_object,
+    _optional_array,
+    _positive_int,
+    _validate_required_array,
+    dumps_ir_document,
+    load_bundle,
+    load_ir,
+    validate_ir,
+)
 from validate_bpmn import Validator
 
 
@@ -255,6 +266,57 @@ class IRTests(unittest.TestCase):
             path = Path(directory) / "process.bpmn"
             engine.write_bpmn(path, model, first_layout, scope)
             self.assertTrue(Validator(path).run())
+
+
+class ValidationHelperTests(unittest.TestCase):
+    """Direct coverage for the small scaffolding helpers _validate_and_normalize
+    delegates to, extracted to remove duplication across the section validators.
+    """
+
+    def test_positive_int_accepts_positive_integers_only(self) -> None:
+        self.assertEqual(3, _positive_int(3, "field"))
+        with self.assertRaisesRegex(IRValidationError, "must be a positive integer"):
+            _positive_int(0, "field")
+        with self.assertRaisesRegex(IRValidationError, "must be a positive integer"):
+            _positive_int(-1, "field")
+        with self.assertRaisesRegex(IRValidationError, "must be a positive integer"):
+            _positive_int(True, "field")  # bool is an int subclass
+        with self.assertRaisesRegex(IRValidationError, "must be a positive integer"):
+            _positive_int(1.5, "field")
+
+    def test_optional_array_defaults_to_empty_list(self) -> None:
+        self.assertEqual([], _optional_array({}, "items", "items"))
+        self.assertEqual([1, 2], _optional_array({"items": [1, 2]}, "items", "items"))
+        with self.assertRaisesRegex(IRValidationError, "expected an array"):
+            _optional_array({"items": {}}, "items", "items")
+
+    def test_validate_required_array_rejects_empty(self) -> None:
+        with self.assertRaisesRegex(
+            IRValidationError, "must contain at least one lane"
+        ):
+            _validate_required_array({"lanes": []}, "lanes", "lanes", item_name="lane")
+        self.assertEqual(
+            [1], _validate_required_array({"lanes": [1]}, "lanes", "lanes", item_name="lane")
+        )
+
+    def test_item_object_checks_keys_and_required_fields(self) -> None:
+        item, path = _item_object(
+            {"id": "x"}, 0, "lanes", allowed={"id", "name"}, required={"id"}
+        )
+        self.assertEqual({"id": "x"}, item)
+        self.assertEqual("lanes[0]", path)
+        with self.assertRaisesRegex(IRValidationError, "unknown field"):
+            _item_object({"id": "x", "bogus": 1}, 0, "lanes", allowed={"id"}, required={"id"})
+        with self.assertRaisesRegex(IRValidationError, "missing required field"):
+            _item_object({}, 0, "lanes", allowed={"id"}, required={"id"})
+
+
+class DumpsIRDocumentTests(unittest.TestCase):
+    def test_output_is_sorted_and_newline_terminated(self) -> None:
+        text = dumps_ir_document({"b": 1, "a": 2})
+        self.assertTrue(text.endswith("\n"))
+        self.assertLess(text.index('"a"'), text.index('"b"'))
+        self.assertEqual({"b": 1, "a": 2}, json.loads(text))
 
 
 if __name__ == "__main__":

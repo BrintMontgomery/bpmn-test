@@ -16,7 +16,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from geometry import GeometryFinding, check_geometry
+from geometry import GeometryFinding, check_geometry, strip_label_suffix
 
 
 # --------------------------------------------------------------------------
@@ -584,6 +584,47 @@ def _reachable(start: str, adjacency: dict[str, list[str]]) -> set[str]:
     return seen
 
 
+def _gateway_branches(gateway: Node, outgoing: list[Edge]) -> list[Edge]:
+    """Return the outgoing edges that count as branches for this gateway kind."""
+    if gateway.kind == "gateway_x":
+        return [edge for edge in outgoing if edge.condition]
+    if gateway.kind == "gateway_p":
+        return outgoing
+    return []
+
+
+def _branch_unique_reach(
+    edge: Edge, outgoing: list[Edge], reach_by_edge: dict[int, set[str]]
+) -> set[str]:
+    """Return the nodes only ``edge`` (not any sibling branch) can reach."""
+    other_reach: set[str] = set()
+    for other in outgoing:
+        if other != edge:
+            other_reach.update(reach_by_edge[id(other)])
+    return reach_by_edge[id(edge)] - other_reach
+
+
+def _branch_tokens_for_edge(
+    gateway: Node, edge: Edge, unique: set[str], desired: int,
+    nodes: list[Node], columns: dict[str, int],
+    lanes: list[tuple[str, str]],
+) -> list[BranchToken]:
+    """Return one BranchToken per lane that this branch's unique nodes touch."""
+    tokens: list[BranchToken] = []
+    for lane_id, _ in lanes:
+        lane_nodes = unique & {node.id for node in nodes if node.lane == lane_id}
+        if not lane_nodes:
+            continue
+        tokens.append(BranchToken(
+            key=(gateway.id, edge.target, lane_id),
+            start=min(columns[node_id] for node_id in lane_nodes),
+            end=max(columns[node_id] for node_id in lane_nodes),
+            desired=desired,
+            nodes=frozenset(lane_nodes),
+        ))
+    return tokens
+
+
 def _auto_placements(model: ProcessModel, scope: Scope) -> dict[str, Placement]:
     """Compute columns, semantic branch depth, and deterministic row colors."""
     columns, order = _topological_layout_data(model, scope)
@@ -615,23 +656,14 @@ def _auto_placements(model: ProcessModel, scope: Scope) -> dict[str, Placement]:
         outgoing = [edge for edge in forward if edge.source == gateway.id]
         if len(outgoing) < 2:
             continue
-        if gateway.kind == "gateway_x":
-            branches = [edge for edge in outgoing if edge.condition]
-        elif gateway.kind == "gateway_p":
-            branches = outgoing
-        else:
-            branches = []
+        branches = _gateway_branches(gateway, outgoing)
         if not branches:
             continue
         reach_by_edge = {
             id(edge): _reachable(edge.target, adjacency) for edge in outgoing
         }
         for edge in branches:
-            other_reach: set[str] = set()
-            for other in outgoing:
-                if other != edge:
-                    other_reach.update(reach_by_edge[id(other)])
-            unique = reach_by_edge[id(edge)] - other_reach
+            unique = _branch_unique_reach(edge, outgoing, reach_by_edge)
             desired = branch_depth[gateway.id]
             if gateway.kind == "gateway_x" and edge.condition:
                 desired += 1
@@ -641,19 +673,10 @@ def _auto_placements(model: ProcessModel, scope: Scope) -> dict[str, Placement]:
                 }
             if not unique:
                 continue
-            for lane_id, _ in _scope_lanes(model, scope):
-                lane_nodes = unique & {
-                    node.id for node in nodes if node.lane == lane_id
-                }
-                if not lane_nodes:
-                    continue
-                branch_tokens.append(BranchToken(
-                    key=(gateway.id, edge.target, lane_id),
-                    start=min(columns[node_id] for node_id in lane_nodes),
-                    end=max(columns[node_id] for node_id in lane_nodes),
-                    desired=desired,
-                    nodes=frozenset(lane_nodes),
-                ))
+            branch_tokens.extend(_branch_tokens_for_edge(
+                gateway, edge, unique, desired, nodes, columns,
+                _scope_lanes(model, scope),
+            ))
 
     # Interval coloring is deterministic and keeps overlapping option spans
     # on separate rows even when their individual nodes do not share a column.
@@ -985,6 +1008,31 @@ def message_flow_geometry(
 # --------------------------------------------------------------------------
 
 
+def _external_bounds_map(
+    model: ProcessModel, lay: Layout
+) -> dict[str, tuple[float, float, float, float]]:
+    return {
+        pool.id: _external_pool_bounds(model, pool, lay)
+        for pool in model.external_pools
+    }
+
+
+def _resolve_message_source(
+    message: MessageFlow, *,
+    external_bounds: dict[str, tuple[float, float, float, float]],
+    node_bounds: dict[str, tuple[float, float, float, float]],
+) -> tuple[float, float, float, float] | None:
+    return external_bounds.get(message.source) or node_bounds.get(message.source)
+
+
+def _resolve_message_target(
+    message: MessageFlow, *,
+    external_bounds: dict[str, tuple[float, float, float, float]],
+    node_bounds: dict[str, tuple[float, float, float, float]],
+) -> tuple[float, float, float, float] | None:
+    return node_bounds.get(message.target) or external_bounds.get(message.target)
+
+
 def _layout_labels(
     model: ProcessModel, scope: Scope, lay: Layout
 ) -> dict[str, tuple[float, float, float, float]]:
@@ -1002,17 +1050,14 @@ def _layout_labels(
             )
 
     if scope.include_pool:
-        external_bounds = {
-            pool.id: _external_pool_bounds(model, pool, lay)
-            for pool in model.external_pools
-        }
+        external_bounds = _external_bounds_map(model, lay)
         for message in model.message_flows:
-            source = external_bounds.get(message.source)
-            if source is None:
-                source = lay.bounds.get(message.source)
-            target = lay.bounds.get(message.target)
-            if target is None:
-                target = external_bounds.get(message.target)
+            source = _resolve_message_source(
+                message, external_bounds=external_bounds, node_bounds=lay.bounds
+            )
+            target = _resolve_message_target(
+                message, external_bounds=external_bounds, node_bounds=lay.bounds
+            )
             if source is None or target is None:
                 continue
             _, label = message_flow_geometry(message, source, target)
@@ -1037,13 +1082,14 @@ def _layout_edges(
         ))
 
     if scope.include_pool:
-        external_bounds = {
-            pool.id: _external_pool_bounds(model, pool, lay)
-            for pool in model.external_pools
-        }
+        external_bounds = _external_bounds_map(model, lay)
         for message in model.message_flows:
-            source = external_bounds.get(message.source) or lay.bounds.get(message.source)
-            target = lay.bounds.get(message.target) or external_bounds.get(message.target)
+            source = _resolve_message_source(
+                message, external_bounds=external_bounds, node_bounds=lay.bounds
+            )
+            target = _resolve_message_target(
+                message, external_bounds=external_bounds, node_bounds=lay.bounds
+            )
             if source is None or target is None:
                 continue
             points, _ = message_flow_geometry(message, source, target)
@@ -1080,6 +1126,86 @@ def _placement_order_valid(
     return violation is None
 
 
+def _repair_candidates(finding: GeometryFinding, node_index: dict[str, int]) -> list[str]:
+    candidates: list[str] = []
+    for value in (finding.first, finding.second):
+        owner = strip_label_suffix(value)
+        if owner.startswith("Ann_"):
+            owner = owner.removeprefix("Ann_")
+        if owner in node_index and owner not in candidates:
+            candidates.append(owner)
+        if owner.startswith("Flow_"):
+            flow = owner.removeprefix("Flow_")
+            source, separator, target = flow.partition("__")
+            for endpoint in (source, target) if separator else ():
+                if endpoint in node_index and endpoint not in candidates:
+                    candidates.append(endpoint)
+        if owner.startswith("Assoc_"):
+            endpoint = owner.removeprefix("Assoc_")
+            if endpoint in node_index and endpoint not in candidates:
+                candidates.append(endpoint)
+    return sorted(candidates, key=lambda node_id: node_index[node_id])
+
+
+def _repair_score(findings: list[GeometryFinding], placements: dict[str, Placement]):
+    return (
+        len(findings),
+        sum(placement.subrow for placement in placements.values()),
+        max(placement.col for placement in placements.values()),
+    )
+
+
+def _apply_proposal(
+    current: dict[str, Placement],
+    proposal_node: str,
+    proposal: Placement,
+    old: Placement,
+    forward_adjacency: dict[str, list[str]],
+) -> dict[str, Placement]:
+    """Return a copy of ``current`` with one node's placement shifted.
+
+    Downstream descendants move along with it when the column changes, so a
+    node cannot be nudged past work it must still come before.
+    """
+    candidate = dict(current)
+    if proposal.col != old.col:
+        descendants = _reachable(proposal_node, forward_adjacency)
+    else:
+        descendants = {proposal_node}
+    for descendant in descendants:
+        placement = candidate[descendant]
+        candidate[descendant] = Placement(
+            placement.col + (proposal.col - old.col),
+            placement.subrow if descendant != proposal_node else proposal.subrow,
+        )
+    return candidate
+
+
+def _try_node_proposals(
+    model: ProcessModel,
+    scope: Scope,
+    node_id: str,
+    current: dict[str, Placement],
+    current_score,
+    forward_adjacency: dict[str, list[str]],
+) -> tuple[dict[str, Placement], list[GeometryFinding]] | None:
+    """Try both nudges for one node; return the first improving candidate."""
+    old = current[node_id]
+    proposals = [
+        (node_id, Placement(old.col, old.subrow + 1)),
+        (node_id, Placement(old.col + 1, old.subrow)),
+    ]
+    for proposal_node, proposal in proposals:
+        candidate = _apply_proposal(current, proposal_node, proposal, old, forward_adjacency)
+        if not _placement_order_valid(model, scope, candidate):
+            continue
+        candidate_layout = _build_layout(model, scope, candidate)
+        candidate_findings = layout_findings(model, scope, candidate_layout)
+        if _repair_score(candidate_findings, candidate) < current_score:
+            return candidate, candidate_findings
+    return None
+
+
 def _repair_placements(
     model: ProcessModel,
     scope: Scope,
@@ -1097,67 +1223,19 @@ def _repair_placements(
         if not edge.loop:
             forward_adjacency[edge.source].append(edge.target)
 
-    def node_candidates(finding: GeometryFinding) -> list[str]:
-        candidates: list[str] = []
-        for value in (finding.first, finding.second):
-            owner = value.split(" label", 1)[0]
-            if owner.startswith("Ann_"):
-                owner = owner.removeprefix("Ann_")
-            if owner in node_index and owner not in candidates:
-                candidates.append(owner)
-            if owner.startswith("Flow_"):
-                flow = owner.removeprefix("Flow_")
-                source, separator, target = flow.partition("__")
-                for endpoint in (source, target) if separator else ():
-                    if endpoint in node_index and endpoint not in candidates:
-                        candidates.append(endpoint)
-            if owner.startswith("Assoc_"):
-                endpoint = owner.removeprefix("Assoc_")
-                if endpoint in node_index and endpoint not in candidates:
-                    candidates.append(endpoint)
-        return sorted(candidates, key=lambda node_id: node_index[node_id])
-
-    def score(findings: list[GeometryFinding], placements: dict[str, Placement]):
-        return (
-            len(findings),
-            sum(placement.subrow for placement in placements.values()),
-            max(placement.col for placement in placements.values()),
-        )
-
     for _ in range(max_attempts):
-        current_score = score(current_findings, current)
-        candidates = node_candidates(current_findings[0])
+        current_score = _repair_score(current_findings, current)
+        candidates = _repair_candidates(current_findings[0], node_index)
         if not candidates:
             break
         improved = False
         for node_id in candidates:
-            old = current[node_id]
-            proposals = [
-                (node_id, Placement(old.col, old.subrow + 1)),
-                (node_id, Placement(old.col + 1, old.subrow)),
-            ]
-            for proposal_node, proposal in proposals:
-                candidate = dict(current)
-                if proposal.col != old.col:
-                    descendants = _reachable(proposal_node, forward_adjacency)
-                else:
-                    descendants = {proposal_node}
-                for descendant in descendants:
-                    placement = candidate[descendant]
-                    candidate[descendant] = Placement(
-                        placement.col + (proposal.col - old.col),
-                        placement.subrow if descendant != proposal_node else proposal.subrow,
-                    )
-                if not _placement_order_valid(model, scope, candidate):
-                    continue
-                candidate_layout = _build_layout(model, scope, candidate)
-                candidate_findings = layout_findings(model, scope, candidate_layout)
-                if score(candidate_findings, candidate) < current_score:
-                    current = candidate
-                    current_findings = candidate_findings
-                    improved = True
-                    break
-            if improved:
+            result = _try_node_proposals(
+                model, scope, node_id, current, current_score, forward_adjacency
+            )
+            if result is not None:
+                current, current_findings = result
+                improved = True
                 break
         if not improved:
             break
@@ -1438,10 +1516,9 @@ def build_xml(
 
     external_bounds: dict[str, tuple[float, float, float, float]] = {}
     if scope.include_pool and lay.pool is not None:
+        external_bounds = _external_bounds_map(model, lay)
         for pool in model.external_pools:
-            bounds = _external_pool_bounds(model, pool, lay)
-            external_bounds[pool.id] = bounds
-            shape(pool.id, *bounds, horizontal=True)
+            shape(pool.id, *external_bounds[pool.id], horizontal=True)
 
         px, py, pw, ph = lay.pool
         shape(model.participant_id, px, py, pw, ph, horizontal=True)
@@ -1565,15 +1642,25 @@ def build_xml(
     return defs
 
 
-def write_bpmn(
-    path: Path, model: ProcessModel, lay: Layout, scope: Scope | None = None,
+def render_bpmn_xml(
+    model: ProcessModel, lay: Layout, scope: Scope | None = None,
     *, layouts: dict[str, Layout] | None = None,
-) -> None:
+) -> str:
+    """Serialize one BPMN scope as pretty-printed, blank-line-free XML text."""
     raw = ET.tostring(build_xml(model, lay, scope, layouts=layouts), encoding="utf-8")
     pretty = minidom.parseString(raw).toprettyxml(indent="  ", encoding="UTF-8")
     text = pretty.decode("utf-8")
     text = "\n".join(line for line in text.splitlines() if line.strip())
-    path.write_text(text + "\n", encoding="utf-8")
+    return text + "\n"
+
+
+def write_bpmn(
+    path: Path, model: ProcessModel, lay: Layout, scope: Scope | None = None,
+    *, layouts: dict[str, Layout] | None = None,
+) -> None:
+    path.write_text(
+        render_bpmn_xml(model, lay, scope, layouts=layouts), encoding="utf-8"
+    )
 
 
 # --------------------------------------------------------------------------

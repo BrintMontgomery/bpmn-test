@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import argparse
-import sys
+import logging
 from pathlib import Path
 from typing import TextIO
 
 import ir_to_bpmn
 import sop_to_ir
+from cli_support import run_cli
+from logging_setup import configure
+
+configure()
+logger = logging.getLogger(__name__)
 
 
 def run(
@@ -64,21 +69,21 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    try:
-        paths = run(
+    return run_cli(
+        argv,
+        parser_factory=build_parser,
+        action=lambda args: run(
             args.source,
             ir_output=args.ir_output,
             output_dir=args.output_dir,
             response_file=args.response_file,
             prompt_file=args.prompt_file,
             repair_layout=args.repair_layout,
-        )
-    except (sop_to_ir.CLIError, ir_to_bpmn.CLIError) as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    print(f"validated {len(paths)} BPMN file(s)")
-    return 0
+        ),
+        error_types=(sop_to_ir.CLIError, ir_to_bpmn.CLIError),
+        logger=logger,
+        on_success=lambda paths: logger.info(f"validated {len(paths)} BPMN file(s)"),
+    )
 
 
 if __name__ == "__main__":

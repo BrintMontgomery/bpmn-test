@@ -7,22 +7,26 @@ without a graphical display.
 
 from __future__ import annotations
 
-import json
+import logging
 import os
 import queue
 import threading
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 import ir_to_bpmn
-from ir import load_bundle
+from ir import dumps_ir_document, load_bundle
+from logging_setup import configure
 from markdown_extractor import extract_markdown
 from semantic_handoff import build_semantic_prompt, parse_semantic_response
 from sop_to_ir import default_ir_path
+
+configure()
+logger = logging.getLogger(__name__)
 
 
 class WorkflowError(ValueError):
@@ -74,6 +78,26 @@ def build_ir_validation_feedback(response: str, error: object) -> str:
     )
 
 
+def _validate_semantic_document(response: str) -> dict[str, Any]:
+    try:
+        document = parse_semantic_response(response)
+        load_bundle([document])
+    except (TypeError, ValueError) as exc:
+        raise IRResponseValidationError(
+            f"Semantic response failed IR validation: {exc}"
+        ) from exc
+    return document
+
+
+def _persist_ir_document(document: dict[str, Any], destination: Path, *, overwrite: bool) -> None:
+    if destination.exists() and not overwrite:
+        raise OverwriteRequired([destination])
+    try:
+        destination.write_text(dumps_ir_document(document), encoding="utf-8")
+    except OSError as exc:
+        raise WorkflowError(f"Could not write IR {destination}: {exc}") from exc
+
+
 class SOPToBPMNController:
     """Stateful, UI-neutral facade over the existing SOP-to-BPMN modules."""
 
@@ -119,24 +143,9 @@ class SOPToBPMNController:
     def save_semantic_response(self, response: str, *, overwrite: bool = False) -> Path:
         if self.source is None:
             raise WorkflowError("Select and validate a Markdown file first.")
-        try:
-            document = parse_semantic_response(response)
-            load_bundle([document])
-        except (TypeError, ValueError) as exc:
-            raise IRResponseValidationError(
-                f"Semantic response failed IR validation: {exc}"
-            ) from exc
-
+        document = _validate_semantic_document(response)
         destination = default_ir_path(self.source)
-        if destination.exists() and not overwrite:
-            raise OverwriteRequired([destination])
-        try:
-            destination.write_text(
-                json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-                encoding="utf-8",
-            )
-        except OSError as exc:
-            raise WorkflowError(f"Could not write IR {destination}: {exc}") from exc
+        _persist_ir_document(document, destination, overwrite=overwrite)
         self.ir_path = destination
         return destination
 
@@ -166,11 +175,13 @@ class SOPToBPMNController:
                 repair_layout=repair_layout,
                 output_basename=self.source.stem,
             )
-            paths = ir_to_bpmn.run(
-                [self.ir_path], output_dir=self.source.parent,
-                repair_layout=repair_layout,
-                output_basename=self.source.stem,
-            )
+            directory = self.source.parent
+            directory.mkdir(parents=True, exist_ok=True)
+        except (ir_to_bpmn.CLIError, OSError) as exc:
+            raise WorkflowError(str(exc)) from exc
+        try:
+            paths = ir_to_bpmn.publish_bundle(directory, prepared)
+            ir_to_bpmn.report_published(prepared, paths)
         except ir_to_bpmn.CLIError as exc:
             raise WorkflowError(str(exc)) from exc
         return BuildResult(tuple(paths), prepared.repairs)
@@ -335,6 +346,7 @@ class SOPToBPMNApp:
             try:
                 completed.put((work(), None))
             except Exception as exc:  # returned to Tk's main thread below
+                logger.exception("background task failed")
                 completed.put((None, exc))
 
         threading.Thread(target=runner, daemon=True).start()

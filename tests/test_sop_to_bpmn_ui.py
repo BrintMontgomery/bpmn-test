@@ -223,6 +223,25 @@ class SOPToBPMNControllerTests(unittest.TestCase):
             with self.assertRaises(OverwriteRequired):
                 controller.build_bpmn()
 
+    def test_build_bpmn_no_longer_preflights_the_build_redundantly(self) -> None:
+        """planned_outputs() does its own preflight for the overwrite-consent
+        check (1 call); build_bpmn used to preflight *again* directly and then
+        a third time inside ir_to_bpmn.run() (making 3 total). Only the
+        redundant pair for the build itself should be collapsed, leaving 2.
+        """
+        with TemporaryDirectory() as directory:
+            source = self.make_source(Path(directory), "Case Manager.v2 (Draft).md")
+            controller = SOPToBPMNController()
+            controller.prepare_source(source)
+            controller.save_semantic_response(json.dumps(valid_ir()))
+
+            with patch.object(
+                ir_to_bpmn, "preflight", wraps=ir_to_bpmn.preflight
+            ) as preflight_spy:
+                with redirect_stdout(io.StringIO()):
+                    controller.build_bpmn()
+            self.assertEqual(2, preflight_spy.call_count)
+
     def test_controller_can_opt_into_build_only_layout_repair(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
@@ -263,10 +282,14 @@ class SOPToBPMNControllerTests(unittest.TestCase):
             controller.save_semantic_response(json.dumps(valid_ir()))
             outputs = [source.with_name("main.bpmn"), source.with_name("global.bpmn")]
             with patch.object(ir_to_bpmn, "planned_output_paths", return_value=outputs), \
-                 patch.object(ir_to_bpmn, "run", return_value=outputs):
+                 patch.object(ir_to_bpmn, "publish_bundle", return_value=outputs), \
+                 patch.object(ir_to_bpmn, "report_published"):
                 self.assertEqual(tuple(outputs), controller.build_bpmn().paths)
 
-            with patch.object(ir_to_bpmn, "run", side_effect=ir_to_bpmn.CLIError("validation failed")):
+            with patch.object(
+                ir_to_bpmn, "publish_bundle",
+                side_effect=ir_to_bpmn.CLIError("validation failed"),
+            ):
                 with self.assertRaisesRegex(WorkflowError, "validation failed"):
                     controller.build_bpmn(overwrite=True)
 

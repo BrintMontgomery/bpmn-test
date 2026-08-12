@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import argparse
-import sys
+import logging
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from bpmn_engine import DocumentSpec, ProcessBundle
+from cli_support import run_cli
 from decomposition import PreparedBundle, prepare_bundle_for_build, write_prepared_bundle
 from ir import IRValidationError, load_bundle, validate_document_manifest
+from logging_setup import configure
 from validate_bpmn import FLOW_NODE_TAGS, local, validate_bundle
+
+configure()
+logger = logging.getLogger(__name__)
 
 
 class CLIError(ValueError):
@@ -142,25 +147,8 @@ def planned_output_paths(
     return [directory / document.file for document in bundle.documents]
 
 
-def run(
-    ir_files: list[str | Path],
-    *,
-    output_dir: str | Path | None = None,
-    repair_layout: bool = False, output_basename: str | None = None,
-) -> list[Path]:
-    """Emit and validate a complete BPMN bundle, returning emitted paths."""
-
-    ir_paths = _ir_paths(ir_files)
-    try:
-        _bundle, prepared = preflight(
-            ir_paths,
-            repair_layout=repair_layout,
-            output_basename=output_basename,
-        )
-        directory = Path(output_dir) if output_dir is not None else ir_paths[0].parent
-        directory.mkdir(parents=True, exist_ok=True)
-    except (OSError, IRValidationError, ValueError) as exc:
-        raise CLIError(str(exc)) from exc
+def publish_bundle(directory: Path, prepared: PreparedBundle) -> list[Path]:
+    """Stage, validate, and atomically publish an already-preflighted bundle."""
 
     # Build in a private directory so an invalid bundle is never published.
     with tempfile.TemporaryDirectory(prefix=".bpmn-stage-", dir=directory) as staged_name:
@@ -183,15 +171,44 @@ def run(
             final_path.parent.mkdir(parents=True, exist_ok=True)
             staged_path.replace(final_path)
             paths.append(final_path)
+    return paths
+
+
+def report_published(prepared: PreparedBundle, paths: list[Path]) -> None:
+    """Log the console lines describing one successful publish."""
 
     for repair in prepared.repairs:
-        print(f"layout repair: {repair}")
+        logger.info(f"layout repair: {repair}")
     for path in paths:
         counts = ", ".join(
             f"{plane_id}: {count} flow nodes"
             for plane_id, count in _plane_node_counts(path)
         )
-        print(f"wrote {path}: {counts or 'no BPMN planes'}")
+        logger.info(f"wrote {path}: {counts or 'no BPMN planes'}")
+
+
+def run(
+    ir_files: list[str | Path],
+    *,
+    output_dir: str | Path | None = None,
+    repair_layout: bool = False, output_basename: str | None = None,
+) -> list[Path]:
+    """Emit and validate a complete BPMN bundle, returning emitted paths."""
+
+    ir_paths = _ir_paths(ir_files)
+    try:
+        _bundle, prepared = preflight(
+            ir_paths,
+            repair_layout=repair_layout,
+            output_basename=output_basename,
+        )
+        directory = Path(output_dir) if output_dir is not None else ir_paths[0].parent
+        directory.mkdir(parents=True, exist_ok=True)
+    except (OSError, IRValidationError, ValueError) as exc:
+        raise CLIError(str(exc)) from exc
+
+    paths = publish_bundle(directory, prepared)
+    report_published(prepared, paths)
     return paths
 
 
@@ -209,17 +226,17 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    try:
-        run(
+    return run_cli(
+        argv,
+        parser_factory=build_parser,
+        action=lambda args: run(
             args.ir_files,
             output_dir=args.output_dir,
             repair_layout=args.repair_layout,
-        )
-    except CLIError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    return 0
+        ),
+        error_types=(CLIError,),
+        logger=logger,
+    )
 
 
 if __name__ == "__main__":

@@ -9,13 +9,18 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from bpmn_engine import ProcessModel, PreviewMetadata
+from logging_setup import configure
 from ofc001_model import MODEL as OFC001_MODEL
 from project_paths import ASSETS_DIR, EXAMPLE_BPMN_DIR, PROJECT_ROOT
+
+configure()
+logger = logging.getLogger(__name__)
 
 # ``HERE`` remains the project root for callers that used this public module
 # constant before the source files were moved under ``src``.
@@ -181,6 +186,120 @@ def _metadata(process_model: ProcessModel) -> PreviewMetadata:
     )
 
 
+@dataclass(frozen=True)
+class DocumentStats:
+    """Diagram-wide element counts shown in the preview's stat row."""
+
+    nodes: int
+    tasks: int
+    gateways: int
+    decisions: int
+    flows: int
+    lanes: int
+
+
+def _document_stats(process_model: ProcessModel) -> DocumentStats:
+    tasks = sum(1 for node in process_model.nodes if node.kind == "task")
+    gateways = sum(1 for node in process_model.nodes
+                   if node.kind.startswith("gateway"))
+    decisions = sum(1 for node in process_model.nodes
+                    if node.kind == "gateway_x" and node.name)
+    return DocumentStats(
+        nodes=len(process_model.nodes),
+        tasks=tasks,
+        gateways=gateways,
+        decisions=decisions,
+        flows=len(process_model.edges),
+        lanes=len(process_model.lanes),
+    )
+
+
+def _collect_notes(process_model: ProcessModel) -> list[tuple[str, str, str]]:
+    notes = []
+    for node in process_model.nodes:
+        if node.note:
+            key, text = _note_parts(node.note)
+            notes.append((key, text, node.name))
+    notes.sort(key=lambda item: item[0])
+    return notes
+
+
+def _document_payload(document: PreviewDocument, document_id: str) -> dict[str, object]:
+    xml = document.read_xml()
+    model_lanes = lane_slugs(document.model)
+    lane_of = {node.id: model_lanes[node.lane]
+               for node in document.model.nodes if node.kind == "task"}
+    download = ("data:application/xml;base64,"
+                + base64.b64encode(xml.encode("utf-8")).decode("ascii"))
+    return {
+        "id": document_id,
+        "filename": document.filename,
+        "xml": xml,
+        "laneOf": lane_of,
+        "download": download,
+    }
+
+
+def _document_tab_html(document: PreviewDocument, document_id: str, *, selected: bool) -> str:
+    label = document.label or document.model.process_name
+    selected_attr = "true" if selected else "false"
+    return (
+        f'<button type="button" class="document-tab" '
+        f'data-document-tab="{esc(document_id)}" '
+        f'aria-selected="{selected_attr}">{esc(label)}</button>'
+    )
+
+
+def _document_canvas_html(document: PreviewDocument, document_id: str, *, active: bool) -> str:
+    label = document.label or document.model.process_name
+    active_class = " active" if active else ""
+    return (
+        f'<div id="canvas-{esc(document_id)}" '
+        f'class="doc-viewer{active_class}" data-document-canvas="'
+        f'{esc(document_id)}" role="img" aria-label="BPMN diagram of '
+        f'{esc(label)}"></div>'
+    )
+
+
+def _lane_legend_html(process_model: ProcessModel, lane_slug_map: dict[str, str]) -> str:
+    return "".join(
+        f'<li class="legend-item"><span class="swatch sw-{lane_slug_map[lane_id]}">'
+        f'</span>{esc(name)}</li>'
+        for lane_id, name in process_model.lanes
+    )
+
+
+def _phase_rows_html(process_model: ProcessModel) -> str:
+    return "".join(
+        f'<li class="phase"><span class="phase-num">{number or "&mdash;"}</span>'
+        f'<span class="phase-title">{esc(title)}</span>'
+        f'<span class="phase-lanes">'
+        + "".join(f'<i class="dot sw-{slug}" aria-hidden="true"></i>'
+                  for slug in lanes)
+        + "</span></li>"
+        for number, title, lanes in phase_summary(process_model)
+    )
+
+
+def _option_rows_html(process_model: ProcessModel) -> str:
+    return "".join(
+        f'<tr><th scope="row"><span class="opt-key">{esc(option.key)}</span></th>'
+        f'<td><strong>{esc(option.title)}</strong><p>{esc(option.trigger)}</p></td>'
+        f'<td><code>{esc(option.gateway)}</code></td>'
+        f'<td>{esc(option.effect)}</td></tr>'
+        for option in process_model.options
+    )
+
+
+def _note_rows_html(notes: list[tuple[str, str, str]]) -> str:
+    return "".join(
+        f'<div class="note"><span class="note-key">{esc(key)}</span>'
+        f'<div><p class="note-text">{esc(text)}</p>'
+        f'<p class="note-anchor">{esc(anchor)}</p></div></div>'
+        for key, text, anchor in notes
+    )
+
+
 def build(bundle: PreviewBundle = DEFAULT_BUNDLE) -> str:
     primary = bundle.primary
     process_model = primary.model
@@ -196,74 +315,17 @@ def build(bundle: PreviewBundle = DEFAULT_BUNDLE) -> str:
     document_tabs = []
     document_canvases = []
     for document, document_id in zip(bundle.documents, document_ids):
-        xml = document.read_xml()
-        model_lanes = lane_slugs(document.model)
-        lane_of = {node.id: model_lanes[node.lane]
-                   for node in document.model.nodes if node.kind == "task"}
-        download = ("data:application/xml;base64,"
-                    + base64.b64encode(xml.encode("utf-8")).decode("ascii"))
-        label = document.label or document.model.process_name
-        documents.append({
-            "id": document_id,
-            "filename": document.filename,
-            "xml": xml,
-            "laneOf": lane_of,
-            "download": download,
-        })
-        selected = "true" if document_id == primary_slug else "false"
+        documents.append(_document_payload(document, document_id))
+        selected = document_id == primary_slug
         document_tabs.append(
-            f'<button type="button" class="document-tab" '
-            f'data-document-tab="{esc(document_id)}" '
-            f'aria-selected="{selected}">{esc(label)}</button>'
+            _document_tab_html(document, document_id, selected=selected)
         )
-        active = " active" if document_id == primary_slug else ""
         document_canvases.append(
-            f'<div id="canvas-{esc(document_id)}" '
-            f'class="doc-viewer{active}" data-document-canvas="'
-            f'{esc(document_id)}" role="img" aria-label="BPMN diagram of '
-            f'{esc(label)}"></div>'
+            _document_canvas_html(document, document_id, active=selected)
         )
 
-    tasks = sum(1 for node in process_model.nodes if node.kind == "task")
-    gateways = sum(1 for node in process_model.nodes
-                   if node.kind.startswith("gateway"))
-    decisions = sum(1 for node in process_model.nodes
-                    if node.kind == "gateway_x" and node.name)
-
-    notes = []
-    for node in process_model.nodes:
-        if node.note:
-            key, text = _note_parts(node.note)
-            notes.append((key, text, node.name))
-    notes.sort(key=lambda item: item[0])
-
-    lane_legend = "".join(
-        f'<li class="legend-item"><span class="swatch sw-{primary_lanes[lane_id]}">'
-        f'</span>{esc(name)}</li>'
-        for lane_id, name in process_model.lanes
-    )
-    phase_rows = "".join(
-        f'<li class="phase"><span class="phase-num">{number or "&mdash;"}</span>'
-        f'<span class="phase-title">{esc(title)}</span>'
-        f'<span class="phase-lanes">'
-        + "".join(f'<i class="dot sw-{slug}" aria-hidden="true"></i>'
-                  for slug in lanes)
-        + "</span></li>"
-        for number, title, lanes in phase_summary(process_model)
-    )
-    option_rows = "".join(
-        f'<tr><th scope="row"><span class="opt-key">{esc(option.key)}</span></th>'
-        f'<td><strong>{esc(option.title)}</strong><p>{esc(option.trigger)}</p></td>'
-        f'<td><code>{esc(option.gateway)}</code></td>'
-        f'<td>{esc(option.effect)}</td></tr>'
-        for option in process_model.options
-    )
-    note_rows = "".join(
-        f'<div class="note"><span class="note-key">{esc(key)}</span>'
-        f'<div><p class="note-text">{esc(text)}</p>'
-        f'<p class="note-anchor">{esc(anchor)}</p></div></div>'
-        for key, text, anchor in notes
-    )
+    stats = _document_stats(process_model)
+    notes = _collect_notes(process_model)
 
     return TEMPLATE.format(
         page_title=esc(metadata.title),
@@ -293,16 +355,16 @@ def build(bundle: PreviewBundle = DEFAULT_BUNDLE) -> str:
         document_tabs="".join(document_tabs),
         document_canvases="".join(document_canvases),
         lane_styles=lane_style_css(process_model),
-        nodes=len(process_model.nodes),
-        tasks=tasks,
-        gateways=gateways,
-        decisions=decisions,
-        flows=len(process_model.edges),
-        lanes=len(process_model.lanes),
-        lane_legend=lane_legend,
-        phase_rows=phase_rows,
-        option_rows=option_rows,
-        note_rows=note_rows,
+        nodes=stats.nodes,
+        tasks=stats.tasks,
+        gateways=stats.gateways,
+        decisions=stats.decisions,
+        flows=stats.flows,
+        lanes=stats.lanes,
+        lane_legend=_lane_legend_html(process_model, primary_lanes),
+        phase_rows=_phase_rows_html(process_model),
+        option_rows=_option_rows_html(process_model),
+        note_rows=_note_rows_html(notes),
     )
 
 TEMPLATE = """<title>{page_title}</title>
@@ -761,7 +823,7 @@ def main() -> None:
     out = HERE / "OFC-001-preview.html"
     html = build()
     out.write_text(html, encoding="utf-8")
-    print(f"wrote {out.name}: {len(html) / 1024:.0f} KB")
+    logger.info(f"wrote {out.name}: {len(html) / 1024:.0f} KB")
 
 
 if __name__ == "__main__":

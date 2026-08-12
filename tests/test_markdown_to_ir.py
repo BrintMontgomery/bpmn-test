@@ -10,6 +10,7 @@ from ir import IRValidationError
 from markdown_extractor import MarkdownExtractionError, extract_markdown, write_extraction
 from semantic_handoff import (
     SemanticHandoffError,
+    _format_semantic_prompt,
     build_semantic_prompt,
     parse_semantic_response,
     validate_semantic_response,
@@ -96,6 +97,15 @@ class SemanticHandoffTests(unittest.TestCase):
         self.assertIn("generated BPMN output manifest", prompt)
         self.assertIn("decomposition", prompt)
         self.assertIn("global layout constraint", prompt)
+
+    def test_format_semantic_prompt_is_pure_templating_with_no_filesystem_access(self) -> None:
+        prompt = _format_semantic_prompt(
+            {"actors": [{"name": "Case Manager"}]}, schema="{\"type\": \"object\"}"
+        )
+        self.assertIn('"actors"', prompt)
+        self.assertIn('"Case Manager"', prompt)
+        self.assertIn("first bold actor", prompt)
+        self.assertIn('{"type": "object"}', prompt)
 
     def valid_ir(self) -> dict:
         return {

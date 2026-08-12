@@ -54,20 +54,16 @@ def _extraction_dict(extraction: ExtractedSOP | Mapping[str, Any]) -> dict[str, 
     raise TypeError("extraction must be an ExtractedSOP or mapping")
 
 
-def build_semantic_prompt(
-    extraction: ExtractedSOP | Mapping[str, Any],
-    *,
-    schema_path: str | Path = IR_SCHEMA_PATH,
-) -> str:
-    """Build a complete prompt without making a provider or network call."""
-
+def _read_schema(schema_path: str | Path) -> str:
     try:
-        schema = Path(schema_path).read_text(encoding="utf-8")
+        return Path(schema_path).read_text(encoding="utf-8")
     except OSError as exc:
         raise SemanticHandoffError(f"could not read IR schema: {exc}") from exc
-    structural_json = json.dumps(
-        _extraction_dict(extraction), ensure_ascii=False, indent=2
-    )
+
+
+def _format_semantic_prompt(extraction_dict: dict[str, Any], schema: str) -> str:
+    """Assemble the complete prompt text; no I/O."""
+    structural_json = json.dumps(extraction_dict, ensure_ascii=False, indent=2)
     return (
         "Convert the structurally extracted SOP below into the version-1 BPMN "
         "intermediate representation. Use only evidence in the extraction and "
@@ -79,6 +75,17 @@ def build_semantic_prompt(
         + schema
         + "\n```\n"
     )
+
+
+def build_semantic_prompt(
+    extraction: ExtractedSOP | Mapping[str, Any],
+    *,
+    schema_path: str | Path = IR_SCHEMA_PATH,
+) -> str:
+    """Build a complete prompt without making a provider or network call."""
+
+    schema = _read_schema(schema_path)
+    return _format_semantic_prompt(_extraction_dict(extraction), schema)
 
 
 def parse_semantic_response(response: str | bytes | Mapping[str, Any]) -> dict[str, Any]:

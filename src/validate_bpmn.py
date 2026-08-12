@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
@@ -9,6 +10,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from geometry import Bounds, check_geometry, format_finding
+from logging_setup import configure
+
+configure()
+logger = logging.getLogger(__name__)
 
 BPMN = "{http://www.omg.org/spec/BPMN/20100524/MODEL}"
 BPMNDI = "{http://www.omg.org/spec/BPMN/20100524/DI}"
@@ -176,13 +181,15 @@ class Validator:
             )
             self.check_process_ref(collab, process)
 
-            top_items = _direct_scope_items(top)
-            print(f"{self.path.name}: {len(top_items.nodes)} flow nodes, "
-                  f"{len(top_items.flows)} sequence flows, "
-                  f"{len(top_items.annotations)} annotations, "
-                  f"{self.checks} assertions")
+            self._report_process_summary(_direct_scope_items(top))
 
         return self.report()
+
+    def _report_process_summary(self, top_items: ScopeItems) -> None:
+        logger.info(f"{self.path.name}: {len(top_items.nodes)} flow nodes, "
+                    f"{len(top_items.flows)} sequence flows, "
+                    f"{len(top_items.annotations)} annotations, "
+                    f"{self.checks} assertions")
 
     def check_unique_ids(self) -> None:
         ids = [el.get("id") for el in self.root.iter() if el.get("id")]
@@ -285,52 +292,75 @@ class Validator:
         incoming = Counter(flow.get("targetRef") for flow in flows)
         outgoing = Counter(flow.get("sourceRef") for flow in flows)
         for node_id, element in nodes.items():
-            tag = local(element.tag)
-            link = _link_definition(element)
-            if link is not None:
-                is_throw = tag == "intermediateThrowEvent"
-                self.check(
-                    incoming[node_id] > 0 if is_throw else incoming[node_id] == 0,
-                    f"{tag} {node_id} has invalid incoming sequence flow "
-                    "for a link event",
-                )
-                self.check(
-                    outgoing[node_id] == 0 if is_throw else outgoing[node_id] > 0,
-                    f"{tag} {node_id} has invalid outgoing sequence flow "
-                    "for a link event",
-                )
-            else:
-                if tag != "startEvent":
-                    self.check(incoming[node_id] > 0,
-                               f"{tag} {node_id} has no incoming sequence flow")
-                else:
-                    self.check(incoming[node_id] == 0,
-                               f"startEvent {node_id} must not have an incoming flow")
-                if tag != "endEvent":
-                    self.check(outgoing[node_id] > 0,
-                               f"{tag} {node_id} has no outgoing sequence flow")
-                else:
-                    self.check(outgoing[node_id] == 0,
-                               f"endEvent {node_id} must not have an outgoing flow")
-
-            declared_in = {child.text for child in element
-                           if local(child.tag) == "incoming"}
-            declared_out = {child.text for child in element
-                            if local(child.tag) == "outgoing"}
-            actual_in = {flow.get("id") for flow in flows
-                         if flow.get("targetRef") == node_id}
-            actual_out = {flow.get("id") for flow in flows
-                          if flow.get("sourceRef") == node_id}
-            self.check(declared_in == actual_in,
-                       f"{node_id} <incoming> refs disagree with sequenceFlows")
-            self.check(declared_out == actual_out,
-                       f"{node_id} <outgoing> refs disagree with sequenceFlows")
+            self._check_node_connectivity(node_id, element, incoming, outgoing)
+            self._check_declared_refs(node_id, element, flows)
 
         starts = [node_id for node_id, element in nodes.items()
                   if local(element.tag) == "startEvent"]
         self.check(len(starts) == 1,
                    f"expected exactly 1 start event, found {len(starts)}")
+        self._check_reachability(nodes, flows, starts)
 
+    def _check_node_connectivity(
+        self,
+        node_id: str,
+        element: ET.Element,
+        incoming: Counter,
+        outgoing: Counter,
+    ) -> None:
+        tag = local(element.tag)
+        link = _link_definition(element)
+        if link is not None:
+            is_throw = tag == "intermediateThrowEvent"
+            self.check(
+                incoming[node_id] > 0 if is_throw else incoming[node_id] == 0,
+                f"{tag} {node_id} has invalid incoming sequence flow "
+                "for a link event",
+            )
+            self.check(
+                outgoing[node_id] == 0 if is_throw else outgoing[node_id] > 0,
+                f"{tag} {node_id} has invalid outgoing sequence flow "
+                "for a link event",
+            )
+        else:
+            if tag != "startEvent":
+                self.check(incoming[node_id] > 0,
+                           f"{tag} {node_id} has no incoming sequence flow")
+            else:
+                self.check(incoming[node_id] == 0,
+                           f"startEvent {node_id} must not have an incoming flow")
+            if tag != "endEvent":
+                self.check(outgoing[node_id] > 0,
+                           f"{tag} {node_id} has no outgoing sequence flow")
+            else:
+                self.check(outgoing[node_id] == 0,
+                           f"endEvent {node_id} must not have an outgoing flow")
+
+    def _check_declared_refs(
+        self,
+        node_id: str,
+        element: ET.Element,
+        flows: list[ET.Element],
+    ) -> None:
+        declared_in = {child.text for child in element
+                       if local(child.tag) == "incoming"}
+        declared_out = {child.text for child in element
+                        if local(child.tag) == "outgoing"}
+        actual_in = {flow.get("id") for flow in flows
+                     if flow.get("targetRef") == node_id}
+        actual_out = {flow.get("id") for flow in flows
+                      if flow.get("sourceRef") == node_id}
+        self.check(declared_in == actual_in,
+                   f"{node_id} <incoming> refs disagree with sequenceFlows")
+        self.check(declared_out == actual_out,
+                   f"{node_id} <outgoing> refs disagree with sequenceFlows")
+
+    def _check_reachability(
+        self,
+        nodes: dict[str, ET.Element],
+        flows: list[ET.Element],
+        starts: list[str],
+    ) -> None:
         adjacency: dict[str, list[str]] = {node_id: [] for node_id in nodes}
         for flow in flows:
             source, target = flow.get("sourceRef"), flow.get("targetRef")
@@ -632,11 +662,11 @@ class Validator:
 
     def report(self) -> bool:
         if self.errors:
-            print(f"\nFAILED with {len(self.errors)} error(s):")
+            logger.info(f"\nFAILED with {len(self.errors)} error(s):")
             for error in self.errors:
-                print(f"  - {error}")
+                logger.info(f"  - {error}")
             return False
-        print("all checks passed")
+        logger.info("all checks passed")
         return True
 
 
@@ -671,13 +701,13 @@ def validate_bundle(paths: list[Path]) -> bool:
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     if not args:
-        print("usage: validate_bpmn.py <file.bpmn> [<file.bpmn> ...]")
+        logger.info("usage: validate_bpmn.py <file.bpmn> [<file.bpmn> ...]")
         return 2
     paths = [Path(arg) for arg in args]
     missing = [path for path in paths if not path.exists()]
     if missing:
         for path in missing:
-            print(f"no such file: {path}")
+            logger.info(f"no such file: {path}")
         return 2
     return 0 if validate_bundle(paths) else 1
 
