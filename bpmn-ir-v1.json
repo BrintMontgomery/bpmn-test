@@ -1,0 +1,540 @@
+{
+  "schema_version": 1,
+  "process_id": "atm_withdrawal_v1",
+  "participant_name": "ATM Withdrawal",
+  "process_name": "Withdraw Cash at an ATM",
+  "participant_id": "Participant_ATM_Withdrawal",
+  "collaboration_id": "Collaboration_ATM_Withdrawal",
+  "definitions_id": "Definitions_ATM_Withdrawal",
+  "exporter": "OFC BPMN IR",
+  "exporter_version": "1",
+  "target_namespace": "https://oklahoma.gov/odmhsas/ofc/bpmn/atm-withdrawal",
+  "ann_above": [
+    "Source: ATM-001 â Withdraw Cash at an ATM.md",
+    "Version: ATM Standard Procedure â 2026-08-12 â v1.0"
+  ],
+  "process_doc": "Source context: This procedure describes a cardholder withdrawing cash from an automated teller machine (ATM) using a debit card and PIN. Preconditions: the cardholder has an active debit card, knows the PIN, can access the selected account, and uses an available ATM with sufficient cash to operate. Outcome: the cardholder receives the requested cash and retrieves the debit card; the Financial Institution records the withdrawal. If completion fails, the ATM provides an appropriate message without dispensing cash. Modeling judgments: the first bold actor owns each main-path task. Option steps have no bold-actor extraction, so ownership follows the grammatical actor named in each step; this is an inference. The Financial Institution lane is retained because it is an extracted actor, but it has no separate task because it appears as a counterparty in the extracted ATM steps and no explicit lane handoff is specified. The start event, end events, and exclusive gateways are inferred BPMN control-flow elements. The three option triggers are represented by entry gateways in the main path. Option A has an internal retry-limit gateway; Option B has an internal smaller-amount-or-cancel gateway. Option C has no additional conditional branch. No decomposition proposals are made, so no split rationales are applicable.",
+  "lanes": [
+    {
+      "id": "lane_cardholder",
+      "name": "Cardholder"
+    },
+    {
+      "id": "lane_atm",
+      "name": "ATM"
+    },
+    {
+      "id": "lane_financial_institution",
+      "name": "Financial Institution"
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase_main",
+      "name": "Main path"
+    },
+    {
+      "id": "phase_option_a",
+      "name": "Option A — PIN Is Incorrect"
+    },
+    {
+      "id": "phase_option_b",
+      "name": "Option B — Account Has Insufficient Funds"
+    },
+    {
+      "id": "phase_option_c",
+      "name": "Option C — Cardholder Cancels the Transaction"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start_withdrawal",
+      "kind": "start_message",
+      "lane": "lane_cardholder",
+      "phase": "phase_main",
+      "name": "Withdrawal starts",
+      "doc": [
+        "Inferred start event before main-path step 1; the extraction does not specify a separate start trigger."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_01_insert_card",
+      "kind": "task",
+      "lane": "lane_cardholder",
+      "phase": "phase_main",
+      "name": "Insert debit card into ATM",
+      "doc": [
+        "Main-path step 1, source line 30: Cardholder inserts the debit card into the ATM."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_02_read_prompt_pin",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Read card and prompt for PIN",
+      "doc": [
+        "Main-path step 2, source line 31: ATM reads the card and prompts the Cardholder to enter the PIN."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_03_enter_pin",
+      "kind": "task",
+      "lane": "lane_cardholder",
+      "phase": "phase_main",
+      "name": "Enter PIN",
+      "doc": [
+        "Main-path step 3, source line 32: Cardholder enters the PIN."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_04_verify_pin",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Verify PIN with Financial Institution",
+      "doc": [
+        "Main-path step 4, source line 33: ATM verifies the PIN with the Financial Institution."
+      ],
+      "note": "a: PIN retry limits and card-retention behavior are set by the Financial Institution and may differ by card issuer."
+    },
+    {
+      "id": "main_gw_pin_result",
+      "kind": "gateway_x",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Option A entry: PIN verified?",
+      "doc": [
+        "Exclusive gateway inferred from the PIN-incorrect trigger for Option A at source line 44."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_05_display_options",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Display transaction options",
+      "doc": [
+        "Main-path step 5, source line 34: ATM displays transaction options to the Cardholder."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_06_select_withdrawal_amount",
+      "kind": "task",
+      "lane": "lane_cardholder",
+      "phase": "phase_main",
+      "name": "Select cash withdrawal and enter requested amount",
+      "doc": [
+        "Main-path step 6, source line 35: Cardholder selects a cash withdrawal and enters the requested amount."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_gw_cancel_entry",
+      "kind": "gateway_x",
+      "lane": "lane_cardholder",
+      "phase": "phase_main",
+      "name": "Option C entry: Cardholder cancels before cash is dispensed?",
+      "doc": [
+        "Exclusive gateway inferred from the Option C trigger at source line 60; the gateway is placed after amount entry and before cash dispensing."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_07_verify_funds",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Verify sufficient available funds",
+      "doc": [
+        "Main-path step 7, source line 36: ATM verifies with the Financial Institution that the account has sufficient available funds."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_gw_funds_entry",
+      "kind": "gateway_x",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Option B entry: Account has sufficient available funds?",
+      "doc": [
+        "Exclusive gateway inferred from the insufficient-funds trigger for Option B at source line 52."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_08_debit_account",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Debit selected account",
+      "doc": [
+        "Main-path step 8, source line 37: ATM debits the selected account through the Financial Institution."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_09_dispense_cash",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Dispense requested cash",
+      "doc": [
+        "Main-path step 9, source line 38: ATM dispenses the requested cash."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_10_return_card_receipt",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_main",
+      "name": "Return debit card and offer receipt",
+      "doc": [
+        "Main-path step 10, source line 39: ATM returns the debit card and offers a receipt to the Cardholder."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_11_retrieve_outputs",
+      "kind": "task",
+      "lane": "lane_cardholder",
+      "phase": "phase_main",
+      "name": "Take cash, debit card, and requested receipt",
+      "doc": [
+        "Main-path step 11, source line 40: Cardholder takes the cash and debit card, and takes the receipt if requested."
+      ],
+      "note": null
+    },
+    {
+      "id": "main_end_success",
+      "kind": "end",
+      "lane": "lane_cardholder",
+      "phase": "phase_main",
+      "name": "Withdrawal completed",
+      "doc": [
+        "End event inferred after main-path step 11."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_a_01_inform_pin_failure",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_option_a",
+      "name": "Inform Cardholder that PIN could not be verified",
+      "doc": [
+        "Option A step 1, source line 48. Ownership inferred from the named ATM actor."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_a_gw_retry_limit",
+      "kind": "gateway_x",
+      "lane": "lane_atm",
+      "phase": "phase_option_a",
+      "name": "PIN retry limit reached?",
+      "doc": [
+        "Internal exclusive gateway required by the conditional in Option A step 3, source line 50."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_a_02_permit_retry",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_option_a",
+      "name": "Permit another PIN entry",
+      "doc": [
+        "Option A step 2, source line 49. Ownership inferred from the named ATM actor."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_a_03_retain_or_return_card",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_option_a",
+      "name": "Retain or return card according to Financial Institution policy",
+      "doc": [
+        "Option A step 3, source line 50."
+      ],
+      "note": "a: PIN retry limits and card-retention behavior are set by the Financial Institution and may differ by card issuer."
+    },
+    {
+      "id": "option_a_end",
+      "kind": "end",
+      "lane": "lane_atm",
+      "phase": "phase_option_a",
+      "name": "PIN transaction ended",
+      "doc": [
+        "End event inferred from Option A step 3."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_b_01_inform_insufficient_funds",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_option_b",
+      "name": "Inform Cardholder that requested amount cannot be withdrawn",
+      "doc": [
+        "Option B step 1, source line 56. Ownership inferred from the named ATM actor."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_b_02_prompt_smaller_or_cancel",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_option_b",
+      "name": "Prompt for a smaller amount or cancellation",
+      "doc": [
+        "Option B step 2, source line 57. Ownership inferred from the named ATM actor."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_b_gw_choice",
+      "kind": "gateway_x",
+      "lane": "lane_cardholder",
+      "phase": "phase_option_b",
+      "name": "Cardholder enters smaller amount or cancels?",
+      "doc": [
+        "Internal exclusive gateway required by the conditional in Option B step 3, source line 58."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_b_03_return_card_cancel",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_option_b",
+      "name": "Return card and end without dispensing cash",
+      "doc": [
+        "Option B step 3, source line 58. Ownership inferred from the named ATM actor."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_b_end",
+      "kind": "end",
+      "lane": "lane_atm",
+      "phase": "phase_option_b",
+      "name": "Insufficient-funds transaction ended",
+      "doc": [
+        "End event inferred from Option B step 3."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_c_01_cancel_transaction",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_option_c",
+      "name": "Cancel transaction before debiting account",
+      "doc": [
+        "Option C step 1, source line 64. Ownership inferred from the named ATM actor."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_c_02_return_card",
+      "kind": "task",
+      "lane": "lane_atm",
+      "phase": "phase_option_c",
+      "name": "Return debit card",
+      "doc": [
+        "Option C step 2, source line 65. Ownership inferred from the named ATM actor."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_c_03_retrieve_card",
+      "kind": "task",
+      "lane": "lane_cardholder",
+      "phase": "phase_option_c",
+      "name": "Retrieve debit card",
+      "doc": [
+        "Option C step 3, source line 66. Ownership inferred from the named Cardholder actor."
+      ],
+      "note": null
+    },
+    {
+      "id": "option_c_end",
+      "kind": "end",
+      "lane": "lane_cardholder",
+      "phase": "phase_option_c",
+      "name": "Cancellation completed",
+      "doc": [
+        "End event inferred after Option C step 3."
+      ],
+      "note": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "start_withdrawal",
+      "target": "main_01_insert_card"
+    },
+    {
+      "source": "main_01_insert_card",
+      "target": "main_02_read_prompt_pin"
+    },
+    {
+      "source": "main_02_read_prompt_pin",
+      "target": "main_03_enter_pin"
+    },
+    {
+      "source": "main_03_enter_pin",
+      "target": "main_04_verify_pin"
+    },
+    {
+      "source": "main_04_verify_pin",
+      "target": "main_gw_pin_result"
+    },
+    {
+      "source": "main_gw_pin_result",
+      "target": "main_05_display_options",
+      "label": "PIN verified",
+      "condition": "PIN is verified"
+    },
+    {
+      "source": "main_gw_pin_result",
+      "target": "option_a_01_inform_pin_failure",
+      "label": "PIN incorrect",
+      "condition": "ATM reports that the entered PIN is incorrect"
+    },
+    {
+      "source": "main_05_display_options",
+      "target": "main_06_select_withdrawal_amount"
+    },
+    {
+      "source": "main_06_select_withdrawal_amount",
+      "target": "main_gw_cancel_entry"
+    },
+    {
+      "source": "main_gw_cancel_entry",
+      "target": "option_c_01_cancel_transaction",
+      "label": "Cancel",
+      "condition": "Cardholder selects cancel before cash is dispensed"
+    },
+    {
+      "source": "main_gw_cancel_entry",
+      "target": "main_07_verify_funds",
+      "label": "Continue",
+      "condition": "Cardholder does not select cancel"
+    },
+    {
+      "source": "main_07_verify_funds",
+      "target": "main_gw_funds_entry"
+    },
+    {
+      "source": "main_gw_funds_entry",
+      "target": "main_08_debit_account",
+      "label": "Sufficient funds",
+      "condition": "Financial Institution reports sufficient available funds"
+    },
+    {
+      "source": "main_gw_funds_entry",
+      "target": "option_b_01_inform_insufficient_funds",
+      "label": "Insufficient funds",
+      "condition": "Financial Institution reports insufficient available funds"
+    },
+    {
+      "source": "main_08_debit_account",
+      "target": "main_09_dispense_cash"
+    },
+    {
+      "source": "main_09_dispense_cash",
+      "target": "main_10_return_card_receipt"
+    },
+    {
+      "source": "main_10_return_card_receipt",
+      "target": "main_11_retrieve_outputs"
+    },
+    {
+      "source": "main_11_retrieve_outputs",
+      "target": "main_end_success"
+    },
+    {
+      "source": "option_a_01_inform_pin_failure",
+      "target": "option_a_gw_retry_limit"
+    },
+    {
+      "source": "option_a_gw_retry_limit",
+      "target": "option_a_02_permit_retry",
+      "label": "Retry available",
+      "condition": "Retry limit has not been reached"
+    },
+    {
+      "source": "option_a_gw_retry_limit",
+      "target": "option_a_03_retain_or_return_card",
+      "label": "Retry limit reached",
+      "condition": "Retry limit is reached"
+    },
+    {
+      "source": "option_a_02_permit_retry",
+      "target": "main_03_enter_pin",
+      "label": "Another PIN entry",
+      "loop": true
+    },
+    {
+      "source": "option_a_03_retain_or_return_card",
+      "target": "option_a_end"
+    },
+    {
+      "source": "option_b_01_inform_insufficient_funds",
+      "target": "option_b_02_prompt_smaller_or_cancel"
+    },
+    {
+      "source": "option_b_02_prompt_smaller_or_cancel",
+      "target": "option_b_gw_choice"
+    },
+    {
+      "source": "option_b_gw_choice",
+      "target": "main_06_select_withdrawal_amount",
+      "label": "Enter smaller amount",
+      "condition": "Cardholder enters a smaller amount",
+      "loop": true
+    },
+    {
+      "source": "option_b_gw_choice",
+      "target": "option_b_03_return_card_cancel",
+      "label": "Cancel",
+      "condition": "Cardholder cancels"
+    },
+    {
+      "source": "option_b_03_return_card_cancel",
+      "target": "option_b_end"
+    },
+    {
+      "source": "option_c_01_cancel_transaction",
+      "target": "option_c_02_return_card"
+    },
+    {
+      "source": "option_c_02_return_card",
+      "target": "option_c_03_retrieve_card"
+    },
+    {
+      "source": "option_c_03_retrieve_card",
+      "target": "option_c_end"
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc_atm_001",
+      "file": "ATM-001 â Withdraw Cash at an ATM.md",
+      "role": "main"
+    }
+  ],
+  "decomposition": {
+    "mode": "off"
+  }
+}

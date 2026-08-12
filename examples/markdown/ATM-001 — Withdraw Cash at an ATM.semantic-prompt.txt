@@ -1,0 +1,508 @@
+Convert the structurally extracted SOP below into the version-1 BPMN intermediate representation. Use only evidence in the extraction and make uncertain modeling judgments explicit in the IR documentation.
+
+Modeling rules:
+1. The first bold actor on a main-path step is the owning lane candidate.
+2. Later bold actors are counterparties unless the semantic model explicitly
+   gives them a separate task and lane handoff.
+3. Each option has an entry gateway in the main path; conditional branches
+   inside an option require their own internal gateway in that option.
+4. Note references must resolve to extracted Notes entries and should attach
+   to the modeled task or event that carries the reference.
+5. Decomposition proposals must include a one-line rationale for every split.
+6. Return one JSON object conforming to the supplied IR schema. Do not return
+   Markdown, commentary, or a second representation of the IR.
+
+
+Structural extraction:
+```json
+{
+  "source_name": "ATM-001 — Withdraw Cash at an ATM.md",
+  "metadata": {
+    "context": [
+      "This procedure describes a cardholder withdrawing cash from an automated teller machine (ATM) using a debit card and personal identification number (PIN)."
+    ],
+    "preconditions": [
+      "Cardholder has an active debit card.",
+      "Cardholder knows the card PIN.",
+      "ATM is available and has sufficient cash to operate.",
+      "Cardholder has access to the selected account."
+    ],
+    "outcome": [
+      "The cardholder receives the requested cash, retrieves the debit card, and the Financial Institution records the withdrawal. If the transaction cannot be completed, the ATM provides an appropriate message without dispensing cash."
+    ],
+    "version": [
+      "ATM Standard Procedure — 2026-08-12 — v1.0"
+    ]
+  },
+  "actors": [
+    {
+      "name": "Cardholder",
+      "line": 5
+    },
+    {
+      "name": "ATM",
+      "line": 6
+    },
+    {
+      "name": "Financial Institution",
+      "line": 7
+    }
+  ],
+  "main_path": [
+    {
+      "number": 1,
+      "text": "**Cardholder** inserts the debit card into the **ATM**.",
+      "line": 30,
+      "bold_actors": [
+        "Cardholder",
+        "ATM"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 2,
+      "text": "**ATM** reads the card and prompts the **Cardholder** to enter the PIN.",
+      "line": 31,
+      "bold_actors": [
+        "ATM",
+        "Cardholder"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 3,
+      "text": "**Cardholder** enters the PIN.",
+      "line": 32,
+      "bold_actors": [
+        "Cardholder"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 4,
+      "text": "**ATM** verifies the PIN with the **Financial Institution** \\[a\\].",
+      "line": 33,
+      "bold_actors": [
+        "ATM",
+        "Financial Institution"
+      ],
+      "note_refs": [
+        "a"
+      ]
+    },
+    {
+      "number": 5,
+      "text": "**ATM** displays transaction options to the **Cardholder**.",
+      "line": 34,
+      "bold_actors": [
+        "ATM",
+        "Cardholder"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 6,
+      "text": "**Cardholder** selects a cash withdrawal and enters the requested amount.",
+      "line": 35,
+      "bold_actors": [
+        "Cardholder"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 7,
+      "text": "**ATM** verifies with the **Financial Institution** that the account has sufficient available funds.",
+      "line": 36,
+      "bold_actors": [
+        "ATM",
+        "Financial Institution"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 8,
+      "text": "**ATM** debits the selected account through the **Financial Institution**.",
+      "line": 37,
+      "bold_actors": [
+        "ATM",
+        "Financial Institution"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 9,
+      "text": "**ATM** dispenses the requested cash.",
+      "line": 38,
+      "bold_actors": [
+        "ATM"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 10,
+      "text": "**ATM** returns the debit card and offers a receipt to the **Cardholder**.",
+      "line": 39,
+      "bold_actors": [
+        "ATM",
+        "Cardholder"
+      ],
+      "note_refs": []
+    },
+    {
+      "number": 11,
+      "text": "**Cardholder** takes the cash and debit card, and takes the receipt if requested.",
+      "line": 40,
+      "bold_actors": [
+        "Cardholder"
+      ],
+      "note_refs": []
+    }
+  ],
+  "options": [
+    {
+      "key": "A",
+      "title": "PIN Is Incorrect",
+      "trigger": "The ATM reports that the entered PIN is incorrect.",
+      "line": 44,
+      "steps": [
+        {
+          "number": 1,
+          "text": "ATM informs the Cardholder that the PIN could not be verified.",
+          "line": 48,
+          "bold_actors": [],
+          "note_refs": []
+        },
+        {
+          "number": 2,
+          "text": "ATM permits another PIN entry when the retry limit has not been reached.",
+          "line": 49,
+          "bold_actors": [],
+          "note_refs": []
+        },
+        {
+          "number": 3,
+          "text": "If the retry limit is reached, ATM retains or returns the card according to the Financial Institution policy and ends the transaction \\[a\\].",
+          "line": 50,
+          "bold_actors": [],
+          "note_refs": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "B",
+      "title": "Account Has Insufficient Funds",
+      "trigger": "The Financial Institution reports that the selected account does not have sufficient available funds.",
+      "line": 52,
+      "steps": [
+        {
+          "number": 1,
+          "text": "ATM informs the Cardholder that the requested amount cannot be withdrawn.",
+          "line": 56,
+          "bold_actors": [],
+          "note_refs": []
+        },
+        {
+          "number": 2,
+          "text": "ATM prompts the Cardholder to enter a smaller amount or cancel the transaction.",
+          "line": 57,
+          "bold_actors": [],
+          "note_refs": []
+        },
+        {
+          "number": 3,
+          "text": "If the Cardholder cancels, ATM returns the card and ends the transaction without dispensing cash.",
+          "line": 58,
+          "bold_actors": [],
+          "note_refs": []
+        }
+      ]
+    },
+    {
+      "key": "C",
+      "title": "Cardholder Cancels the Transaction",
+      "trigger": "The Cardholder selects cancel before cash is dispensed.",
+      "line": 60,
+      "steps": [
+        {
+          "number": 1,
+          "text": "ATM cancels the transaction before debiting the account.",
+          "line": 64,
+          "bold_actors": [],
+          "note_refs": []
+        },
+        {
+          "number": 2,
+          "text": "ATM returns the debit card.",
+          "line": 65,
+          "bold_actors": [],
+          "note_refs": []
+        },
+        {
+          "number": 3,
+          "text": "Cardholder retrieves the debit card.",
+          "line": 66,
+          "bold_actors": [],
+          "note_refs": []
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "key": "a",
+      "text": "PIN retry limits and card-retention behavior are set by the Financial Institution and may differ by card issuer.",
+      "line": 70
+    }
+  ],
+  "inline_references": [
+    {
+      "key": "a",
+      "section": "main_path",
+      "line": 33,
+      "item": 4
+    },
+    {
+      "key": "a",
+      "section": "option_A",
+      "line": 50,
+      "item": 3
+    }
+  ]
+}
+```
+
+IR JSON Schema:
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oklahoma.gov/odmhsas/ofc/bpmn/ir-schema-v1.json",
+  "title": "OFC BPMN intermediate representation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "process_id",
+    "participant_name",
+    "process_doc",
+    "lanes",
+    "phases",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "process_id": {"type": "string", "minLength": 1},
+    "participant_name": {"type": "string", "minLength": 1},
+    "process_doc": {"type": "string"},
+    "process_name": {"type": "string", "minLength": 1},
+    "participant_id": {"type": "string", "minLength": 1},
+    "collaboration_id": {"type": "string", "minLength": 1},
+    "definitions_id": {"type": "string", "minLength": 1},
+    "exporter": {"type": "string", "minLength": 1},
+    "exporter_version": {"type": "string", "minLength": 1},
+    "target_namespace": {"type": "string", "minLength": 1},
+    "ann_above": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "lane_classes": {
+      "type": "object",
+      "additionalProperties": {"type": "string", "minLength": 1}
+    },
+    "mermaid_class_defs": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "lanes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/lane"}
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/phase"}
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/node"}
+    },
+    "edges": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/edge"}
+    },
+    "external_pools": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/external_pool"}
+    },
+    "message_flows": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/message_flow"}
+    },
+    "documents": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/document"}
+    },
+    "decomposition": {
+      "$ref": "#/$defs/decomposition"
+    }
+  },
+  "$defs": {
+    "lane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string"},
+        "ann_above": {"type": "boolean"}
+      }
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string"}
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "lane", "phase", "name"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {
+          "enum": [
+            "task",
+            "gateway_x",
+            "gateway_p",
+            "start_message",
+            "catch_timer",
+            "catch_message",
+            "end",
+            "subprocess",
+            "call_activity",
+            "link_throw",
+            "link_catch"
+          ]
+        },
+        "lane": {"type": "string", "minLength": 1},
+        "phase": {"type": "string", "minLength": 1},
+        "name": {"type": "string"},
+        "ttype": {"enum": ["manual", "user", "send", "receive"]},
+        "doc": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "note": {"type": ["string", "null"]},
+        "parent": {"type": ["string", "null"], "minLength": 1},
+        "collapsed": {"type": "boolean"},
+        "called_element": {"type": "string", "minLength": 1},
+        "link_name": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [
+        {
+          "properties": {"kind": {"const": "task"}}
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "gateway_x",
+                "gateway_p",
+                "start_message",
+                "catch_timer",
+                "catch_message",
+                "end",
+                "subprocess",
+                "call_activity",
+                "link_throw",
+                "link_catch"
+              ]
+            }
+          },
+          "not": {"required": ["ttype"]}
+        }
+      ]
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "label": {"type": "string"},
+        "condition": {"type": "string"},
+        "loop": {"type": "boolean"}
+      }
+    },
+    "external_pool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "anchor"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string"},
+        "anchor": {"type": "string", "minLength": 1},
+        "width": {"type": "number", "exclusiveMinimum": 0},
+        "height": {"type": "number", "exclusiveMinimum": 0},
+        "gap_above": {"type": "number", "minimum": 0},
+        "mermaid_id": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "message_flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "name": {"type": "string"},
+        "mermaid_name": {"type": ["string", "null"]},
+        "label_width": {"type": "number", "exclusiveMinimum": 0},
+        "label_height": {"type": "number", "exclusiveMinimum": 0},
+        "label_dx": {"type": "number"},
+        "label_dy": {"type": "number"}
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "file"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "file": {"type": "string", "minLength": 1},
+        "role": {"enum": ["main", "global"]}
+      }
+    },
+    "decomposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"enum": ["off", "auto"]},
+        "max_nodes_per_plane": {"type": "integer", "minimum": 1},
+        "max_columns": {"type": "integer", "minimum": 1},
+        "max_pool_width": {"type": "number", "exclusiveMinimum": 0},
+        "collapse_phases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "max_lanes_per_collapsed_phase": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
+
+```
