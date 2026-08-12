@@ -1,6 +1,6 @@
 # Star Fleet Battles Game Development Prompts
 
-This document serves as a checklist and guide for iterating on a computer game version of Star Fleet Battles, focusing on feature suggestions, code refactoring, commit message generation, and phase completion updates. 
+This document serves as a checklist and guide for iterating on a BPMN program, focusing on feature suggestions, code refactoring, commit message generation, and phase completion updates. 
 
 ---
 
