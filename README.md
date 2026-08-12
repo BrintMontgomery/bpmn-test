@@ -3,6 +3,14 @@
 
 Convert Standard Operating Procedure (SOP) Markdown documents into validated, auto-laid-out BPMN 2.0 diagrams — and back again.
 
+## Desktop UI
+
+For a guided local workflow, run:
+
+```bash
+py src/sop_to_bpmn_ui.py
+```
+
 ## What It Does
 
 This project implements a deterministic pipeline that reads a strictly-formatted SOP Markdown file, models its workflow as an intermediate JSON representation, and emits a production-ready `.bpmn` file (plus optional Mermaid preview). The key stages are:
@@ -129,13 +137,7 @@ markdown/ ──► markdown_extractor.py ──► structural JSON
 - Standard library only (no `pip install` required for the core pipeline)
 - Tk 8.6 (included with the installed Windows Python) for the optional desktop UI
 
-## Desktop UI
 
-For a guided local workflow, run:
-
-```bash
-py src/sop_to_bpmn_ui.py
-```
 
 Select an SOP Markdown file and validate its template. The app either validates
 an adjacent reviewed `.ir.json` file or helps you create one by copying or
