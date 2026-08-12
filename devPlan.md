@@ -497,7 +497,23 @@ spread across more than ~3 lanes.
   fallback, scope-local layout, multi-plane DI, bundles, call resolution,
   links, Mermaid output, determinism, and flat golden compatibility.
 
-## Phase 4 — Markdown → IR conversion
+## Phase 4 — Markdown → IR conversion [x]
+
+- [x] **Structural extraction.** Parse the SOP template into deterministic,
+  inspectable JSON containing metadata, actors, main-path steps, options,
+  notes, and inline note references; fail fast on malformed structure.
+- [x] **Semantic-modeling handoff.** Build a provider-neutral prompt from the
+  extracted JSON and the IR schema, then validate returned JSON through the
+  existing IR loader.
+- [x] **Modeling rules and decomposition guidance.** Preserve multi-actor
+  evidence, option-internal branching, note attachments, and decomposition
+  rationale requirements for the semantic step without inferring BPMN here.
+- [x] **Markdown authoring conventions.** Document the exact headings,
+  numbering, hard-break, actor, option, and note syntax required by the
+  extractor.
+- [x] **Unit and regression coverage.** Cover OFC-004 extraction, escaped and
+  bare note forms, malformed documents, deterministic JSON, prompt assembly,
+  and semantic IR validation.
 
 The existing SOPs share one template: `Actors` / `Context` / `Preconditions`
 / `Outcome` / `Version` / `Main Path` (numbered, bold actor per step) /
