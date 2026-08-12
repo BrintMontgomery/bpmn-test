@@ -20,7 +20,7 @@ Implement all the suggestions in [simpleRefactors.md](docs/simpleRefactors.md) .
 ### Robust
 
 #### Role
-You are assisting in refactoring the client-side codebase for **Start Fleet Battles**—a browser-based tactical starship combat simulator. 
+You are assisting in refactoring the client-side codebase for this program, a BPMN utility.
 
 Your goal is to review the codebase below and refactor it to make it cleaner, more modular, and highly maintainable without altering its external behavior or underlying game mechanics.
 
