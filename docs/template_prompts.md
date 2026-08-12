@@ -52,7 +52,7 @@ Please structure your response as follows:
 
 ## Phase Creation
 
-Review `foo` and build me a plan to implement these rules into the software. The plan should follow the style and guidelines as found in `docs\archive\template_phasePlan.md`, and the plan should have multiple phases so that not too much is happening at once.  The plan will be implemented in a linear fashion, one phase after another, each being accomplished one at a time. Put your plan into a markdown file called `docs\devPlan.md`. Make no other changes elsewhere. Assume that simpler LLM models will be used for low and medium complexity coding, and more advanced models will be used for high and very high complexity coding. Prefer to have more and smaller phases to favor the use of simpler LLM models. 
+Review `foo` and build me a plan to implement these rules into the software. The plan should follow the style and guidelines as found in `docs\template_phasePlan.md`, and the plan should have multiple phases so that not too much is happening at once.  The plan will be implemented in a linear fashion, one phase after another, each being accomplished one at a time. Put your plan into a markdown file called `docs\devPlan.md`. Make no other changes elsewhere. Assume that simpler LLM models will be used for low and medium complexity coding, and more advanced models will be used for high and very high complexity coding. Prefer to have more and smaller phases to favor the use of simpler LLM models. 
 
 ---
 
