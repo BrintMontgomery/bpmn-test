@@ -92,6 +92,8 @@ class SemanticHandoffTests(unittest.TestCase):
         self.assertIn('"schema_version"', prompt)
         self.assertIn("first bold actor", prompt)
         self.assertIn("internal gateway", prompt)
+        self.assertIn("lane IDs", prompt)
+        self.assertIn("generated BPMN output manifest", prompt)
         self.assertIn("decomposition", prompt)
 
     def valid_ir(self) -> dict:

@@ -101,6 +101,30 @@ class SopToIRTests(unittest.TestCase):
                 )
             self.assertFalse(invalid_output.exists())
 
+    def test_invalid_document_manifest_does_not_create_output(self) -> None:
+        document = valid_ir()
+        document["documents"] = [{
+            "id": document["process_id"],
+            "file": "source.md",
+            "role": "main",
+        }]
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "Process.md"
+            source.write_text(SOURCE.read_text(encoding="utf-8"), encoding="utf-8")
+            response = root / "model.json"
+            response.write_text(json.dumps(document), encoding="utf-8")
+            output = root / "invalid.ir.json"
+
+            with self.assertRaisesRegex(sop_to_ir.CLIError, r"\.bpmn suffix"):
+                sop_to_ir.run(
+                    source,
+                    output=output,
+                    response_file=str(response),
+                    prompt_stream=io.StringIO(),
+                )
+            self.assertFalse(output.exists())
+
     def test_main_uses_explicit_argv_instead_of_sys_argv(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)

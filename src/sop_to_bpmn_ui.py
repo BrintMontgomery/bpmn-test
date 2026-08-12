@@ -19,7 +19,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 import ir_to_bpmn
-from ir import load_ir
+from ir import load_bundle
 from markdown_extractor import extract_markdown
 from semantic_handoff import build_semantic_prompt, parse_semantic_response
 from sop_to_ir import default_ir_path
@@ -109,7 +109,7 @@ class SOPToBPMNController:
         if not candidate.exists():
             raise WorkflowError(f"No adjacent IR file was found: {candidate.name}")
         try:
-            load_ir(candidate)
+            load_bundle([candidate])
         except (OSError, ValueError) as exc:
             raise WorkflowError(f"Existing IR is not valid: {exc}") from exc
         self.ir_path = candidate
@@ -120,7 +120,7 @@ class SOPToBPMNController:
             raise WorkflowError("Select and validate a Markdown file first.")
         try:
             document = parse_semantic_response(response)
-            load_ir(document)
+            load_bundle([document])
         except (TypeError, ValueError) as exc:
             raise IRResponseValidationError(
                 f"Semantic response failed IR validation: {exc}"
@@ -245,10 +245,14 @@ class SOPToBPMNApp:
         ttk.Label(status_frame, textvariable=self.status_var, wraplength=700).grid(
             row=0, column=0, sticky="w"
         )
+        self.copy_status_button = ttk.Button(
+            status_frame, text="Copy status", command=self._copy_status
+        )
+        self.copy_status_button.grid(row=1, column=0, sticky="w", pady=(8, 0))
         self.copy_feedback_button = ttk.Button(
             status_frame, text="Copy IR feedback", command=self._copy_ir_feedback
         )
-        self.copy_feedback_button.grid(row=1, column=0, sticky="w", pady=(8, 0))
+        self.copy_feedback_button.grid(row=2, column=0, sticky="w", pady=(8, 0))
 
     def _refresh_controls(self) -> None:
         prepared = self.controller.source is not None and bool(self.controller.prompt)
@@ -260,6 +264,7 @@ class SOPToBPMNApp:
         self.existing_ir_button.configure(state=normal if candidate and prepared else tk.DISABLED)
         for button in (self.copy_button, self.save_prompt_button, self.load_response_button, self.save_ir_button):
             button.configure(state=normal if prepared else tk.DISABLED)
+        self.copy_status_button.configure(state=tk.NORMAL)
         self.copy_feedback_button.configure(
             state=normal if prepared and self.ir_validation_feedback else tk.DISABLED
         )
@@ -356,6 +361,10 @@ class SOPToBPMNApp:
         self.root.clipboard_clear()
         self.root.clipboard_append(self.controller.prompt)
         self.status_var.set("Semantic prompt copied to the clipboard.")
+
+    def _copy_status(self) -> None:
+        self.root.clipboard_clear()
+        self.root.clipboard_append(self.status_var.get())
 
     def _copy_ir_feedback(self) -> None:
         if not self.ir_validation_feedback:

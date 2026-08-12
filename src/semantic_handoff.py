@@ -25,7 +25,18 @@ MODELING_RULES = """Modeling rules:
 4. Note references must resolve to extracted Notes entries and should attach
    to the modeled task or event that carries the reference.
 5. Decomposition proposals must include a one-line rationale for every split.
-6. Return one JSON object conforming to the supplied IR schema. Do not return
+6. `ann_above`, when present, is an array of lane IDs from `lanes`; never put
+   source filenames, version text, lane names, or other prose there. Omit it
+   or use an empty array when no lane annotation placement is specified.
+7. `documents`, when present, is the generated BPMN output manifest, not a
+   list of source Markdown documents. For one process, omit it or use exactly
+   `{\"id\": <process_id>, \"file\": <name ending in .bpmn>, \"role\": \"main\"}`.
+   For a bundle, include exactly one entry per process ID, with one `main`
+   entry and `global` entries for the other process IDs.
+8. Every branching `gateway_x` must have exactly one outgoing edge whose
+   `condition` is omitted or an empty string; every other outgoing edge must
+   have a non-empty condition.
+9. Return one JSON object conforming to the supplied IR schema. Do not return
    Markdown, commentary, or a second representation of the IR.
 """
 

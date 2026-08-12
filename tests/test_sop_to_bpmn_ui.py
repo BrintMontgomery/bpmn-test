@@ -13,6 +13,7 @@ from project_paths import EXAMPLE_MARKDOWN_DIR
 from sop_to_bpmn_ui import (
     IRResponseValidationError,
     OverwriteRequired,
+    SOPToBPMNApp,
     SOPToBPMNController,
     WorkflowError,
     build_ir_validation_feedback,
@@ -142,6 +143,69 @@ class SOPToBPMNControllerTests(unittest.TestCase):
             saved = controller.save_semantic_response(json.dumps(valid_ir()))
 
             self.assertEqual(source.with_suffix(".ir.json"), saved)
+
+    def test_invalid_document_manifest_is_rejected_before_ir_write(self) -> None:
+        with TemporaryDirectory() as directory:
+            source = self.make_source(Path(directory))
+            controller = SOPToBPMNController()
+            controller.prepare_source(source)
+            invalid = valid_ir()
+            invalid["documents"] = [{
+                "id": invalid["process_id"],
+                "file": source.name,
+                "role": "main",
+            }]
+
+            with self.assertRaisesRegex(IRResponseValidationError, r"\.bpmn suffix"):
+                controller.save_semantic_response(json.dumps(invalid))
+            self.assertFalse(source.with_suffix(".ir.json").exists())
+
+    def test_existing_ir_manifest_is_validated_before_use(self) -> None:
+        with TemporaryDirectory() as directory:
+            source = self.make_source(Path(directory))
+            ir_path = source.with_suffix(".ir.json")
+            invalid = valid_ir()
+            invalid["documents"] = [{
+                "id": "wrong_process",
+                "file": "main.bpmn",
+                "role": "main",
+            }]
+            ir_path.write_text(json.dumps(invalid), encoding="utf-8")
+            controller = SOPToBPMNController()
+            controller.prepare_source(source)
+
+            with self.assertRaisesRegex(WorkflowError, "unknown process document"):
+                controller.use_existing_ir()
+
+    def test_status_copy_preserves_exact_text_for_all_status_states(self) -> None:
+        class FakeRoot:
+            def __init__(self) -> None:
+                self.clipboard = ""
+
+            def clipboard_clear(self) -> None:
+                self.clipboard = ""
+
+            def clipboard_append(self, value: str) -> None:
+                self.clipboard = value
+
+        class FakeStatus:
+            def __init__(self, value: str) -> None:
+                self.value = value
+
+            def get(self) -> str:
+                return self.value
+
+        for status in (
+            "1. Select a Markdown SOP file.",
+            "Working…",
+            "Template validation failed: malformed SOP",
+            "Built and validated 1 BPMN file.",
+        ):
+            app = object.__new__(SOPToBPMNApp)
+            app.root = FakeRoot()
+            app.status_var = FakeStatus(status)
+            app._copy_status()
+            self.assertEqual(status, app.root.clipboard)
 
     def test_builds_bpmn_beside_markdown_and_requires_output_consent(self) -> None:
         with TemporaryDirectory() as directory:

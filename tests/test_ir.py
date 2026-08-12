@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import bpmn_engine as engine
-from ir import IR_SCHEMA_PATH, IRValidationError, load_ir, validate_ir
+from ir import IR_SCHEMA_PATH, IRValidationError, load_bundle, load_ir, validate_ir
 from validate_bpmn import Validator
 
 
@@ -167,6 +167,81 @@ class IRTests(unittest.TestCase):
         two_defaults = self.document()
         two_defaults["edges"][2].pop("condition")
         self.assert_invalid(two_defaults, r"exclusive gateway must have exactly one")
+
+    def test_annotation_above_accepts_lane_ids_only(self) -> None:
+        invalid = self.document()
+        invalid["ann_above"] = ["Source: process.md"]
+        self.assert_invalid(invalid, r"ann_above\[0\].*unknown lane")
+
+    def test_document_manifest_rejects_source_and_unaddressed_documents(self) -> None:
+        source_document = self.document()
+        source_document["documents"] = [{
+            "id": "Process_IRTest",
+            "file": "process.md",
+            "role": "main",
+        }]
+        with self.assertRaisesRegex(IRValidationError, r"documents: output file.*\.bpmn suffix"):
+            load_bundle([source_document])
+
+        unknown = self.document()
+        unknown["documents"] = [{
+            "id": "doc_source",
+            "file": "main.bpmn",
+            "role": "main",
+        }]
+        with self.assertRaisesRegex(IRValidationError, r"documents: unknown process document"):
+            load_bundle([unknown])
+
+        unaddressed = self.document()
+        unaddressed["documents"] = [{
+            "id": "Process_IRTest",
+            "file": "main.bpmn",
+            "role": "main",
+        }]
+        global_model = copy.deepcopy(self.document())
+        global_model["process_id"] = "Process_Global"
+        with self.assertRaisesRegex(IRValidationError, r"documents: unaddressed process id"):
+            load_bundle([unaddressed, global_model])
+
+    def test_document_manifest_rejects_duplicate_outputs_and_bad_roles(self) -> None:
+        main = self.document()
+        main["documents"] = [
+            {"id": "Process_IRTest", "file": "same.bpmn", "role": "main"},
+            {"id": "Process_Global", "file": "same.bpmn", "role": "global"},
+        ]
+        global_model = copy.deepcopy(self.document())
+        global_model["process_id"] = "Process_Global"
+        with self.assertRaisesRegex(IRValidationError, r"duplicate BPMN output filename"):
+            load_bundle([main, global_model])
+
+        wrong_role = copy.deepcopy(main)
+        wrong_role["documents"] = [
+            {"id": "Process_IRTest", "file": "main.bpmn", "role": "global"},
+            {"id": "Process_Global", "file": "global.bpmn", "role": "main"},
+        ]
+        with self.assertRaisesRegex(IRValidationError, r"main document must address"):
+            load_bundle([wrong_role, global_model])
+
+    def test_document_manifest_accepts_valid_single_and_multi_process_outputs(self) -> None:
+        single = self.document()
+        single["documents"] = [{
+            "id": "Process_IRTest",
+            "file": "main.bpmn",
+            "role": "main",
+        }]
+        self.assertEqual("main.bpmn", load_bundle([single]).documents[0].file)
+
+        main = copy.deepcopy(single)
+        main["documents"] = [
+            {"id": "Process_IRTest", "file": "main.bpmn", "role": "main"},
+            {"id": "Process_Global", "file": "global.bpmn", "role": "global"},
+        ]
+        global_model = copy.deepcopy(self.document())
+        global_model["process_id"] = "Process_Global"
+        bundle = load_bundle([main, global_model])
+        self.assertEqual(("main.bpmn", "global.bpmn"), tuple(
+            document.file for document in bundle.documents
+        ))
 
     def test_loaded_ir_reaches_layout_xml_and_validator(self) -> None:
         model = load_ir(self.document())

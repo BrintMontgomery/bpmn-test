@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from bpmn_engine import DocumentSpec, ProcessBundle, write_bundle
-from ir import IRValidationError, load_bundle
+from ir import IRValidationError, load_bundle, validate_document_manifest
 from validate_bpmn import FLOW_NODE_TAGS, local, validate_bundle
 
 
@@ -28,7 +28,10 @@ def default_bpmn_name(ir_path: Path) -> str:
 def _default_documents(ir_paths: list[Path], bundle: ProcessBundle) -> ProcessBundle:
     """Fill in output names without overriding reviewed document metadata."""
 
-    models_by_id = {model.process_id: model for model in bundle.models}
+    if len(ir_paths) != len(bundle.models):
+        raise CLIError(
+            "IR bundle input count does not match the number of loaded processes"
+        )
     # load_bundle supplies process-id filenames when the IR omitted
     # ``documents``. Those are loader fallbacks, not reviewed metadata, so
     # replace them with the CLI's input-stem policy.
@@ -45,12 +48,11 @@ def _default_documents(ir_paths: list[Path], bundle: ProcessBundle) -> ProcessBu
             )
         )
         known_ids.add(model.process_id)
-    if len(specs) != len(models_by_id):
-        raise CLIError("IR bundle contains duplicate or unaddressed process documents")
-    filenames = [spec.file for spec in specs]
-    if len(filenames) != len(set(filenames)):
-        raise CLIError("IR bundle contains duplicate BPMN output filenames")
-    return ProcessBundle(bundle.models, tuple(specs))
+    try:
+        validated = validate_document_manifest(bundle.models, specs)
+    except IRValidationError as exc:
+        raise CLIError(str(exc)) from exc
+    return ProcessBundle(bundle.models, validated)
 
 
 def _plane_node_counts(path: Path) -> list[tuple[str, int]]:

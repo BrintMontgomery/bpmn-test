@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from typing import TextIO
 
-from ir import load_ir
+from ir import load_bundle
 from markdown_extractor import extract_markdown
 from semantic_handoff import build_semantic_prompt, parse_semantic_response
 
@@ -80,7 +80,7 @@ def run(
     response = _read_response(response_file, input_stream=input_stream)
     try:
         document = parse_semantic_response(response)
-        load_ir(document)
+        load_bundle([document])
     except (OSError, TypeError, ValueError) as exc:
         raise CLIError(f"semantic response failed IR validation: {exc}") from exc
 

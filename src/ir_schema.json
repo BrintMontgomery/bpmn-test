@@ -28,6 +28,7 @@
     "target_namespace": {"type": "string", "minLength": 1},
     "ann_above": {
       "type": "array",
+      "description": "Optional lane IDs whose annotation bands render above their lanes. Do not use source filenames, version text, lane names, or prose.",
       "items": {"type": "string", "minLength": 1},
       "uniqueItems": true
     },
@@ -68,6 +69,7 @@
     },
     "documents": {
       "type": "array",
+      "description": "Optional manifest of generated BPMN output documents. IDs are process IDs and files must be generated .bpmn filenames; source Markdown files do not belong here.",
       "items": {"$ref": "#/$defs/document"}
     },
     "decomposition": {
@@ -162,7 +164,7 @@
         "source": {"type": "string", "minLength": 1},
         "target": {"type": "string", "minLength": 1},
         "label": {"type": "string"},
-        "condition": {"type": "string"},
+        "condition": {"type": "string", "description": "Branch condition. Omit or leave empty for the single default branch of an exclusive gateway."},
         "loop": {"type": "boolean"}
       }
     },
@@ -198,6 +200,7 @@
     },
     "document": {
       "type": "object",
+      "description": "A generated BPMN output document in a process bundle, not a source SOP file.",
       "additionalProperties": false,
       "required": ["id", "file"],
       "properties": {

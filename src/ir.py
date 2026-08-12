@@ -649,6 +649,80 @@ def validate_ir(path_or_mapping: str | Path | Mapping[str, Any]) -> None:
     _validate_and_normalize(_read_document(path_or_mapping))
 
 
+def validate_document_manifest(
+    models: list[ProcessModel],
+    specs: list[DocumentSpec] | tuple[DocumentSpec, ...],
+) -> tuple[DocumentSpec, ...]:
+    """Validate the generated-BPMN document manifest for a process bundle."""
+
+    if not models:
+        raise IRValidationError("documents: bundle must contain at least one process")
+
+    process_ids = [model.process_id for model in models]
+    if len(process_ids) != len(set(process_ids)):
+        duplicates = sorted({item for item in process_ids if process_ids.count(item) > 1})
+        raise IRValidationError(
+            "documents: duplicate process id(s) in bundle: "
+            + ", ".join(repr(item) for item in duplicates)
+        )
+
+    specs = tuple(specs)
+    spec_ids = [spec.id for spec in specs]
+    duplicate_ids = sorted({item for item in spec_ids if spec_ids.count(item) > 1})
+    if duplicate_ids:
+        raise IRValidationError(
+            "documents: duplicate document id(s): "
+            + ", ".join(repr(item) for item in duplicate_ids)
+        )
+
+    process_id_set = set(process_ids)
+    unknown_ids = sorted(set(spec_ids) - process_id_set)
+    if unknown_ids:
+        raise IRValidationError(
+            "documents: unknown process document id(s): "
+            + ", ".join(repr(item) for item in unknown_ids)
+        )
+
+    missing_ids = [process_id for process_id in process_ids if process_id not in spec_ids]
+    if missing_ids:
+        raise IRValidationError(
+            "documents: unaddressed process id(s): "
+            + ", ".join(repr(item) for item in missing_ids)
+        )
+
+    filenames = [spec.file for spec in specs]
+    duplicate_files = sorted({item for item in filenames if filenames.count(item) > 1})
+    if duplicate_files:
+        raise IRValidationError(
+            "documents: duplicate BPMN output filename(s): "
+            + ", ".join(repr(item) for item in duplicate_files)
+        )
+    invalid_files = [
+        spec.file for spec in specs if Path(spec.file).suffix.lower() != ".bpmn"
+    ]
+    if invalid_files:
+        raise IRValidationError(
+            "documents: output file(s) must use the .bpmn suffix; source "
+            "Markdown files are not document outputs: "
+            + ", ".join(repr(item) for item in invalid_files)
+        )
+
+    main_specs = [spec for spec in specs if spec.role == "main"]
+    if len(main_specs) != 1:
+        raise IRValidationError(
+            "documents: bundle must have exactly one main document; "
+            f"found {len(main_specs)}"
+        )
+    if main_specs[0].id != models[0].process_id:
+        raise IRValidationError(
+            "documents: the main document must address the first process "
+            f"{models[0].process_id!r}, not {main_specs[0].id!r}"
+        )
+    if any(spec.role not in {"main", "global"} for spec in specs):
+        raise IRValidationError("documents: roles must be 'main' or 'global'")
+    return specs
+
+
 def load_bundle(
     documents: list[str | Path | Mapping[str, Any]],
 ) -> ProcessBundle:
@@ -666,4 +740,7 @@ def load_bundle(
             )
             for index, model in enumerate(models)
         )
-    return ProcessBundle(models=models, documents=specs)
+    return ProcessBundle(
+        models=models,
+        documents=validate_document_manifest(models, specs),
+    )

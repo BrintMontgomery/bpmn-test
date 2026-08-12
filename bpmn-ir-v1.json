@@ -9,10 +9,7 @@
   "exporter": "OFC BPMN IR",
   "exporter_version": "1",
   "target_namespace": "https://oklahoma.gov/odmhsas/ofc/bpmn/atm-withdrawal",
-  "ann_above": [
-    "Source: ATM-001 â Withdraw Cash at an ATM.md",
-    "Version: ATM Standard Procedure â 2026-08-12 â v1.0"
-  ],
+  "ann_above": [],
   "process_doc": "Source context: This procedure describes a cardholder withdrawing cash from an automated teller machine (ATM) using a debit card and PIN. Preconditions: the cardholder has an active debit card, knows the PIN, can access the selected account, and uses an available ATM with sufficient cash to operate. Outcome: the cardholder receives the requested cash and retrieves the debit card; the Financial Institution records the withdrawal. If completion fails, the ATM provides an appropriate message without dispensing cash. Modeling judgments: the first bold actor owns each main-path task. Option steps have no bold-actor extraction, so ownership follows the grammatical actor named in each step; this is an inference. The Financial Institution lane is retained because it is an extracted actor, but it has no separate task because it appears as a counterparty in the extracted ATM steps and no explicit lane handoff is specified. The start event, end events, and exclusive gateways are inferred BPMN control-flow elements. The three option triggers are represented by entry gateways in the main path. Option A has an internal retry-limit gateway; Option B has an internal smaller-amount-or-cancel gateway. Option C has no additional conditional branch. No decomposition proposals are made, so no split rationales are applicable.",
   "lanes": [
     {
@@ -402,8 +399,7 @@
     {
       "source": "main_gw_pin_result",
       "target": "main_05_display_options",
-      "label": "PIN verified",
-      "condition": "PIN is verified"
+      "label": "PIN verified"
     },
     {
       "source": "main_gw_pin_result",
@@ -428,8 +424,7 @@
     {
       "source": "main_gw_cancel_entry",
       "target": "main_07_verify_funds",
-      "label": "Continue",
-      "condition": "Cardholder does not select cancel"
+      "label": "Continue"
     },
     {
       "source": "main_07_verify_funds",
@@ -438,8 +433,7 @@
     {
       "source": "main_gw_funds_entry",
       "target": "main_08_debit_account",
-      "label": "Sufficient funds",
-      "condition": "Financial Institution reports sufficient available funds"
+      "label": "Sufficient funds"
     },
     {
       "source": "main_gw_funds_entry",
@@ -470,8 +464,7 @@
     {
       "source": "option_a_gw_retry_limit",
       "target": "option_a_02_permit_retry",
-      "label": "Retry available",
-      "condition": "Retry limit has not been reached"
+      "label": "Retry available"
     },
     {
       "source": "option_a_gw_retry_limit",
@@ -501,7 +494,6 @@
       "source": "option_b_gw_choice",
       "target": "main_06_select_withdrawal_amount",
       "label": "Enter smaller amount",
-      "condition": "Cardholder enters a smaller amount",
       "loop": true
     },
     {
@@ -529,8 +521,8 @@
   ],
   "documents": [
     {
-      "id": "doc_atm_001",
-      "file": "ATM-001 â Withdraw Cash at an ATM.md",
+      "id": "atm_withdrawal_v1",
+      "file": "atm_withdrawal_v1.bpmn",
       "role": "main"
     }
   ],
