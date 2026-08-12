@@ -32,7 +32,7 @@ Please refactor the existing code focusing on these core AI-assisted clean code 
 4. **Robust Error Handling & Logging:** Improve error reporting and exception management to ensure the automated runtime doesn't silently fail during hands-free turn execution.
 
 #### Refactoring Constraints
-* **Behavior Preservation:** Do not add new mechanics, tweak game balances, or alter existing system contracts. The inputs and outputs must remain functionally identical.
+* **Behavior Preservation:** Do not add new mechanics, tweak program balances, or alter existing system contracts. The inputs and outputs must remain functionally identical.
 * **Separate Concerns:** Focus strictly on structural cleanup. If you spot critical game-rule logical flaws or missing input validation, list them out separately rather than weaving fixes into the refactored code.
 
 #### Expected Output Format
