@@ -63,6 +63,7 @@ class Node:
     ttype: str = "manual"  # manual | user | send | receive (task kinds only)
     doc: list[str] = field(default_factory=list)
     note: str | None = None
+    parent: str | None = None  # containing subprocess id; None -> top level
 
 
 @dataclass

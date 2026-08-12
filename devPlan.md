@@ -286,7 +286,7 @@ paths, so one invocation validates a whole multi-file output.
   link pairing and reachability, subprocess DI placement, scope-boundary
   flows, called-process bundles, global-process lane rules, and CLI behavior.
 
-## Phase 3 — Define the intermediate representation (IR)
+## Phase 3 — Define the intermediate representation (IR) [x]
 
 A plain JSON file is the contract between "understanding the SOP" and
 "drawing the diagram" — mirroring the existing `Node`/`Edge` fields:
@@ -321,32 +321,33 @@ A plain JSON file is the contract between "understanding the SOP" and
 The engine from Phase 1 consumes this directly (`col`/`subrow` omitted —
 Phase 2 computes them). Points the original sketch left out:
 
-- **Enumerate the `kind` and `ttype` vocabularies in the schema.**
+- [x] **Enumerate the `kind` and `ttype` vocabularies in the schema.**
   `kind` ∈ `task | gateway_x | gateway_p | start_message | catch_timer |
   catch_message | end`, extended by Phase 3b with `subprocess |
   call_activity | link_throw | link_catch`; `ttype` ∈ `manual | user |
   send | receive` and applies to tasks only. These are load-bearing:
   `element_tag()` switches on them, and a typo currently produces a
   silently wrong element type.
-- **`parent` is what makes the IR hierarchical.** `null` means top-level;
+- [x] **`parent` is what makes the IR hierarchical.** `null` means top-level;
   otherwise the id of the containing `subprocess` node. Keep nodes in one
   flat list rather than nesting them — id uniqueness, edge resolution, and
   "no flow crosses a scope boundary" all stay one-pass checks that way,
   and the layout engine reads a scope as a simple filter.
-- **Gateway defaults are a validated invariant, not a convention.**
+- [x] **Gateway defaults are a validated invariant, not a convention.**
   `check_gateways` requires that a branching gateway have exactly one
   outgoing flow with no `conditionExpression` (the default) and that every
   other branch has one. `Edge.condition == ""` is what marks the default.
   Encode that rule in the JSON Schema so a malformed IR fails at load, not
   after layout.
-- **Decide what `phase` is for and say so.** Either it stays
-  documentation + Mermaid grouping + the Phase 2 column constraint (state
-  that explicitly, so nobody assumes it renders into BPMN), or it becomes
-  real output (BPMN `group` elements over each phase span). Do not carry
-  it as unexplained dead weight the way OFC-004 does.
-- `external_pools` / `message_flows` per Phase 1.
-- `doc` is a list of paragraph strings (feeds `add_doc`), and `note`
+- [x] **`phase` stays documentation + Mermaid grouping + the Phase 2 column
+  constraint; it does not render into BPMN `group` elements.**
+- [x] `external_pools` / `message_flows` per Phase 1.
+- [x] `doc` is a list of paragraph strings (feeds `add_doc`), and `note`
   is a single string that becomes an associated text annotation.
+
+- [x] Unit and regression coverage verifies IR schema loading, vocabulary and
+  reference validation, hierarchy checks, gateway defaults, deterministic
+  defaults, and engine/XML integration.
 
 This is the same modeling judgment applied to build OFC-004 (which actor
 owns which step, where each lettered Option's gateway belongs, which notes
