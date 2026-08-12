@@ -139,7 +139,7 @@ this plan sequences it first only because it is the smallest, fully independent 
 
 ---
 
-## [ ] Phase 2: `validate_bpmn.py` — guard malformed-XML parsing at its source
+## [x] Phase 2: `validate_bpmn.py` — guard malformed-XML parsing at its source
 *Introduce `BpmnParseError` and raise it from the two unguarded `ET.parse()` call sites inside
 `validate_bpmn.py`, then give `main()` the same clean exit-2 path it already has for missing files.
 Complexity of coding: Low.*
@@ -156,17 +156,17 @@ Complexity of coding: Low.*
   input — this phase only changes behavior for malformed XML.
 
 ### 2. Implementation Checklist
-- [ ] **Task 1:** Define `class BpmnParseError(ValueError): """Raised when a BPMN file is not
+- [x] **Task 1:** Define `class BpmnParseError(ValueError): """Raised when a BPMN file is not
   well-formed XML."""` near the top of `validate_bpmn.py`, alongside the other module-level
   constants and above `class Validator`.
-- [ ] **Task 2:** Wrap `validate_bpmn.py:120` in
+- [x] **Task 2:** Wrap `validate_bpmn.py:120` in
   `try/except ET.ParseError as exc: raise BpmnParseError(f"could not parse {self.path}: {exc}") from exc`.
-- [ ] **Task 3:** Wrap `validate_bpmn.py:679` the same way, using that loop's own `path` variable
+- [x] **Task 3:** Wrap `validate_bpmn.py:679` the same way, using that loop's own `path` variable
   in the message.
-- [ ] **Task 4:** In `main()`, wrap the existing `return 0 if validate_bundle(paths) else 1`
+- [x] **Task 4:** In `main()`, wrap the existing `return 0 if validate_bundle(paths) else 1`
   (`validate_bpmn.py:712`) in
   `try/except BpmnParseError as exc: logger.info(str(exc)); return 2`.
-- [ ] **Task 5:** Add the three regression tests listed under Testing & Verification below.
+- [x] **Task 5:** Add the three regression tests listed under Testing & Verification below.
 
 ### Implementation Notes
 * `main()` already distinguishes "bad input" (exit 2: no args, missing file) from "ran cleanly but
@@ -199,18 +199,18 @@ currently lets it escape unguarded.
 ### 3. Testing & Verification
 * **Test Location:** `tests/test_validate_bpmn.py`
 * **Unit Tests to Write:**
-    * [ ] `test_validator_rejects_malformed_xml`: construct `Validator` directly on a file
+    * [x] `test_validator_rejects_malformed_xml`: construct `Validator` directly on a file
       containing not-well-formed XML (e.g. an unclosed tag) and assert `BpmnParseError` is raised.
-    * [ ] `test_validate_bundle_rejects_malformed_xml`: call `validate_bundle([...])` with one
+    * [x] `test_validate_bundle_rejects_malformed_xml`: call `validate_bundle([...])` with one
       well-formed and one malformed path and assert `BpmnParseError` is raised (not a raw
       `ET.ParseError`, and not a silent `False`).
-    * [ ] `test_main_reports_malformed_xml_cleanly`: call `main([str(corrupt_path)])` under
+    * [x] `test_main_reports_malformed_xml_cleanly`: call `main([str(corrupt_path)])` under
       `contextlib.redirect_stdout`, following the existing `test_main_requires_paths` pattern
       (`tests/test_validate_bpmn.py:289-294`); assert the return value is `2` and the captured
       output identifies the file.
 * **Integration/Regression Tests to Run:**
-    * [ ] `pytest` (full suite)
-    * [ ] `python scripts/check_golden.py` (must stay unchanged — this phase only touches invalid-
+    * [x] `pytest` (full suite)
+    * [x] `python scripts/check_golden.py` (must stay unchanged — this phase only touches invalid-
       input paths)
 * **Acceptance Criteria:** all three new tests pass; `python src/validate_bpmn.py <corrupt-file.bpmn>`
   exits 2 with a clean message instead of a traceback; no previously-passing test regresses.

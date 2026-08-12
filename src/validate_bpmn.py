@@ -33,6 +33,10 @@ GATEWAY_TAGS = {
 }
 
 
+class BpmnParseError(ValueError):
+    """Raised when a BPMN file is not well-formed XML."""
+
+
 def local(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
 
@@ -117,7 +121,12 @@ class Validator:
         called_process_ids: set[str] | None = None,
     ) -> None:
         self.path = Path(path)
-        self.root = ET.parse(self.path).getroot()
+        try:
+            self.root = ET.parse(self.path).getroot()
+        except ET.ParseError as exc:
+            raise BpmnParseError(
+                f"could not parse {self.path}: {exc}"
+            ) from exc
         self.errors: list[str] = []
         self.checks = 0
         self.collab = next((el for el in self.root
@@ -676,7 +685,10 @@ def validate_bundle(paths: list[Path]) -> bool:
     process_ids: set[str] = set()
     called_ids: set[str] = set()
     for path in paths:
-        root = ET.parse(path).getroot()
+        try:
+            root = ET.parse(path).getroot()
+        except ET.ParseError as exc:
+            raise BpmnParseError(f"could not parse {path}: {exc}") from exc
         process_ids.update(
             element.get("id") for element in root
             if local(element.tag) == "process" and element.get("id")
@@ -709,7 +721,11 @@ def main(argv: list[str] | None = None) -> int:
         for path in missing:
             logger.info(f"no such file: {path}")
         return 2
-    return 0 if validate_bundle(paths) else 1
+    try:
+        return 0 if validate_bundle(paths) else 1
+    except BpmnParseError as exc:
+        logger.info(str(exc))
+        return 2
 
 
 if __name__ == "__main__":

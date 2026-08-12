@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from geometry import GeometryFinding, check_geometry, format_finding, strip_label_suffix
-from validate_bpmn import Validator, main, validate_bundle
+from validate_bpmn import BpmnParseError, Validator, main, validate_bundle
 
 BPMN = "{http://www.omg.org/spec/BPMN/20100524/MODEL}"
 BPMNDI = "{http://www.omg.org/spec/BPMN/20100524/DI}"
@@ -260,6 +260,29 @@ class ValidatorTests(unittest.TestCase):
                                   simple_document(call_target="Process_Missing"))
             self.assertFalse(validate_bundle([missing]))
 
+    def test_validator_rejects_malformed_xml(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "malformed.bpmn"
+            path.write_text("<definitions>", encoding="utf-8")
+
+            with self.assertRaises(BpmnParseError) as raised:
+                Validator(path)
+
+            self.assertIn(str(path), str(raised.exception))
+            self.assertIsInstance(raised.exception.__cause__, ET.ParseError)
+
+    def test_validate_bundle_rejects_malformed_xml(self) -> None:
+        with TemporaryDirectory() as directory:
+            valid_path = self.write(directory, "valid.bpmn", simple_document())
+            malformed_path = Path(directory) / "malformed.bpmn"
+            malformed_path.write_text("<definitions>", encoding="utf-8")
+
+            with self.assertRaises(BpmnParseError) as raised:
+                validate_bundle([valid_path, malformed_path])
+
+            self.assertIn(str(malformed_path), str(raised.exception))
+            self.assertIsInstance(raised.exception.__cause__, ET.ParseError)
+
     def test_scope_boundary_and_di_mismatch_are_rejected(self) -> None:
         definitions = add_nested_subprocess(True)
         process = definitions.find(q(BPMN, "process"))
@@ -292,6 +315,18 @@ class ValidatorTests(unittest.TestCase):
             result = main([])
         self.assertEqual(2, result)
         self.assertIn("usage:", output.getvalue())
+
+    def test_main_reports_malformed_xml_cleanly(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "malformed.bpmn"
+            path.write_text("<definitions>", encoding="utf-8")
+            output = io.StringIO()
+
+            with contextlib.redirect_stdout(output):
+                result = main([str(path)])
+
+            self.assertEqual(2, result)
+            self.assertIn(str(path), output.getvalue())
 
 
 class StripLabelSuffixTests(unittest.TestCase):
