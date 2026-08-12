@@ -15,9 +15,12 @@ from pathlib import Path
 
 from bpmn_engine import ProcessModel, PreviewMetadata
 from ofc001_model import MODEL as OFC001_MODEL
+from project_paths import ASSETS_DIR, EXAMPLE_BPMN_DIR, PROJECT_ROOT
 
-HERE = Path(__file__).parent
-VENDOR = HERE / "vendor"
+# ``HERE`` remains the project root for callers that used this public module
+# constant before the source files were moved under ``src``.
+HERE = PROJECT_ROOT
+VENDOR = ASSETS_DIR / "vendor"
 
 _PALETTE = (
     ("#1f5f8b", "#e3eef7"),
@@ -82,7 +85,7 @@ DEFAULT_BUNDLE = PreviewBundle((
         id="ofc001",
         filename="OFC-001.bpmn",
         model=DEFAULT_MODEL,
-        path=HERE / "OFC-001.bpmn",
+        path=EXAMPLE_BPMN_DIR / "OFC-001.bpmn",
     ),
 ))
 

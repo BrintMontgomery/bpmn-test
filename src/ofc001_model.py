@@ -7,13 +7,12 @@ the loaded IR model.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from bpmn_engine import PreviewMetadata, ProcessOption
 from ir import load_ir
+from project_paths import EXAMPLE_IR_DIR
 
 
-MODEL = load_ir(Path(__file__).with_name("OFC-001.ir.json"))
+MODEL = load_ir(EXAMPLE_IR_DIR / "OFC-001.ir.json")
 
 PROCESS_OPTIONS = [
     ProcessOption(

@@ -12,10 +12,11 @@ import bpmn_engine as engine
 import ir_to_bpmn
 from decomposition import decompose_model
 from ir import load_ir
+from project_paths import EXAMPLE_BPMN_DIR, EXAMPLE_IR_DIR
 from validate_bpmn import Validator
 
 
-ROOT = Path(__file__).parent
+ROOT = EXAMPLE_IR_DIR
 IR_FILES = (ROOT / "OFC-001.ir.json", ROOT / "OFC-004.ir.json")
 
 
@@ -126,7 +127,7 @@ class MigrationTests(unittest.TestCase):
             )
             for ir_path in IR_FILES:
                 generated = output_dir / ir_path.name.replace(".ir.json", ".bpmn")
-                legacy = ROOT / generated.name
+                legacy = EXAMPLE_BPMN_DIR / generated.name
                 self.assertTrue(Validator(generated).run())
                 self.assertEqual(
                     bpmn_semantics(legacy), bpmn_semantics(generated),

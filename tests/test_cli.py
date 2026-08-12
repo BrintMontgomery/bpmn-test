@@ -12,9 +12,10 @@ from unittest.mock import patch
 import ir_to_bpmn
 import sop_to_bpmn
 import sop_to_ir
+from project_paths import EXAMPLE_MARKDOWN_DIR
 
 
-SOURCE = Path(__file__).with_name("OFC-004 — Case Manager Intakes Consumer.md")
+SOURCE = next(EXAMPLE_MARKDOWN_DIR.glob("OFC-004*.md"))
 
 
 def valid_ir(

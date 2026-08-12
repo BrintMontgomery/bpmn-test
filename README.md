@@ -71,14 +71,25 @@ Trigger: ...
 \[ end \]
 ```
 
-See [MARKDOWN_AUTHORING.md](MARKDOWN_AUTHORING.md) for the full specification.
+See [the Markdown authoring guide](docs/MARKDOWN_AUTHORING.md) for the full specification.
+
+## Repository Layout
+
+```
+src/        Pipeline, validation, layout, and preview source code
+tests/      Unit and regression tests
+docs/       Authoring guides, plans, and design notes
+examples/   Sample SOP inputs, reviewed IR, and generated BPMN artifacts
+assets/     Vendored browser assets used by the HTML preview
+scripts/    Repository maintenance commands
+```
 
 ## Output
 
 | Input | Output |
 |-------|--------|
-| `OFC-001.ir.json` | `OFC-001.bpmn` |
-| `OFC-004.ir.json` | `OFC-004.bpmn` |
+| `examples/ir/OFC-001.ir.json` | `examples/bpmn/OFC-001.bpmn` |
+| `examples/ir/OFC-004.ir.json` | `examples/bpmn/OFC-004.bpmn` |
 | Validated IR JSON | `.bpmn` bundle (+ optional separate called-process files) |
 
 ## Architecture
@@ -121,14 +132,20 @@ markdown/ ──► markdown_extractor.py ──► structural JSON
 
 ```bash
 # Extract and validate an SOP Markdown file
-python markdown_extractor.py "OFC-004 — Case Manager Intakes Consumer.md"
+python src/markdown_extractor.py "examples/markdown/OFC-004 — Case Manager Intakes Consumer.md"
 
 # After semantic modeling produces an IR JSON, emit BPMN
-python ir_to_bpmn.py OFC-004.ir.json
+python src/ir_to_bpmn.py examples/ir/OFC-004.ir.json
 
 # Validate the emitted bundle
-python validate_bpmn.py OFC-004.bpmn
+python src/validate_bpmn.py examples/bpmn/OFC-004.bpmn
 
 # Generate an interactive HTML preview
-python build_preview.py
+python src/build_preview.py
+```
+
+Run the regression suite with:
+
+```bash
+python -m unittest discover -s tests -t .
 ```

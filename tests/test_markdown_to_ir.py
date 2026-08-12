@@ -14,9 +14,10 @@ from semantic_handoff import (
     parse_semantic_response,
     validate_semantic_response,
 )
+from project_paths import EXAMPLE_MARKDOWN_DIR
 
 
-SOURCE = Path(__file__).with_name("OFC-004 — Case Manager Intakes Consumer.md")
+SOURCE = next(EXAMPLE_MARKDOWN_DIR.glob("OFC-004*.md"))
 
 
 class MarkdownExtractorTests(unittest.TestCase):

@@ -367,7 +367,7 @@ class PreviewTests(unittest.TestCase):
         import build_preview
         import ofc001_model
 
-        xml = (build_preview.HERE / "OFC-001.bpmn").read_text(encoding="utf-8")
+        xml = build_preview.DEFAULT_BUNDLE.primary.read_xml()
         bundle = build_preview.PreviewBundle((
             build_preview.PreviewDocument(
                 id="main-process",
