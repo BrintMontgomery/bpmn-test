@@ -1,0 +1,1086 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_OFC004" targetNamespace="http://oklahoma.gov/odmhsas/ofc/bpmn" exporter="generate_bpmn_ofc004.py" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_OFC004">
+    <bpmn:participant id="Participant_OFCCaseManagement" name="Oklahoma Forensic Center — Case Manager Intakes Consumer" processRef="Process_OFC004"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Process_OFC004" name="OFC-004 — Case Manager Intakes Consumer" isExecutable="false">
+    <bpmn:documentation>- OFC-004 — Case Manager Intakes Consumer. Oklahoma Forensic Center, Case Management Unit. Version 1.1, 2026-08-11. Standardized case-management admission process to establish emergency and restricted contacts, document the consumer's treatment advocate, verify authorized contacts, and ensure required release documentation is available to staff.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_OFC004">
+      <bpmn:lane id="Lane_CM" name="Case Manager">
+        <bpmn:flowNodeRef>StartEvent_AdmissionNotification</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_BeginElopementForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewAdmissionReport</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SearchOSCN</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ProtectiveOrder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecordRestrictedPerson</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DoNotAuthorizeContact</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ConsumerRequestsRestricted</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InformConsumerOfRestriction</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ProtectiveOrderJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ObtainRemainingInfo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EmailElopementForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewTAFormWithConsumer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ConsumerAbleToParticipate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PostponeActivity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReturnWhenAble</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PeriodicFollowUp</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ContactAdvocate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ScanDocumentation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_MailCopyToAdvocate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AdvocateChangeRequested</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ProcessAdvocateChange</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AdvocateChangeJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CheckAdditionalContacts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AdditionalContactRequested</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteROI</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecordROIPurpose</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ContactProspectiveContact</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ContactAgrees</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InformFloorStaffNewContact</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PlaceROIInChartOptionA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InformConsumerDeclined</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ContactJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConfirmContactSheet</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CommunicateVerifiedContacts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FileApprovedROIs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ClinicalEventWitnessed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DocumentInAvatar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ClinicalEventJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_PostAdmissionChange</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ProcessContactChange</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerifyROIForChange</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CommunicateChangeToFloorStaff</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DeliverOngoingIssues</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_HandoffTarget</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_HandoffJoin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Complete</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_CON" name="Consumer">
+        <bpmn:flowNodeRef>Task_ConsumerIdentifiesAdvocate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConsumerSignsROI</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_SW" name="Social Worker">
+        <bpmn:flowNodeRef>Task_SWReceivesHandoff</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_NS" name="Nursing Staff">
+        <bpmn:flowNodeRef>Task_NursingCompletesAdmission</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_FS" name="Floor Staff">
+        <bpmn:flowNodeRef>Task_FloorStaffMaintainsSheet</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FSReceivesHandoff</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_PTA" name="Prospective Treatment Advocate">
+        <bpmn:flowNodeRef>Task_AdvocateSignsForm</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_PC" name="Prospective Contact">
+        <bpmn:flowNodeRef>Task_ProspectiveContactResponds</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_AdmissionNotification" name="Admission notification email and consumer report received">
+      <bpmn:documentation>- Receive the admission notification email and associated consumer report.</bpmn:documentation>
+      <bpmn:outgoing>Flow_StartEvent_AdmissionNotification__Task_BeginElopementForm</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MsgDef_StartEvent_AdmissionNotification"/>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_BeginElopementForm" name="Begin the Elopement Form">
+      <bpmn:documentation>- Open and begin the Elopement Form with available information.</bpmn:documentation>
+      <bpmn:incoming>Flow_StartEvent_AdmissionNotification__Task_BeginElopementForm</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_BeginElopementForm__Task_ReviewAdmissionReport</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_ReviewAdmissionReport" name="Review the admission report for contacts, attorneys, sheriff information, and victims">
+      <bpmn:documentation>- Search the admission report for emergency contacts, county contacts, attorneys, sheriff information, and victim information.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_BeginElopementForm__Task_ReviewAdmissionReport</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReviewAdmissionReport__Task_SearchOSCN</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_SearchOSCN" name="Search OSCN for protective orders">
+      <bpmn:documentation>- Search the Oklahoma State Courts Network (OSCN) for active protective orders.
+- Record applicable contact restrictions on the Elopement Form.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ReviewAdmissionReport__Task_SearchOSCN</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_SearchOSCN__Gateway_ProtectiveOrder</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ProtectiveOrder" name="Protective order restricts contact?" default="Flow_Gateway_ProtectiveOrder__Gateway_ProtectiveOrderJoin">
+      <bpmn:documentation>- Option B — a protective order involves a proposed or existing contact.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_SearchOSCN__Gateway_ProtectiveOrder</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ProtectiveOrder__Gateway_ProtectiveOrderJoin</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_ProtectiveOrder__Task_RecordRestrictedPerson</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_RecordRestrictedPerson" name="Record the restricted person on the Elopement Form">
+      <bpmn:incoming>Flow_Gateway_ProtectiveOrder__Task_RecordRestrictedPerson</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RecordRestrictedPerson__Task_DoNotAuthorizeContact</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_DoNotAuthorizeContact" name="Do not authorize contact with the restricted person">
+      <bpmn:incoming>Flow_Task_RecordRestrictedPerson__Task_DoNotAuthorizeContact</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_DoNotAuthorizeContact__Gateway_ConsumerRequestsRestricted</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_ConsumerRequestsRestricted" name="Consumer requests prohibited contact?" default="Flow_Gateway_ConsumerRequestsRestricted__Gateway_ProtectiveOrderJoin">
+      <bpmn:incoming>Flow_Task_DoNotAuthorizeContact__Gateway_ConsumerRequestsRestricted</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ConsumerRequestsRestricted__Gateway_ProtectiveOrderJoin</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_ConsumerRequestsRestricted__Task_InformConsumerOfRestriction</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_InformConsumerOfRestriction" name="Inform the Consumer of the restriction">
+      <bpmn:incoming>Flow_Gateway_ConsumerRequestsRestricted__Task_InformConsumerOfRestriction</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_InformConsumerOfRestriction__Gateway_ProtectiveOrderJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_ProtectiveOrderJoin">
+      <bpmn:incoming>Flow_Gateway_ProtectiveOrder__Gateway_ProtectiveOrderJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_ConsumerRequestsRestricted__Gateway_ProtectiveOrderJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_InformConsumerOfRestriction__Gateway_ProtectiveOrderJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ProtectiveOrderJoin__Task_ObtainRemainingInfo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_ObtainRemainingInfo" name="Obtain remaining consumer information after arrival and complete the Elopement Form">
+      <bpmn:incoming>Flow_Gateway_ProtectiveOrderJoin__Task_ObtainRemainingInfo</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ObtainRemainingInfo__Task_EmailElopementForm</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_EmailElopementForm" name="Email the completed Elopement Form to admissions staff">
+      <bpmn:incoming>Flow_Task_ObtainRemainingInfo__Task_EmailElopementForm</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_EmailElopementForm__Task_ReviewTAFormWithConsumer</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="Task_ReviewTAFormWithConsumer" name="Review the Treatment Advocate Form with the Consumer">
+      <bpmn:incoming>Flow_Task_EmailElopementForm__Task_ReviewTAFormWithConsumer</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_PeriodicFollowUp__Task_ReviewTAFormWithConsumer</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReviewTAFormWithConsumer__Gateway_ConsumerAbleToParticipate</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ConsumerAbleToParticipate" name="Consumer able to participate?" default="Flow_Gateway_ConsumerAbleToParticipate__Task_ConsumerIdentifiesAdvocate">
+      <bpmn:documentation>- Option C — the Consumer is too agitated, delusional, or unable to participate effectively.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ReviewTAFormWithConsumer__Gateway_ConsumerAbleToParticipate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ConsumerAbleToParticipate__Task_ConsumerIdentifiesAdvocate</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_ConsumerAbleToParticipate__Task_PostponeActivity</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_PostponeActivity" name="Postpone the activity">
+      <bpmn:incoming>Flow_Gateway_ConsumerAbleToParticipate__Task_PostponeActivity</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PostponeActivity__Task_ReturnWhenAble</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ReturnWhenAble" name="Return when the Consumer is able to participate">
+      <bpmn:incoming>Flow_Task_PostponeActivity__Task_ReturnWhenAble</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReturnWhenAble__Task_PeriodicFollowUp</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_PeriodicFollowUp" name="Continue periodic follow-up during the week">
+      <bpmn:incoming>Flow_Task_ReturnWhenAble__Task_PeriodicFollowUp</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PeriodicFollowUp__Task_ReviewTAFormWithConsumer</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ConsumerIdentifiesAdvocate" name="Identify a prospective external Treatment Advocate">
+      <bpmn:incoming>Flow_Gateway_ConsumerAbleToParticipate__Task_ConsumerIdentifiesAdvocate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ConsumerIdentifiesAdvocate__Task_ContactAdvocate</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sendTask id="Task_ContactAdvocate" name="Contact the Prospective Treatment Advocate">
+      <bpmn:documentation>- Obtain confirmation that the person is willing to serve in that role.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_ConsumerIdentifiesAdvocate__Task_ContactAdvocate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ContactAdvocate__Task_AdvocateSignsForm</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:manualTask id="Task_AdvocateSignsForm" name="Sign the Treatment Advocate Form">
+      <bpmn:incoming>Flow_Task_ContactAdvocate__Task_AdvocateSignsForm</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ConsumerSignsROI" name="Sign the associated Release of Information authorization">
+      <bpmn:incoming>Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ConsumerSignsROI__Task_ScanDocumentation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_ScanDocumentation" name="Scan a copy of the completed treatment-advocate documentation">
+      <bpmn:incoming>Flow_Task_ConsumerSignsROI__Task_ScanDocumentation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ScanDocumentation__Task_MailCopyToAdvocate</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_MailCopyToAdvocate" name="Mail a copy to the Treatment Advocate">
+      <bpmn:incoming>Flow_Task_ScanDocumentation__Task_MailCopyToAdvocate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_MailCopyToAdvocate__Gateway_AdvocateChangeRequested</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="Gateway_AdvocateChangeRequested" name="Consumer requests a different Treatment Advocate?" default="Flow_Gateway_AdvocateChangeRequested__Gateway_AdvocateChangeJoin">
+      <bpmn:documentation>- Option D — the Consumer requests a different Treatment Advocate after the initial designation.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_MailCopyToAdvocate__Gateway_AdvocateChangeRequested</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_AdvocateChangeRequested__Gateway_AdvocateChangeJoin</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_AdvocateChangeRequested__Task_ProcessAdvocateChange</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_ProcessAdvocateChange" name="Process the new Treatment Advocate designation">
+      <bpmn:incoming>Flow_Gateway_AdvocateChangeRequested__Task_ProcessAdvocateChange</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ProcessAdvocateChange__Gateway_AdvocateChangeJoin</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_AdvocateChangeJoin">
+      <bpmn:incoming>Flow_Gateway_AdvocateChangeRequested__Gateway_AdvocateChangeJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_ProcessAdvocateChange__Gateway_AdvocateChangeJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_AdvocateChangeJoin__Task_NursingCompletesAdmission</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_NursingCompletesAdmission" name="Nursing Staff completes the nursing portion of the admission">
+      <bpmn:incoming>Flow_Gateway_AdvocateChangeJoin__Task_NursingCompletesAdmission</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_NursingCompletesAdmission__Task_CheckAdditionalContacts</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_CheckAdditionalContacts" name="Check with the Social Worker and Consumer for additional persons">
+      <bpmn:incoming>Flow_Task_NursingCompletesAdmission__Task_CheckAdditionalContacts</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CheckAdditionalContacts__Gateway_AdditionalContactRequested</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_AdditionalContactRequested" name="Consumer requests an additional contact?" default="Flow_Gateway_AdditionalContactRequested__Gateway_ContactJoin">
+      <bpmn:documentation>- Option A — the Consumer requests that another person be added to the unit contact sheet.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_CheckAdditionalContacts__Gateway_AdditionalContactRequested</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_AdditionalContactRequested__Gateway_ContactJoin</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_AdditionalContactRequested__Task_CompleteROI</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_CompleteROI" name="Complete an ROI with the Consumer">
+      <bpmn:incoming>Flow_Gateway_AdditionalContactRequested__Task_CompleteROI</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteROI__Task_RecordROIPurpose</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_RecordROIPurpose" name="Record authorized purposes or information categories on the ROI">
+      <bpmn:documentation>- Include applicable contact purposes such as visit, telephone call, or televisit.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_CompleteROI__Task_RecordROIPurpose</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RecordROIPurpose__Task_ContactProspectiveContact</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_ContactProspectiveContact" name="Contact the Prospective Contact">
+      <bpmn:documentation>- Ask whether the person agrees to receive contact from the Consumer.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_RecordROIPurpose__Task_ContactProspectiveContact</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ContactProspectiveContact__Task_ProspectiveContactResponds</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:manualTask id="Task_ProspectiveContactResponds" name="Respond with agreement or decline">
+      <bpmn:incoming>Flow_Task_ContactProspectiveContact__Task_ProspectiveContactResponds</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ProspectiveContactResponds__Gateway_ContactAgrees</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_ContactAgrees" name="Prospective Contact agrees?" default="Flow_Gateway_ContactAgrees__Task_InformFloorStaffNewContact">
+      <bpmn:incoming>Flow_Task_ProspectiveContactResponds__Gateway_ContactAgrees</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ContactAgrees__Task_InformFloorStaffNewContact</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_ContactAgrees__Task_InformConsumerDeclined</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Task_InformFloorStaffNewContact" name="Inform Floor Staff that the contact may be added to the unit contact sheet">
+      <bpmn:incoming>Flow_Gateway_ContactAgrees__Task_InformFloorStaffNewContact</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_InformFloorStaffNewContact__Task_PlaceROIInChartOptionA</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:manualTask id="Task_PlaceROIInChartOptionA" name="Place the approved ROI in the consumer chart">
+      <bpmn:incoming>Flow_Task_InformFloorStaffNewContact__Task_PlaceROIInChartOptionA</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PlaceROIInChartOptionA__Gateway_ContactJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_InformConsumerDeclined" name="Inform the Consumer and do not authorize the contact">
+      <bpmn:incoming>Flow_Gateway_ContactAgrees__Task_InformConsumerDeclined</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_InformConsumerDeclined__Gateway_ContactJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_ContactJoin">
+      <bpmn:incoming>Flow_Gateway_AdditionalContactRequested__Gateway_ContactJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_PlaceROIInChartOptionA__Gateway_ContactJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_InformConsumerDeclined__Gateway_ContactJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ContactJoin__Task_ConfirmContactSheet</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_ConfirmContactSheet" name="Confirm that the unit contact sheet reflects approved contacts">
+      <bpmn:incoming>Flow_Gateway_ContactJoin__Task_ConfirmContactSheet</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ConfirmContactSheet__Task_CommunicateVerifiedContacts</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_CommunicateVerifiedContacts" name="Communicate verified contact information to Floor Staff">
+      <bpmn:incoming>Flow_Task_ConfirmContactSheet__Task_CommunicateVerifiedContacts</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CommunicateVerifiedContacts__Task_FloorStaffMaintainsSheet</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:manualTask id="Task_FloorStaffMaintainsSheet" name="Maintain the operational unit contact sheet">
+      <bpmn:incoming>Flow_Task_CommunicateVerifiedContacts__Task_FloorStaffMaintainsSheet</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_FloorStaffMaintainsSheet__Task_FileApprovedROIs</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_FileApprovedROIs" name="Ensure each approved ROI is placed in the consumer chart">
+      <bpmn:incoming>Flow_Task_FloorStaffMaintainsSheet__Task_FileApprovedROIs</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_FileApprovedROIs__Gateway_ClinicalEventWitnessed</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ClinicalEventWitnessed" name="Event requiring clinical documentation witnessed?" default="Flow_Gateway_ClinicalEventWitnessed__Gateway_ClinicalEventJoin">
+      <bpmn:documentation>- Option F — the Case Manager personally witnesses an event that requires documentation.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_FileApprovedROIs__Gateway_ClinicalEventWitnessed</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ClinicalEventWitnessed__Gateway_ClinicalEventJoin</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_ClinicalEventWitnessed__Task_DocumentInAvatar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_DocumentInAvatar" name="Document the event in Avatar">
+      <bpmn:incoming>Flow_Gateway_ClinicalEventWitnessed__Task_DocumentInAvatar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_DocumentInAvatar__Gateway_ClinicalEventJoin</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ClinicalEventJoin">
+      <bpmn:incoming>Flow_Gateway_ClinicalEventWitnessed__Gateway_ClinicalEventJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_DocumentInAvatar__Gateway_ClinicalEventJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ClinicalEventJoin__Gateway_PostAdmissionChange</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_PostAdmissionChange" name="Contact-list change requested after admission?" default="Flow_Gateway_PostAdmissionChange__Task_DeliverOngoingIssues">
+      <bpmn:documentation>- Option E — the Consumer requests that a person be added to or removed from the contact sheet after the initial admission process.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_ClinicalEventJoin__Gateway_PostAdmissionChange</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_CommunicateChangeToFloorStaff__Gateway_PostAdmissionChange</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_PostAdmissionChange__Task_DeliverOngoingIssues</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_PostAdmissionChange__Task_ProcessContactChange</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_ProcessContactChange" name="Process the requested change">
+      <bpmn:incoming>Flow_Gateway_PostAdmissionChange__Task_ProcessContactChange</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ProcessContactChange__Task_VerifyROIForChange</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_VerifyROIForChange" name="Complete and verify an ROI when required">
+      <bpmn:incoming>Flow_Task_ProcessContactChange__Task_VerifyROIForChange</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_VerifyROIForChange__Task_CommunicateChangeToFloorStaff</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_CommunicateChangeToFloorStaff" name="Communicate the approved change to Floor Staff">
+      <bpmn:incoming>Flow_Task_VerifyROIForChange__Task_CommunicateChangeToFloorStaff</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CommunicateChangeToFloorStaff__Gateway_PostAdmissionChange</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="Task_DeliverOngoingIssues" name="Complete the case-management admission workflow">
+      <bpmn:documentation>- Deliver ongoing contact, behavioral, or consumer-support issues to the Social Worker or Floor Staff as appropriate.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_PostAdmissionChange__Task_DeliverOngoingIssues</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_DeliverOngoingIssues__Gateway_HandoffTarget</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_HandoffTarget" name="Handoff to Floor Staff or Social Worker?" default="Flow_Gateway_HandoffTarget__Task_FSReceivesHandoff">
+      <bpmn:incoming>Flow_Task_DeliverOngoingIssues__Gateway_HandoffTarget</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_HandoffTarget__Task_FSReceivesHandoff</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_HandoffTarget__Task_SWReceivesHandoff</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_FSReceivesHandoff" name="Receive handoff of ongoing issues">
+      <bpmn:incoming>Flow_Gateway_HandoffTarget__Task_FSReceivesHandoff</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_FSReceivesHandoff__Gateway_HandoffJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_SWReceivesHandoff" name="Receive handoff of ongoing issues">
+      <bpmn:incoming>Flow_Gateway_HandoffTarget__Task_SWReceivesHandoff</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_SWReceivesHandoff__Gateway_HandoffJoin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_HandoffJoin">
+      <bpmn:incoming>Flow_Task_FSReceivesHandoff__Gateway_HandoffJoin</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_SWReceivesHandoff__Gateway_HandoffJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_HandoffJoin__EndEvent_Complete</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_Complete" name="Case-management admission workflow complete">
+      <bpmn:documentation>- The consumer's elopement information, protective-order restrictions, treatment advocate status, and approved external contacts are documented and communicated. Required ROI documentation is placed in the chart. Delayed or unresolved admission activity is tracked and handed off to Social Worker or Floor Staff.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_HandoffJoin__EndEvent_Complete</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_StartEvent_AdmissionNotification__Task_BeginElopementForm" sourceRef="StartEvent_AdmissionNotification" targetRef="Task_BeginElopementForm"/>
+    <bpmn:sequenceFlow id="Flow_Task_BeginElopementForm__Task_ReviewAdmissionReport" sourceRef="Task_BeginElopementForm" targetRef="Task_ReviewAdmissionReport"/>
+    <bpmn:sequenceFlow id="Flow_Task_ReviewAdmissionReport__Task_SearchOSCN" sourceRef="Task_ReviewAdmissionReport" targetRef="Task_SearchOSCN"/>
+    <bpmn:sequenceFlow id="Flow_Task_SearchOSCN__Gateway_ProtectiveOrder" sourceRef="Task_SearchOSCN" targetRef="Gateway_ProtectiveOrder"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ProtectiveOrder__Gateway_ProtectiveOrderJoin" sourceRef="Gateway_ProtectiveOrder" targetRef="Gateway_ProtectiveOrderJoin" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ProtectiveOrder__Task_RecordRestrictedPerson" sourceRef="Gateway_ProtectiveOrder" targetRef="Task_RecordRestrictedPerson" name="Yes">
+      <bpmn:conditionExpression>Protective order restricts contact</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_RecordRestrictedPerson__Task_DoNotAuthorizeContact" sourceRef="Task_RecordRestrictedPerson" targetRef="Task_DoNotAuthorizeContact"/>
+    <bpmn:sequenceFlow id="Flow_Task_DoNotAuthorizeContact__Gateway_ConsumerRequestsRestricted" sourceRef="Task_DoNotAuthorizeContact" targetRef="Gateway_ConsumerRequestsRestricted"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ConsumerRequestsRestricted__Gateway_ProtectiveOrderJoin" sourceRef="Gateway_ConsumerRequestsRestricted" targetRef="Gateway_ProtectiveOrderJoin" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ConsumerRequestsRestricted__Task_InformConsumerOfRestriction" sourceRef="Gateway_ConsumerRequestsRestricted" targetRef="Task_InformConsumerOfRestriction" name="Yes">
+      <bpmn:conditionExpression>Consumer requests the restricted contact</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_InformConsumerOfRestriction__Gateway_ProtectiveOrderJoin" sourceRef="Task_InformConsumerOfRestriction" targetRef="Gateway_ProtectiveOrderJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ProtectiveOrderJoin__Task_ObtainRemainingInfo" sourceRef="Gateway_ProtectiveOrderJoin" targetRef="Task_ObtainRemainingInfo"/>
+    <bpmn:sequenceFlow id="Flow_Task_ObtainRemainingInfo__Task_EmailElopementForm" sourceRef="Task_ObtainRemainingInfo" targetRef="Task_EmailElopementForm"/>
+    <bpmn:sequenceFlow id="Flow_Task_EmailElopementForm__Task_ReviewTAFormWithConsumer" sourceRef="Task_EmailElopementForm" targetRef="Task_ReviewTAFormWithConsumer"/>
+    <bpmn:sequenceFlow id="Flow_Task_ReviewTAFormWithConsumer__Gateway_ConsumerAbleToParticipate" sourceRef="Task_ReviewTAFormWithConsumer" targetRef="Gateway_ConsumerAbleToParticipate"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ConsumerAbleToParticipate__Task_ConsumerIdentifiesAdvocate" sourceRef="Gateway_ConsumerAbleToParticipate" targetRef="Task_ConsumerIdentifiesAdvocate" name="Yes"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ConsumerAbleToParticipate__Task_PostponeActivity" sourceRef="Gateway_ConsumerAbleToParticipate" targetRef="Task_PostponeActivity" name="No">
+      <bpmn:conditionExpression>Consumer is too agitated, delusional, or unable to participate</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_PostponeActivity__Task_ReturnWhenAble" sourceRef="Task_PostponeActivity" targetRef="Task_ReturnWhenAble"/>
+    <bpmn:sequenceFlow id="Flow_Task_ReturnWhenAble__Task_PeriodicFollowUp" sourceRef="Task_ReturnWhenAble" targetRef="Task_PeriodicFollowUp"/>
+    <bpmn:sequenceFlow id="Flow_Task_PeriodicFollowUp__Task_ReviewTAFormWithConsumer" sourceRef="Task_PeriodicFollowUp" targetRef="Task_ReviewTAFormWithConsumer"/>
+    <bpmn:sequenceFlow id="Flow_Task_ConsumerIdentifiesAdvocate__Task_ContactAdvocate" sourceRef="Task_ConsumerIdentifiesAdvocate" targetRef="Task_ContactAdvocate"/>
+    <bpmn:sequenceFlow id="Flow_Task_ContactAdvocate__Task_AdvocateSignsForm" sourceRef="Task_ContactAdvocate" targetRef="Task_AdvocateSignsForm"/>
+    <bpmn:sequenceFlow id="Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI" sourceRef="Task_AdvocateSignsForm" targetRef="Task_ConsumerSignsROI"/>
+    <bpmn:sequenceFlow id="Flow_Task_ConsumerSignsROI__Task_ScanDocumentation" sourceRef="Task_ConsumerSignsROI" targetRef="Task_ScanDocumentation"/>
+    <bpmn:sequenceFlow id="Flow_Task_ScanDocumentation__Task_MailCopyToAdvocate" sourceRef="Task_ScanDocumentation" targetRef="Task_MailCopyToAdvocate"/>
+    <bpmn:sequenceFlow id="Flow_Task_MailCopyToAdvocate__Gateway_AdvocateChangeRequested" sourceRef="Task_MailCopyToAdvocate" targetRef="Gateway_AdvocateChangeRequested"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AdvocateChangeRequested__Gateway_AdvocateChangeJoin" sourceRef="Gateway_AdvocateChangeRequested" targetRef="Gateway_AdvocateChangeJoin" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AdvocateChangeRequested__Task_ProcessAdvocateChange" sourceRef="Gateway_AdvocateChangeRequested" targetRef="Task_ProcessAdvocateChange" name="Yes">
+      <bpmn:conditionExpression>Consumer requests a different Treatment Advocate</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_ProcessAdvocateChange__Gateway_AdvocateChangeJoin" sourceRef="Task_ProcessAdvocateChange" targetRef="Gateway_AdvocateChangeJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AdvocateChangeJoin__Task_NursingCompletesAdmission" sourceRef="Gateway_AdvocateChangeJoin" targetRef="Task_NursingCompletesAdmission"/>
+    <bpmn:sequenceFlow id="Flow_Task_NursingCompletesAdmission__Task_CheckAdditionalContacts" sourceRef="Task_NursingCompletesAdmission" targetRef="Task_CheckAdditionalContacts"/>
+    <bpmn:sequenceFlow id="Flow_Task_CheckAdditionalContacts__Gateway_AdditionalContactRequested" sourceRef="Task_CheckAdditionalContacts" targetRef="Gateway_AdditionalContactRequested"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AdditionalContactRequested__Gateway_ContactJoin" sourceRef="Gateway_AdditionalContactRequested" targetRef="Gateway_ContactJoin" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AdditionalContactRequested__Task_CompleteROI" sourceRef="Gateway_AdditionalContactRequested" targetRef="Task_CompleteROI" name="Yes">
+      <bpmn:conditionExpression>Consumer requests an additional contact</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteROI__Task_RecordROIPurpose" sourceRef="Task_CompleteROI" targetRef="Task_RecordROIPurpose"/>
+    <bpmn:sequenceFlow id="Flow_Task_RecordROIPurpose__Task_ContactProspectiveContact" sourceRef="Task_RecordROIPurpose" targetRef="Task_ContactProspectiveContact"/>
+    <bpmn:sequenceFlow id="Flow_Task_ContactProspectiveContact__Task_ProspectiveContactResponds" sourceRef="Task_ContactProspectiveContact" targetRef="Task_ProspectiveContactResponds"/>
+    <bpmn:sequenceFlow id="Flow_Task_ProspectiveContactResponds__Gateway_ContactAgrees" sourceRef="Task_ProspectiveContactResponds" targetRef="Gateway_ContactAgrees"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ContactAgrees__Task_InformFloorStaffNewContact" sourceRef="Gateway_ContactAgrees" targetRef="Task_InformFloorStaffNewContact" name="Yes"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ContactAgrees__Task_InformConsumerDeclined" sourceRef="Gateway_ContactAgrees" targetRef="Task_InformConsumerDeclined" name="No">
+      <bpmn:conditionExpression>Prospective Contact declines</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_InformFloorStaffNewContact__Task_PlaceROIInChartOptionA" sourceRef="Task_InformFloorStaffNewContact" targetRef="Task_PlaceROIInChartOptionA"/>
+    <bpmn:sequenceFlow id="Flow_Task_PlaceROIInChartOptionA__Gateway_ContactJoin" sourceRef="Task_PlaceROIInChartOptionA" targetRef="Gateway_ContactJoin"/>
+    <bpmn:sequenceFlow id="Flow_Task_InformConsumerDeclined__Gateway_ContactJoin" sourceRef="Task_InformConsumerDeclined" targetRef="Gateway_ContactJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ContactJoin__Task_ConfirmContactSheet" sourceRef="Gateway_ContactJoin" targetRef="Task_ConfirmContactSheet"/>
+    <bpmn:sequenceFlow id="Flow_Task_ConfirmContactSheet__Task_CommunicateVerifiedContacts" sourceRef="Task_ConfirmContactSheet" targetRef="Task_CommunicateVerifiedContacts"/>
+    <bpmn:sequenceFlow id="Flow_Task_CommunicateVerifiedContacts__Task_FloorStaffMaintainsSheet" sourceRef="Task_CommunicateVerifiedContacts" targetRef="Task_FloorStaffMaintainsSheet"/>
+    <bpmn:sequenceFlow id="Flow_Task_FloorStaffMaintainsSheet__Task_FileApprovedROIs" sourceRef="Task_FloorStaffMaintainsSheet" targetRef="Task_FileApprovedROIs"/>
+    <bpmn:sequenceFlow id="Flow_Task_FileApprovedROIs__Gateway_ClinicalEventWitnessed" sourceRef="Task_FileApprovedROIs" targetRef="Gateway_ClinicalEventWitnessed"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ClinicalEventWitnessed__Gateway_ClinicalEventJoin" sourceRef="Gateway_ClinicalEventWitnessed" targetRef="Gateway_ClinicalEventJoin" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ClinicalEventWitnessed__Task_DocumentInAvatar" sourceRef="Gateway_ClinicalEventWitnessed" targetRef="Task_DocumentInAvatar" name="Yes">
+      <bpmn:conditionExpression>Event requires clinical documentation</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_DocumentInAvatar__Gateway_ClinicalEventJoin" sourceRef="Task_DocumentInAvatar" targetRef="Gateway_ClinicalEventJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ClinicalEventJoin__Gateway_PostAdmissionChange" sourceRef="Gateway_ClinicalEventJoin" targetRef="Gateway_PostAdmissionChange"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_PostAdmissionChange__Task_DeliverOngoingIssues" sourceRef="Gateway_PostAdmissionChange" targetRef="Task_DeliverOngoingIssues" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_PostAdmissionChange__Task_ProcessContactChange" sourceRef="Gateway_PostAdmissionChange" targetRef="Task_ProcessContactChange" name="Yes">
+      <bpmn:conditionExpression>Contact-list change requested after admission</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_ProcessContactChange__Task_VerifyROIForChange" sourceRef="Task_ProcessContactChange" targetRef="Task_VerifyROIForChange"/>
+    <bpmn:sequenceFlow id="Flow_Task_VerifyROIForChange__Task_CommunicateChangeToFloorStaff" sourceRef="Task_VerifyROIForChange" targetRef="Task_CommunicateChangeToFloorStaff"/>
+    <bpmn:sequenceFlow id="Flow_Task_CommunicateChangeToFloorStaff__Gateway_PostAdmissionChange" sourceRef="Task_CommunicateChangeToFloorStaff" targetRef="Gateway_PostAdmissionChange"/>
+    <bpmn:sequenceFlow id="Flow_Task_DeliverOngoingIssues__Gateway_HandoffTarget" sourceRef="Task_DeliverOngoingIssues" targetRef="Gateway_HandoffTarget"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_HandoffTarget__Task_FSReceivesHandoff" sourceRef="Gateway_HandoffTarget" targetRef="Task_FSReceivesHandoff" name="Floor Staff"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_HandoffTarget__Task_SWReceivesHandoff" sourceRef="Gateway_HandoffTarget" targetRef="Task_SWReceivesHandoff" name="Social Worker">
+      <bpmn:conditionExpression>Handoff to Social Worker</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_FSReceivesHandoff__Gateway_HandoffJoin" sourceRef="Task_FSReceivesHandoff" targetRef="Gateway_HandoffJoin"/>
+    <bpmn:sequenceFlow id="Flow_Task_SWReceivesHandoff__Gateway_HandoffJoin" sourceRef="Task_SWReceivesHandoff" targetRef="Gateway_HandoffJoin"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_HandoffJoin__EndEvent_Complete" sourceRef="Gateway_HandoffJoin" targetRef="EndEvent_Complete"/>
+    <bpmn:textAnnotation id="Ann_Task_RecordRestrictedPerson">
+      <bpmn:text>[a] Protective orders identified through OSCN restrict contact with the persons named in the order. A restricted person must not be approved for consumer contact.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_RecordRestrictedPerson" sourceRef="Task_RecordRestrictedPerson" targetRef="Ann_Task_RecordRestrictedPerson"/>
+    <bpmn:textAnnotation id="Ann_Task_PostponeActivity">
+      <bpmn:text>[c] Postpone the affected interview or documentation activity. Return when the Consumer is able to participate, including the following day when appropriate. Continue periodic follow-up during the week when needed.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_PostponeActivity" sourceRef="Task_PostponeActivity" targetRef="Ann_Task_PostponeActivity"/>
+    <bpmn:textAnnotation id="Ann_Task_ScanDocumentation">
+      <bpmn:text>[b] Release of information is limited to the information or purposes authorized on the signed ROI. Authorization is not a general release of all consumer information.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_ScanDocumentation" sourceRef="Task_ScanDocumentation" targetRef="Ann_Task_ScanDocumentation"/>
+    <bpmn:textAnnotation id="Ann_Task_ProcessAdvocateChange">
+      <bpmn:text>[d] A Consumer may change the designated Treatment Advocate at any time and may request additions or removals from the contact sheet after admission.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_ProcessAdvocateChange" sourceRef="Task_ProcessAdvocateChange" targetRef="Ann_Task_ProcessAdvocateChange"/>
+    <bpmn:textAnnotation id="Ann_Task_ConfirmContactSheet">
+      <bpmn:text>[c] The contact sheet is individualized to the unit and is not a standardized standalone case-management form. Floor Staff maintains the operational contact information.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_ConfirmContactSheet" sourceRef="Task_ConfirmContactSheet" targetRef="Ann_Task_ConfirmContactSheet"/>
+    <bpmn:textAnnotation id="Ann_Task_DocumentInAvatar">
+      <bpmn:text>[e] Avatar is not part of the routine case-management admission-document workflow. The Case Manager uses Avatar when an observed event independently requires documentation. Do not enter routine Elopement Forms, Treatment Advocate Forms, or admission ROIs into Avatar solely as part of this intake workflow.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_DocumentInAvatar" sourceRef="Task_DocumentInAvatar" targetRef="Ann_Task_DocumentInAvatar"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_OFC004">
+    <bpmndi:BPMNPlane id="BPMNPlane_OFC004" bpmnElement="Collaboration_OFC004">
+      <bpmndi:BPMNShape id="Shape_Participant_OFCCaseManagement" bpmnElement="Participant_OFCCaseManagement" isHorizontal="true">
+        <dc:Bounds x="200" y="260" width="10646" height="2609"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_CM" bpmnElement="Lane_CM" isHorizontal="true">
+        <dc:Bounds x="230" y="260" width="10616" height="779"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_CON" bpmnElement="Lane_CON" isHorizontal="true">
+        <dc:Bounds x="230" y="1039" width="10616" height="330"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_SW" bpmnElement="Lane_SW" isHorizontal="true">
+        <dc:Bounds x="230" y="1369" width="10616" height="480"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_NS" bpmnElement="Lane_NS" isHorizontal="true">
+        <dc:Bounds x="230" y="1849" width="10616" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_FS" bpmnElement="Lane_FS" isHorizontal="true">
+        <dc:Bounds x="230" y="2029" width="10616" height="330"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_PTA" bpmnElement="Lane_PTA" isHorizontal="true">
+        <dc:Bounds x="230" y="2359" width="10616" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_PC" bpmnElement="Lane_PC" isHorizontal="true">
+        <dc:Bounds x="230" y="2539" width="10616" height="330"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_StartEvent_AdmissionNotification" bpmnElement="StartEvent_AdmissionNotification">
+        <dc:Bounds x="308" y="481" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="271" y="522" width="110" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_BeginElopementForm" bpmnElement="Task_BeginElopementForm">
+        <dc:Bounds x="422" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReviewAdmissionReport" bpmnElement="Task_ReviewAdmissionReport">
+        <dc:Bounds x="640" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SearchOSCN" bpmnElement="Task_SearchOSCN">
+        <dc:Bounds x="858" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ProtectiveOrder" bpmnElement="Gateway_ProtectiveOrder" isMarkerVisible="true">
+        <dc:Bounds x="1076" y="474" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1031" y="436" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecordRestrictedPerson" bpmnElement="Task_RecordRestrictedPerson">
+        <dc:Bounds x="1204" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_DoNotAuthorizeContact" bpmnElement="Task_DoNotAuthorizeContact">
+        <dc:Bounds x="1422" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ConsumerRequestsRestricted" bpmnElement="Gateway_ConsumerRequestsRestricted" isMarkerVisible="true">
+        <dc:Bounds x="1640" y="624" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1595" y="586" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_InformConsumerOfRestriction" bpmnElement="Task_InformConsumerOfRestriction">
+        <dc:Bounds x="1768" y="759" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ProtectiveOrderJoin" bpmnElement="Gateway_ProtectiveOrderJoin" isMarkerVisible="true">
+        <dc:Bounds x="1986" y="624" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ObtainRemainingInfo" bpmnElement="Task_ObtainRemainingInfo">
+        <dc:Bounds x="2114" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EmailElopementForm" bpmnElement="Task_EmailElopementForm">
+        <dc:Bounds x="2332" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReviewTAFormWithConsumer" bpmnElement="Task_ReviewTAFormWithConsumer">
+        <dc:Bounds x="2550" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ConsumerAbleToParticipate" bpmnElement="Gateway_ConsumerAbleToParticipate" isMarkerVisible="true">
+        <dc:Bounds x="2768" y="474" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2723" y="436" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PostponeActivity" bpmnElement="Task_PostponeActivity">
+        <dc:Bounds x="2896" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReturnWhenAble" bpmnElement="Task_ReturnWhenAble">
+        <dc:Bounds x="3114" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PeriodicFollowUp" bpmnElement="Task_PeriodicFollowUp">
+        <dc:Bounds x="3332" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ConsumerIdentifiesAdvocate" bpmnElement="Task_ConsumerIdentifiesAdvocate">
+        <dc:Bounds x="3550" y="1089" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ContactAdvocate" bpmnElement="Task_ContactAdvocate">
+        <dc:Bounds x="3768" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_AdvocateSignsForm" bpmnElement="Task_AdvocateSignsForm">
+        <dc:Bounds x="4064" y="2409" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ConsumerSignsROI" bpmnElement="Task_ConsumerSignsROI">
+        <dc:Bounds x="4282" y="1239" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ScanDocumentation" bpmnElement="Task_ScanDocumentation">
+        <dc:Bounds x="4500" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_MailCopyToAdvocate" bpmnElement="Task_MailCopyToAdvocate">
+        <dc:Bounds x="4718" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_AdvocateChangeRequested" bpmnElement="Gateway_AdvocateChangeRequested" isMarkerVisible="true">
+        <dc:Bounds x="4936" y="474" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4891" y="423" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ProcessAdvocateChange" bpmnElement="Task_ProcessAdvocateChange">
+        <dc:Bounds x="5064" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_AdvocateChangeJoin" bpmnElement="Gateway_AdvocateChangeJoin" isMarkerVisible="true">
+        <dc:Bounds x="5282" y="624" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_NursingCompletesAdmission" bpmnElement="Task_NursingCompletesAdmission">
+        <dc:Bounds x="5410" y="1899" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CheckAdditionalContacts" bpmnElement="Task_CheckAdditionalContacts">
+        <dc:Bounds x="5628" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_AdditionalContactRequested" bpmnElement="Gateway_AdditionalContactRequested" isMarkerVisible="true">
+        <dc:Bounds x="5846" y="474" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5801" y="436" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteROI" bpmnElement="Task_CompleteROI">
+        <dc:Bounds x="5974" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RecordROIPurpose" bpmnElement="Task_RecordROIPurpose">
+        <dc:Bounds x="6192" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ContactProspectiveContact" bpmnElement="Task_ContactProspectiveContact">
+        <dc:Bounds x="6410" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ProspectiveContactResponds" bpmnElement="Task_ProspectiveContactResponds">
+        <dc:Bounds x="6628" y="2739" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ContactAgrees" bpmnElement="Gateway_ContactAgrees" isMarkerVisible="true">
+        <dc:Bounds x="6846" y="624" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6801" y="586" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_InformFloorStaffNewContact" bpmnElement="Task_InformFloorStaffNewContact">
+        <dc:Bounds x="6974" y="759" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PlaceROIInChartOptionA" bpmnElement="Task_PlaceROIInChartOptionA">
+        <dc:Bounds x="7192" y="759" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_InformConsumerDeclined" bpmnElement="Task_InformConsumerDeclined">
+        <dc:Bounds x="7410" y="909" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ContactJoin" bpmnElement="Gateway_ContactJoin" isMarkerVisible="true">
+        <dc:Bounds x="7706" y="624" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ConfirmContactSheet" bpmnElement="Task_ConfirmContactSheet">
+        <dc:Bounds x="7834" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CommunicateVerifiedContacts" bpmnElement="Task_CommunicateVerifiedContacts">
+        <dc:Bounds x="8052" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_FloorStaffMaintainsSheet" bpmnElement="Task_FloorStaffMaintainsSheet">
+        <dc:Bounds x="8052" y="2079" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_FileApprovedROIs" bpmnElement="Task_FileApprovedROIs">
+        <dc:Bounds x="8270" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ClinicalEventWitnessed" bpmnElement="Gateway_ClinicalEventWitnessed" isMarkerVisible="true">
+        <dc:Bounds x="8488" y="474" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="8443" y="423" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_DocumentInAvatar" bpmnElement="Task_DocumentInAvatar">
+        <dc:Bounds x="8616" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ClinicalEventJoin" bpmnElement="Gateway_ClinicalEventJoin" isMarkerVisible="true">
+        <dc:Bounds x="8834" y="624" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_PostAdmissionChange" bpmnElement="Gateway_PostAdmissionChange" isMarkerVisible="true">
+        <dc:Bounds x="8962" y="474" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="8917" y="423" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ProcessContactChange" bpmnElement="Task_ProcessContactChange">
+        <dc:Bounds x="9090" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_VerifyROIForChange" bpmnElement="Task_VerifyROIForChange">
+        <dc:Bounds x="9308" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CommunicateChangeToFloorStaff" bpmnElement="Task_CommunicateChangeToFloorStaff">
+        <dc:Bounds x="9526" y="609" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_DeliverOngoingIssues" bpmnElement="Task_DeliverOngoingIssues">
+        <dc:Bounds x="9744" y="459" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_HandoffTarget" bpmnElement="Gateway_HandoffTarget" isMarkerVisible="true">
+        <dc:Bounds x="9962" y="474" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="9917" y="436" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_FSReceivesHandoff" bpmnElement="Task_FSReceivesHandoff">
+        <dc:Bounds x="10168" y="2229" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SWReceivesHandoff" bpmnElement="Task_SWReceivesHandoff">
+        <dc:Bounds x="10386" y="1719" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_HandoffJoin" bpmnElement="Gateway_HandoffJoin" isMarkerVisible="true">
+        <dc:Bounds x="10604" y="774" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndEvent_Complete" bpmnElement="EndEvent_Complete">
+        <dc:Bounds x="10732" y="481" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="10695" y="522" width="110" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_RecordRestrictedPerson" bpmnElement="Ann_Task_RecordRestrictedPerson">
+        <dc:Bounds x="1134" y="310" width="280" height="78"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_PostponeActivity" bpmnElement="Ann_Task_PostponeActivity">
+        <dc:Bounds x="2826" y="303" width="280" height="93"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_ScanDocumentation" bpmnElement="Ann_Task_ScanDocumentation">
+        <dc:Bounds x="4430" y="310" width="280" height="78"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_ProcessAdvocateChange" bpmnElement="Ann_Task_ProcessAdvocateChange">
+        <dc:Bounds x="4994" y="310" width="280" height="78"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_ConfirmContactSheet" bpmnElement="Ann_Task_ConfirmContactSheet">
+        <dc:Bounds x="7764" y="310" width="280" height="78"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_DocumentInAvatar" bpmnElement="Ann_Task_DocumentInAvatar">
+        <dc:Bounds x="8546" y="288" width="280" height="123"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_StartEvent_AdmissionNotification__Task_BeginElopementForm" bpmnElement="Flow_StartEvent_AdmissionNotification__Task_BeginElopementForm">
+        <di:waypoint x="344" y="499"/>
+        <di:waypoint x="422" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_BeginElopementForm__Task_ReviewAdmissionReport" bpmnElement="Flow_Task_BeginElopementForm__Task_ReviewAdmissionReport">
+        <di:waypoint x="562" y="499"/>
+        <di:waypoint x="640" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReviewAdmissionReport__Task_SearchOSCN" bpmnElement="Flow_Task_ReviewAdmissionReport__Task_SearchOSCN">
+        <di:waypoint x="780" y="499"/>
+        <di:waypoint x="858" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_SearchOSCN__Gateway_ProtectiveOrder" bpmnElement="Flow_Task_SearchOSCN__Gateway_ProtectiveOrder">
+        <di:waypoint x="998" y="499"/>
+        <di:waypoint x="1076" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ProtectiveOrder__Gateway_ProtectiveOrderJoin" bpmnElement="Flow_Gateway_ProtectiveOrder__Gateway_ProtectiveOrderJoin">
+        <di:waypoint x="1126" y="499"/>
+        <di:waypoint x="1941" y="499"/>
+        <di:waypoint x="1941" y="649"/>
+        <di:waypoint x="1986" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1518" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ProtectiveOrder__Task_RecordRestrictedPerson" bpmnElement="Flow_Gateway_ProtectiveOrder__Task_RecordRestrictedPerson">
+        <di:waypoint x="1126" y="499"/>
+        <di:waypoint x="1165" y="499"/>
+        <di:waypoint x="1165" y="649"/>
+        <di:waypoint x="1204" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1130" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RecordRestrictedPerson__Task_DoNotAuthorizeContact" bpmnElement="Flow_Task_RecordRestrictedPerson__Task_DoNotAuthorizeContact">
+        <di:waypoint x="1344" y="649"/>
+        <di:waypoint x="1422" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_DoNotAuthorizeContact__Gateway_ConsumerRequestsRestricted" bpmnElement="Flow_Task_DoNotAuthorizeContact__Gateway_ConsumerRequestsRestricted">
+        <di:waypoint x="1562" y="649"/>
+        <di:waypoint x="1640" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsumerRequestsRestricted__Gateway_ProtectiveOrderJoin" bpmnElement="Flow_Gateway_ConsumerRequestsRestricted__Gateway_ProtectiveOrderJoin">
+        <di:waypoint x="1690" y="649"/>
+        <di:waypoint x="1986" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1823" y="625" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsumerRequestsRestricted__Task_InformConsumerOfRestriction" bpmnElement="Flow_Gateway_ConsumerRequestsRestricted__Task_InformConsumerOfRestriction">
+        <di:waypoint x="1690" y="649"/>
+        <di:waypoint x="1729" y="649"/>
+        <di:waypoint x="1729" y="799"/>
+        <di:waypoint x="1768" y="799"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1694" y="655" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_InformConsumerOfRestriction__Gateway_ProtectiveOrderJoin" bpmnElement="Flow_Task_InformConsumerOfRestriction__Gateway_ProtectiveOrderJoin">
+        <di:waypoint x="1908" y="799"/>
+        <di:waypoint x="1953" y="799"/>
+        <di:waypoint x="1953" y="649"/>
+        <di:waypoint x="1986" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ProtectiveOrderJoin__Task_ObtainRemainingInfo" bpmnElement="Flow_Gateway_ProtectiveOrderJoin__Task_ObtainRemainingInfo">
+        <di:waypoint x="2036" y="649"/>
+        <di:waypoint x="2075" y="649"/>
+        <di:waypoint x="2075" y="499"/>
+        <di:waypoint x="2114" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ObtainRemainingInfo__Task_EmailElopementForm" bpmnElement="Flow_Task_ObtainRemainingInfo__Task_EmailElopementForm">
+        <di:waypoint x="2254" y="499"/>
+        <di:waypoint x="2332" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_EmailElopementForm__Task_ReviewTAFormWithConsumer" bpmnElement="Flow_Task_EmailElopementForm__Task_ReviewTAFormWithConsumer">
+        <di:waypoint x="2472" y="499"/>
+        <di:waypoint x="2550" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReviewTAFormWithConsumer__Gateway_ConsumerAbleToParticipate" bpmnElement="Flow_Task_ReviewTAFormWithConsumer__Gateway_ConsumerAbleToParticipate">
+        <di:waypoint x="2690" y="499"/>
+        <di:waypoint x="2768" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsumerAbleToParticipate__Task_ConsumerIdentifiesAdvocate" bpmnElement="Flow_Gateway_ConsumerAbleToParticipate__Task_ConsumerIdentifiesAdvocate">
+        <di:waypoint x="2818" y="499"/>
+        <di:waypoint x="3511" y="499"/>
+        <di:waypoint x="3511" y="1129"/>
+        <di:waypoint x="3550" y="1129"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3150" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsumerAbleToParticipate__Task_PostponeActivity" bpmnElement="Flow_Gateway_ConsumerAbleToParticipate__Task_PostponeActivity">
+        <di:waypoint x="2818" y="499"/>
+        <di:waypoint x="2857" y="499"/>
+        <di:waypoint x="2857" y="649"/>
+        <di:waypoint x="2896" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2822" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PostponeActivity__Task_ReturnWhenAble" bpmnElement="Flow_Task_PostponeActivity__Task_ReturnWhenAble">
+        <di:waypoint x="3036" y="649"/>
+        <di:waypoint x="3114" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReturnWhenAble__Task_PeriodicFollowUp" bpmnElement="Flow_Task_ReturnWhenAble__Task_PeriodicFollowUp">
+        <di:waypoint x="3254" y="649"/>
+        <di:waypoint x="3332" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PeriodicFollowUp__Task_ReviewTAFormWithConsumer" bpmnElement="Flow_Task_PeriodicFollowUp__Task_ReviewTAFormWithConsumer">
+        <di:waypoint x="3402" y="689"/>
+        <di:waypoint x="3402" y="724"/>
+        <di:waypoint x="2620" y="724"/>
+        <di:waypoint x="2620" y="539"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ConsumerIdentifiesAdvocate__Task_ContactAdvocate" bpmnElement="Flow_Task_ConsumerIdentifiesAdvocate__Task_ContactAdvocate">
+        <di:waypoint x="3690" y="1129"/>
+        <di:waypoint x="3729" y="1129"/>
+        <di:waypoint x="3729" y="499"/>
+        <di:waypoint x="3768" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ContactAdvocate__Task_AdvocateSignsForm" bpmnElement="Flow_Task_ContactAdvocate__Task_AdvocateSignsForm">
+        <di:waypoint x="3908" y="499"/>
+        <di:waypoint x="4025" y="499"/>
+        <di:waypoint x="4025" y="2449"/>
+        <di:waypoint x="4064" y="2449"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI" bpmnElement="Flow_Task_AdvocateSignsForm__Task_ConsumerSignsROI">
+        <di:waypoint x="4204" y="2449"/>
+        <di:waypoint x="4243" y="2449"/>
+        <di:waypoint x="4243" y="1279"/>
+        <di:waypoint x="4282" y="1279"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ConsumerSignsROI__Task_ScanDocumentation" bpmnElement="Flow_Task_ConsumerSignsROI__Task_ScanDocumentation">
+        <di:waypoint x="4422" y="1279"/>
+        <di:waypoint x="4461" y="1279"/>
+        <di:waypoint x="4461" y="499"/>
+        <di:waypoint x="4500" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ScanDocumentation__Task_MailCopyToAdvocate" bpmnElement="Flow_Task_ScanDocumentation__Task_MailCopyToAdvocate">
+        <di:waypoint x="4640" y="499"/>
+        <di:waypoint x="4718" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_MailCopyToAdvocate__Gateway_AdvocateChangeRequested" bpmnElement="Flow_Task_MailCopyToAdvocate__Gateway_AdvocateChangeRequested">
+        <di:waypoint x="4858" y="499"/>
+        <di:waypoint x="4936" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdvocateChangeRequested__Gateway_AdvocateChangeJoin" bpmnElement="Flow_Gateway_AdvocateChangeRequested__Gateway_AdvocateChangeJoin">
+        <di:waypoint x="4986" y="499"/>
+        <di:waypoint x="5243" y="499"/>
+        <di:waypoint x="5243" y="649"/>
+        <di:waypoint x="5282" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5100" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdvocateChangeRequested__Task_ProcessAdvocateChange" bpmnElement="Flow_Gateway_AdvocateChangeRequested__Task_ProcessAdvocateChange">
+        <di:waypoint x="4986" y="499"/>
+        <di:waypoint x="5025" y="499"/>
+        <di:waypoint x="5025" y="649"/>
+        <di:waypoint x="5064" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4990" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ProcessAdvocateChange__Gateway_AdvocateChangeJoin" bpmnElement="Flow_Task_ProcessAdvocateChange__Gateway_AdvocateChangeJoin">
+        <di:waypoint x="5204" y="649"/>
+        <di:waypoint x="5282" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdvocateChangeJoin__Task_NursingCompletesAdmission" bpmnElement="Flow_Gateway_AdvocateChangeJoin__Task_NursingCompletesAdmission">
+        <di:waypoint x="5332" y="649"/>
+        <di:waypoint x="5371" y="649"/>
+        <di:waypoint x="5371" y="1939"/>
+        <di:waypoint x="5410" y="1939"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_NursingCompletesAdmission__Task_CheckAdditionalContacts" bpmnElement="Flow_Task_NursingCompletesAdmission__Task_CheckAdditionalContacts">
+        <di:waypoint x="5550" y="1939"/>
+        <di:waypoint x="5589" y="1939"/>
+        <di:waypoint x="5589" y="499"/>
+        <di:waypoint x="5628" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CheckAdditionalContacts__Gateway_AdditionalContactRequested" bpmnElement="Flow_Task_CheckAdditionalContacts__Gateway_AdditionalContactRequested">
+        <di:waypoint x="5768" y="499"/>
+        <di:waypoint x="5846" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdditionalContactRequested__Gateway_ContactJoin" bpmnElement="Flow_Gateway_AdditionalContactRequested__Gateway_ContactJoin">
+        <di:waypoint x="5896" y="499"/>
+        <di:waypoint x="7655" y="499"/>
+        <di:waypoint x="7655" y="649"/>
+        <di:waypoint x="7706" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6760" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AdditionalContactRequested__Task_CompleteROI" bpmnElement="Flow_Gateway_AdditionalContactRequested__Task_CompleteROI">
+        <di:waypoint x="5896" y="499"/>
+        <di:waypoint x="5935" y="499"/>
+        <di:waypoint x="5935" y="649"/>
+        <di:waypoint x="5974" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5900" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteROI__Task_RecordROIPurpose" bpmnElement="Flow_Task_CompleteROI__Task_RecordROIPurpose">
+        <di:waypoint x="6114" y="649"/>
+        <di:waypoint x="6192" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RecordROIPurpose__Task_ContactProspectiveContact" bpmnElement="Flow_Task_RecordROIPurpose__Task_ContactProspectiveContact">
+        <di:waypoint x="6332" y="649"/>
+        <di:waypoint x="6410" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ContactProspectiveContact__Task_ProspectiveContactResponds" bpmnElement="Flow_Task_ContactProspectiveContact__Task_ProspectiveContactResponds">
+        <di:waypoint x="6550" y="649"/>
+        <di:waypoint x="6589" y="649"/>
+        <di:waypoint x="6589" y="2779"/>
+        <di:waypoint x="6628" y="2779"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ProspectiveContactResponds__Gateway_ContactAgrees" bpmnElement="Flow_Task_ProspectiveContactResponds__Gateway_ContactAgrees">
+        <di:waypoint x="6768" y="2779"/>
+        <di:waypoint x="6807" y="2779"/>
+        <di:waypoint x="6807" y="649"/>
+        <di:waypoint x="6846" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ContactAgrees__Task_InformFloorStaffNewContact" bpmnElement="Flow_Gateway_ContactAgrees__Task_InformFloorStaffNewContact">
+        <di:waypoint x="6896" y="649"/>
+        <di:waypoint x="6935" y="649"/>
+        <di:waypoint x="6935" y="799"/>
+        <di:waypoint x="6974" y="799"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6900" y="655" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ContactAgrees__Task_InformConsumerDeclined" bpmnElement="Flow_Gateway_ContactAgrees__Task_InformConsumerDeclined">
+        <di:waypoint x="6896" y="649"/>
+        <di:waypoint x="7371" y="649"/>
+        <di:waypoint x="7371" y="949"/>
+        <di:waypoint x="7410" y="949"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7118" y="655" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_InformFloorStaffNewContact__Task_PlaceROIInChartOptionA" bpmnElement="Flow_Task_InformFloorStaffNewContact__Task_PlaceROIInChartOptionA">
+        <di:waypoint x="7114" y="799"/>
+        <di:waypoint x="7192" y="799"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PlaceROIInChartOptionA__Gateway_ContactJoin" bpmnElement="Flow_Task_PlaceROIInChartOptionA__Gateway_ContactJoin">
+        <di:waypoint x="7332" y="799"/>
+        <di:waypoint x="7667" y="799"/>
+        <di:waypoint x="7667" y="649"/>
+        <di:waypoint x="7706" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_InformConsumerDeclined__Gateway_ContactJoin" bpmnElement="Flow_Task_InformConsumerDeclined__Gateway_ContactJoin">
+        <di:waypoint x="7550" y="949"/>
+        <di:waypoint x="7679" y="949"/>
+        <di:waypoint x="7679" y="649"/>
+        <di:waypoint x="7706" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ContactJoin__Task_ConfirmContactSheet" bpmnElement="Flow_Gateway_ContactJoin__Task_ConfirmContactSheet">
+        <di:waypoint x="7756" y="649"/>
+        <di:waypoint x="7795" y="649"/>
+        <di:waypoint x="7795" y="499"/>
+        <di:waypoint x="7834" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ConfirmContactSheet__Task_CommunicateVerifiedContacts" bpmnElement="Flow_Task_ConfirmContactSheet__Task_CommunicateVerifiedContacts">
+        <di:waypoint x="7974" y="499"/>
+        <di:waypoint x="8052" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CommunicateVerifiedContacts__Task_FloorStaffMaintainsSheet" bpmnElement="Flow_Task_CommunicateVerifiedContacts__Task_FloorStaffMaintainsSheet">
+        <di:waypoint x="8192" y="499"/>
+        <di:waypoint x="8202" y="499"/>
+        <di:waypoint x="8202" y="2119"/>
+        <di:waypoint x="8052" y="2119"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_FloorStaffMaintainsSheet__Task_FileApprovedROIs" bpmnElement="Flow_Task_FloorStaffMaintainsSheet__Task_FileApprovedROIs">
+        <di:waypoint x="8192" y="2119"/>
+        <di:waypoint x="8231" y="2119"/>
+        <di:waypoint x="8231" y="499"/>
+        <di:waypoint x="8270" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_FileApprovedROIs__Gateway_ClinicalEventWitnessed" bpmnElement="Flow_Task_FileApprovedROIs__Gateway_ClinicalEventWitnessed">
+        <di:waypoint x="8410" y="499"/>
+        <di:waypoint x="8488" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalEventWitnessed__Gateway_ClinicalEventJoin" bpmnElement="Flow_Gateway_ClinicalEventWitnessed__Gateway_ClinicalEventJoin">
+        <di:waypoint x="8538" y="499"/>
+        <di:waypoint x="8795" y="499"/>
+        <di:waypoint x="8795" y="649"/>
+        <di:waypoint x="8834" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="8652" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalEventWitnessed__Task_DocumentInAvatar" bpmnElement="Flow_Gateway_ClinicalEventWitnessed__Task_DocumentInAvatar">
+        <di:waypoint x="8538" y="499"/>
+        <di:waypoint x="8577" y="499"/>
+        <di:waypoint x="8577" y="649"/>
+        <di:waypoint x="8616" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="8542" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_DocumentInAvatar__Gateway_ClinicalEventJoin" bpmnElement="Flow_Task_DocumentInAvatar__Gateway_ClinicalEventJoin">
+        <di:waypoint x="8756" y="649"/>
+        <di:waypoint x="8834" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ClinicalEventJoin__Gateway_PostAdmissionChange" bpmnElement="Flow_Gateway_ClinicalEventJoin__Gateway_PostAdmissionChange">
+        <di:waypoint x="8884" y="649"/>
+        <di:waypoint x="8923" y="649"/>
+        <di:waypoint x="8923" y="499"/>
+        <di:waypoint x="8962" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_PostAdmissionChange__Task_DeliverOngoingIssues" bpmnElement="Flow_Gateway_PostAdmissionChange__Task_DeliverOngoingIssues">
+        <di:waypoint x="9012" y="499"/>
+        <di:waypoint x="9744" y="499"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="9363" y="475" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_PostAdmissionChange__Task_ProcessContactChange" bpmnElement="Flow_Gateway_PostAdmissionChange__Task_ProcessContactChange">
+        <di:waypoint x="9012" y="499"/>
+        <di:waypoint x="9051" y="499"/>
+        <di:waypoint x="9051" y="649"/>
+        <di:waypoint x="9090" y="649"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="9016" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ProcessContactChange__Task_VerifyROIForChange" bpmnElement="Flow_Task_ProcessContactChange__Task_VerifyROIForChange">
+        <di:waypoint x="9230" y="649"/>
+        <di:waypoint x="9308" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_VerifyROIForChange__Task_CommunicateChangeToFloorStaff" bpmnElement="Flow_Task_VerifyROIForChange__Task_CommunicateChangeToFloorStaff">
+        <di:waypoint x="9448" y="649"/>
+        <di:waypoint x="9526" y="649"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CommunicateChangeToFloorStaff__Gateway_PostAdmissionChange" bpmnElement="Flow_Task_CommunicateChangeToFloorStaff__Gateway_PostAdmissionChange">
+        <di:waypoint x="9596" y="689"/>
+        <di:waypoint x="9596" y="724"/>
+        <di:waypoint x="8987" y="724"/>
+        <di:waypoint x="8987" y="524"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_DeliverOngoingIssues__Gateway_HandoffTarget" bpmnElement="Flow_Task_DeliverOngoingIssues__Gateway_HandoffTarget">
+        <di:waypoint x="9884" y="499"/>
+        <di:waypoint x="9962" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_HandoffTarget__Task_FSReceivesHandoff" bpmnElement="Flow_Gateway_HandoffTarget__Task_FSReceivesHandoff">
+        <di:waypoint x="10012" y="499"/>
+        <di:waypoint x="10129" y="499"/>
+        <di:waypoint x="10129" y="2269"/>
+        <di:waypoint x="10168" y="2269"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="10056" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_HandoffTarget__Task_SWReceivesHandoff" bpmnElement="Flow_Gateway_HandoffTarget__Task_SWReceivesHandoff">
+        <di:waypoint x="10012" y="499"/>
+        <di:waypoint x="10347" y="499"/>
+        <di:waypoint x="10347" y="1759"/>
+        <di:waypoint x="10386" y="1759"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="10164" y="505" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_FSReceivesHandoff__Gateway_HandoffJoin" bpmnElement="Flow_Task_FSReceivesHandoff__Gateway_HandoffJoin">
+        <di:waypoint x="10308" y="2269"/>
+        <di:waypoint x="10559" y="2269"/>
+        <di:waypoint x="10559" y="799"/>
+        <di:waypoint x="10604" y="799"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_SWReceivesHandoff__Gateway_HandoffJoin" bpmnElement="Flow_Task_SWReceivesHandoff__Gateway_HandoffJoin">
+        <di:waypoint x="10526" y="1759"/>
+        <di:waypoint x="10571" y="1759"/>
+        <di:waypoint x="10571" y="799"/>
+        <di:waypoint x="10604" y="799"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_HandoffJoin__EndEvent_Complete" bpmnElement="Flow_Gateway_HandoffJoin__EndEvent_Complete">
+        <di:waypoint x="10654" y="799"/>
+        <di:waypoint x="10693" y="799"/>
+        <di:waypoint x="10693" y="499"/>
+        <di:waypoint x="10732" y="499"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_RecordRestrictedPerson" bpmnElement="Assoc_Task_RecordRestrictedPerson">
+        <di:waypoint x="1274" y="609"/>
+        <di:waypoint x="1274" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_PostponeActivity" bpmnElement="Assoc_Task_PostponeActivity">
+        <di:waypoint x="2966" y="609"/>
+        <di:waypoint x="2966" y="396"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_ScanDocumentation" bpmnElement="Assoc_Task_ScanDocumentation">
+        <di:waypoint x="4570" y="459"/>
+        <di:waypoint x="4570" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_ProcessAdvocateChange" bpmnElement="Assoc_Task_ProcessAdvocateChange">
+        <di:waypoint x="5134" y="609"/>
+        <di:waypoint x="5134" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_ConfirmContactSheet" bpmnElement="Assoc_Task_ConfirmContactSheet">
+        <di:waypoint x="7904" y="459"/>
+        <di:waypoint x="7904" y="388"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_DocumentInAvatar" bpmnElement="Assoc_Task_DocumentInAvatar">
+        <di:waypoint x="8686" y="609"/>
+        <di:waypoint x="8686" y="411"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
