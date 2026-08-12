@@ -127,6 +127,22 @@ markdown/ ──► markdown_extractor.py ──► structural JSON
 
 - Python 3.9+
 - Standard library only (no `pip install` required for the core pipeline)
+- Tk 8.6 (included with the installed Windows Python) for the optional desktop UI
+
+## Desktop UI
+
+For a guided local workflow, run:
+
+```bash
+py src/sop_to_bpmn_ui.py
+```
+
+Select an SOP Markdown file and validate its template. The app either validates
+an adjacent reviewed `.ir.json` file or helps you create one by copying or
+saving the generated semantic prompt and accepting the returned JSON. It then
+builds validated BPMN files beside the Markdown source, reports the number
+created, and opens the output folder. No network access or additional package
+is required.
 
 ## Example
 

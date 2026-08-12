@@ -77,6 +77,27 @@ def _plane_node_counts(path: Path) -> list[tuple[str, int]]:
     return counts
 
 
+def planned_output_paths(
+    ir_files: list[str | Path], *, output_dir: str | Path | None = None,
+) -> list[Path]:
+    """Return the BPMN paths that :func:`run` would publish.
+
+    This is useful to interactive callers that need to obtain overwrite
+    consent before generating a bundle.  It validates the IR bundle but does
+    not create directories or write output files.
+    """
+
+    if not ir_files:
+        raise CLIError("at least one IR file is required")
+    ir_paths = [Path(path) for path in ir_files]
+    try:
+        bundle = _default_documents(ir_paths, load_bundle(ir_paths))
+    except (OSError, IRValidationError, ValueError) as exc:
+        raise CLIError(str(exc)) from exc
+    directory = Path(output_dir) if output_dir is not None else ir_paths[0].parent
+    return [directory / document.file for document in bundle.documents]
+
+
 def run(
     ir_files: list[str | Path],
     *,
