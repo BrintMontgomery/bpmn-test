@@ -579,7 +579,7 @@ mitigation.
 Document the markdown authoring conventions this depends on so future SOPs
 stay auto-parseable rather than every one needing a bespoke read-through.
 
-## Phase 5 — CLI wrapper
+## Phase 5 — CLI wrapper [x]
 
 Split into two commands rather than one, because an LLM call in the middle
 of a build pipeline makes every re-layout slow, costly, and
@@ -597,13 +597,13 @@ when the SOP changes), while layout iteration is pure and offline.
 
 Steps:
 
-1. Structural extraction (Phase 4.1) on the markdown.
-2. Produce the IR (Phase 4.2 — LLM-assisted, validated against the IR
+- [x] Structural extraction (Phase 4.1) on the markdown.
+- [x] Produce the IR (Phase 4.2 — LLM-assisted, validated against the IR
    schema), write it to `<slug>.ir.json` for human review.
-3. Run the shared engine (Phase 1 + Phase 2 + Phase 3b) to emit
+- [x] Run the shared engine (Phase 1 + Phase 2 + Phase 3b) to emit
    `<slug>.bpmn` plus any additional called-process files, and print the
    file list with per-plane node counts so an unintended split is obvious.
-4. Validate automatically by importing `Validator` and calling it on
+- [x] Validate automatically by importing `Validator` and calling it on
    **every** emitted file — not by shelling out to
    `validate_bpmn.main()`, which reads `sys.argv` and returns a process
    exit code. Include the cross-document checks from Phase 2b
@@ -611,6 +611,10 @@ Steps:
    run on a single file in isolation. Fail loudly with the error list;
    never hand back an unchecked file. Non-zero exit on failure so this can
    gate CI.
+
+- [x] Unit and regression coverage verifies provider-neutral IR input,
+  deterministic output naming, multi-file bundles, per-plane reporting,
+  validation failures, and convenience-wrapper IR reuse.
 
 ## Phase 6 — Migrate existing processes
 
