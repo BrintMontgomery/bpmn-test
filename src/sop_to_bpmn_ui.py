@@ -54,6 +54,7 @@ class SourcePreparation:
 @dataclass(frozen=True)
 class BuildResult:
     paths: tuple[Path, ...]
+    repairs: tuple[str, ...] = ()
 
 
 def build_ir_validation_feedback(response: str, error: object) -> str:
@@ -139,27 +140,36 @@ class SOPToBPMNController:
         self.ir_path = destination
         return destination
 
-    def planned_outputs(self) -> list[Path]:
+    def planned_outputs(self, *, repair_layout: bool = False) -> list[Path]:
         if self.source is None or self.ir_path is None:
             raise WorkflowError("Validate or save an IR before building BPMN.")
         try:
             return ir_to_bpmn.planned_output_paths(
-                [self.ir_path], output_dir=self.source.parent
+                [self.ir_path], output_dir=self.source.parent,
+                repair_layout=repair_layout,
             )
         except ir_to_bpmn.CLIError as exc:
             raise WorkflowError(str(exc)) from exc
 
-    def build_bpmn(self, *, overwrite: bool = False) -> BuildResult:
-        planned = self.planned_outputs()
+    def build_bpmn(
+        self, *, overwrite: bool = False, repair_layout: bool = False,
+    ) -> BuildResult:
+        planned = self.planned_outputs(repair_layout=repair_layout)
         existing = [path for path in planned if path.exists()]
         if existing and not overwrite:
             raise OverwriteRequired(existing)
         assert self.source is not None and self.ir_path is not None
         try:
-            paths = ir_to_bpmn.run([self.ir_path], output_dir=self.source.parent)
+            _, prepared = ir_to_bpmn.preflight(
+                [self.ir_path], repair_layout=repair_layout
+            )
+            paths = ir_to_bpmn.run(
+                [self.ir_path], output_dir=self.source.parent,
+                repair_layout=repair_layout,
+            )
         except ir_to_bpmn.CLIError as exc:
             raise WorkflowError(str(exc)) from exc
-        return BuildResult(tuple(paths))
+        return BuildResult(tuple(paths), prepared.repairs)
 
 
 ResultT = TypeVar("ResultT")
@@ -176,6 +186,7 @@ class SOPToBPMNApp:
         self.source_var = tk.StringVar(value="No Markdown file selected")
         self.status_var = tk.StringVar(value="1. Select a Markdown SOP file.")
         self.existing_ir_var = tk.StringVar(value="")
+        self.repair_layout_var = tk.BooleanVar(value=False)
         self._build_window()
         self._refresh_controls()
 
@@ -236,6 +247,12 @@ class SOPToBPMNApp:
         build_frame.grid(row=3, column=0, sticky="ew", pady=8)
         self.build_button = ttk.Button(build_frame, text="Build and validate BPMN", command=self._build_bpmn)
         self.build_button.grid(row=0, column=0, sticky="w")
+        self.repair_layout_check = ttk.Checkbutton(
+            build_frame,
+            text="Repair incompatible phase layout in memory",
+            variable=self.repair_layout_var,
+        )
+        self.repair_layout_check.grid(row=0, column=1, padx=(12, 0), sticky="w")
         self.results = tk.Listbox(build_frame, height=4)
         self.results.grid(row=1, column=0, sticky="ew", pady=(8, 0))
 
@@ -269,6 +286,9 @@ class SOPToBPMNApp:
             state=normal if prepared and self.ir_validation_feedback else tk.DISABLED
         )
         self.build_button.configure(state=normal if has_ir else tk.DISABLED)
+        self.repair_layout_check.configure(
+            state=normal if has_ir and not self.busy else tk.DISABLED
+        )
 
     def _set_prompt(self, prompt: str) -> None:
         self.prompt_box.configure(state=tk.NORMAL)
@@ -353,7 +373,10 @@ class SOPToBPMNApp:
                 self.status_var.set(str(error))
                 return
             assert result is not None
-            self.status_var.set(f"Existing IR is valid: {result.name}. You can now build BPMN.")
+            self.status_var.set(
+                f"Existing IR is structurally valid: {result.name}. "
+                "BPMN buildability will be checked before output."
+            )
 
         self._run_async(self.controller.use_existing_ir, done)
 
@@ -431,7 +454,10 @@ class SOPToBPMNApp:
                 return
             assert result is not None
             self._clear_ir_validation_feedback()
-            self.status_var.set(f"IR is valid and saved as {result.name}. You can now build BPMN.")
+            self.status_var.set(
+                f"IR is structurally valid and saved as {result.name}. "
+                "BPMN buildability will be checked before output."
+            )
 
         self._run_async(lambda: self.controller.save_semantic_response(response, overwrite=overwrite), done)
 
@@ -452,14 +478,23 @@ class SOPToBPMNApp:
             for path in result.paths:
                 self.results.insert(tk.END, path.name)
             count = len(result.paths)
-            self.status_var.set(f"Built and validated {count} BPMN file{'s' if count != 1 else ''}.")
+            status = f"Built and validated {count} BPMN file{'s' if count != 1 else ''}."
+            if result.repairs:
+                status += " Layout repair applied in memory; source IR was not changed."
+            self.status_var.set(status)
             assert self.controller.source is not None
             try:
                 os.startfile(str(self.controller.source.parent))
             except OSError as exc:
                 self.status_var.set(self.status_var.get() + f" Could not open output folder: {exc}")
 
-        self._run_async(lambda: self.controller.build_bpmn(overwrite=overwrite), done)
+        self._run_async(
+            lambda: self.controller.build_bpmn(
+                overwrite=overwrite,
+                repair_layout=self.repair_layout_var.get(),
+            ),
+            done,
+        )
 
 
 def main() -> None:

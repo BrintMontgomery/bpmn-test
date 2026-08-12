@@ -9,7 +9,23 @@ Modeling rules:
 4. Note references must resolve to extracted Notes entries and should attach
    to the modeled task or event that carries the reference.
 5. Decomposition proposals must include a one-line rationale for every split.
-6. Return one JSON object conforming to the supplied IR schema. Do not return
+6. `ann_above`, when present, is an array of lane IDs from `lanes`; never put
+   source filenames, version text, lane names, or other prose there. Omit it
+   or use an empty array when no lane annotation placement is specified.
+7. `documents`, when present, is the generated BPMN output manifest, not a
+   list of source Markdown documents. For one process, omit it or use exactly
+   `{"id": <process_id>, "file": <name ending in .bpmn>, "role": "main"}`.
+   For a bundle, include exactly one entry per process ID, with one `main`
+   entry and `global` entries for the other process IDs.
+8. Every branching `gateway_x` must have exactly one outgoing edge whose
+   `condition` is omitted or an empty string; every other outgoing edge must
+   have a non-empty condition.
+9. Phase order is a global layout constraint: a later phase cannot contain a
+   branch node whose path begins before an earlier phase finishes. Branching
+   options should share the enclosing phase unless they are decomposed into a
+   separate BPMN scope. Do not assign exception branches to later phases when
+   they rejoin or loop back into an earlier main-path step.
+10. Return one JSON object conforming to the supplied IR schema. Do not return
    Markdown, commentary, or a second representation of the IR.
 
 
@@ -305,6 +321,7 @@ IR JSON Schema:
     "target_namespace": {"type": "string", "minLength": 1},
     "ann_above": {
       "type": "array",
+      "description": "Optional lane IDs whose annotation bands render above their lanes. Do not use source filenames, version text, lane names, or prose.",
       "items": {"type": "string", "minLength": 1},
       "uniqueItems": true
     },
@@ -345,6 +362,7 @@ IR JSON Schema:
     },
     "documents": {
       "type": "array",
+      "description": "Optional manifest of generated BPMN output documents. IDs are process IDs and files must be generated .bpmn filenames; source Markdown files do not belong here.",
       "items": {"$ref": "#/$defs/document"}
     },
     "decomposition": {
@@ -439,7 +457,7 @@ IR JSON Schema:
         "source": {"type": "string", "minLength": 1},
         "target": {"type": "string", "minLength": 1},
         "label": {"type": "string"},
-        "condition": {"type": "string"},
+        "condition": {"type": "string", "description": "Branch condition. Omit or leave empty for the single default branch of an exclusive gateway."},
         "loop": {"type": "boolean"}
       }
     },
@@ -475,6 +493,7 @@ IR JSON Schema:
     },
     "document": {
       "type": "object",
+      "description": "A generated BPMN output document in a process bundle, not a source SOP file.",
       "additionalProperties": false,
       "required": ["id", "file"],
       "properties": {

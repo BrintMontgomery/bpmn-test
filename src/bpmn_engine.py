@@ -311,6 +311,34 @@ class LayoutError(ValueError):
     """Raised when a process cannot be laid out safely."""
 
 
+class PhaseOrderError(LayoutError):
+    """Raised when authored phase order cannot fit the process topology."""
+
+    def __init__(
+        self,
+        *,
+        process_id: str,
+        scope_id: str,
+        phase_id: str,
+        earlier_phase_id: str,
+        offender_id: str,
+        offender_column: int,
+        earlier_end_column: int,
+    ) -> None:
+        self.process_id = process_id
+        self.scope_id = scope_id
+        self.phase_id = phase_id
+        self.earlier_phase_id = earlier_phase_id
+        self.offender_id = offender_id
+        self.offender_column = offender_column
+        self.earlier_end_column = earlier_end_column
+        super().__init__(
+            f"phase {phase_id} places {offender_id} at column "
+            f"{offender_column}, left of an earlier phase ending at column "
+            f"{earlier_end_column}"
+        )
+
+
 N = Node
 E = Edge
 
@@ -451,6 +479,7 @@ def _topological_layout_data(
     # but it may not begin to the left of any earlier phase. Equality keeps
     # compact diagrams compact while still enforcing the authored ordering.
     latest_previous = -1
+    latest_phase_id = "<start>"
     for phase_id, _ in model.phases:
         members = [node for node in nodes if node.phase == phase_id]
         if not members:
@@ -458,12 +487,17 @@ def _topological_layout_data(
         minimum = min(columns[node.id] for node in members)
         if minimum < latest_previous:
             offender = min(members, key=lambda node: columns[node.id])
-            raise LayoutError(
-                f"phase {phase_id} places {offender.id} at column "
-                f"{columns[offender.id]}, left of an earlier phase ending "
-                f"at column {latest_previous}"
+            raise PhaseOrderError(
+                process_id=model.process_id,
+                scope_id=scope.id,
+                phase_id=phase_id,
+                earlier_phase_id=latest_phase_id,
+                offender_id=offender.id,
+                offender_column=columns[offender.id],
+                earlier_end_column=latest_previous,
             )
         latest_previous = max(columns[node.id] for node in members)
+        latest_phase_id = phase_id
 
     return columns, order
 
@@ -1602,7 +1636,9 @@ def decompose_model(model: ProcessModel) -> ProcessModel:
     return _decompose_model(model)
 
 
-def write_bundle(directory: Path, bundle: ProcessBundle) -> list[Path]:
+def write_bundle(
+    directory: Path, bundle: ProcessBundle, *, repair_layout: bool = False,
+) -> list[Path]:
     """Lazy public wrapper for multi-document bundle emission."""
     from decomposition import write_bundle as _write_bundle
-    return _write_bundle(directory, bundle)
+    return _write_bundle(directory, bundle, repair_layout=repair_layout)

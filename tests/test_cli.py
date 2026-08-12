@@ -53,6 +53,29 @@ def valid_ir(
     return document
 
 
+def phase_order_invalid_ir() -> dict:
+    document = valid_ir("Process_PhaseOrder")
+    document["phases"] = [
+        {"id": "P0", "name": "Main"},
+        {"id": "P1", "name": "Exception"},
+    ]
+    document["nodes"] = [
+        {"id": "Start", "kind": "start_message", "lane": "A", "phase": "P0", "name": "Start"},
+        {"id": "Main1", "kind": "task", "lane": "A", "phase": "P0", "name": "Main 1"},
+        {"id": "Main2", "kind": "task", "lane": "A", "phase": "P0", "name": "Main 2"},
+        {"id": "Option", "kind": "task", "lane": "A", "phase": "P1", "name": "Exception"},
+        {"id": "End", "kind": "end", "lane": "A", "phase": "P1", "name": "End"},
+    ]
+    document["edges"] = [
+        {"source": "Start", "target": "Main1"},
+        {"source": "Main1", "target": "Main2"},
+        {"source": "Main2", "target": "End"},
+        {"source": "Start", "target": "Option"},
+        {"source": "Option", "target": "End"},
+    ]
+    return document
+
+
 class SopToIRTests(unittest.TestCase):
     def test_response_file_is_validated_before_deterministic_write(self) -> None:
         document = valid_ir()
@@ -185,6 +208,33 @@ class IRToBPMNTests(unittest.TestCase):
                         ir_to_bpmn.run([ir_path])
             self.assertNotIn("wrote", output.getvalue())
             self.assertFalse((root / "Process.bpmn").exists())
+
+    def test_buildability_preflight_rejects_phase_backtracking_before_output(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            ir_path = self.write_ir(root, "PhaseOrder.ir.json", phase_order_invalid_ir())
+            output_dir = root / "out"
+            with self.assertRaisesRegex(
+                ir_to_bpmn.CLIError,
+                r"phase P1 places Option.*left of an earlier phase ending at column",
+            ):
+                ir_to_bpmn.run([ir_path], output_dir=output_dir)
+            self.assertFalse(output_dir.exists())
+
+    def test_repair_layout_is_build_only_and_preserves_source_ir(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            document = phase_order_invalid_ir()
+            ir_path = self.write_ir(root, "PhaseOrder.ir.json", document)
+            original = ir_path.read_bytes()
+            output = io.StringIO()
+            with redirect_stdout(output):
+                paths = ir_to_bpmn.run(
+                    [ir_path], output_dir=root / "out", repair_layout=True
+                )
+            self.assertTrue(paths[0].exists())
+            self.assertEqual(original, ir_path.read_bytes())
+            self.assertIn("layout repair", output.getvalue())
 
 
 class ConvenienceWrapperTests(unittest.TestCase):

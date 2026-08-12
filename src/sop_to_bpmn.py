@@ -20,6 +20,7 @@ def run(
     prompt_file: str | Path | None = None,
     input_stream: TextIO | None = None,
     prompt_stream: TextIO | None = None,
+    repair_layout: bool = False,
 ) -> list[Path]:
     """Use an existing adjacent IR or create one, then emit validated BPMN."""
 
@@ -34,7 +35,9 @@ def run(
             input_stream=input_stream,
             prompt_stream=prompt_stream,
         )
-    return ir_to_bpmn.run([ir_path], output_dir=output_dir)
+    return ir_to_bpmn.run(
+        [ir_path], output_dir=output_dir, repair_layout=repair_layout
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -50,6 +53,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--prompt-file", type=Path, help="optional semantic prompt path")
     parser.add_argument("--ir-output", type=Path, help="IR artifact path")
     parser.add_argument("-o", "--output-dir", type=Path, help="BPMN output directory")
+    parser.add_argument(
+        "--repair-layout", action="store_true",
+        help="flatten incompatible authored phases in memory for this build",
+    )
     return parser
 
 
@@ -62,6 +69,7 @@ def main(argv: list[str] | None = None) -> int:
             output_dir=args.output_dir,
             response_file=args.response_file,
             prompt_file=args.prompt_file,
+            repair_layout=args.repair_layout,
         )
     except (sop_to_ir.CLIError, ir_to_bpmn.CLIError) as exc:
         print(f"error: {exc}", file=sys.stderr)

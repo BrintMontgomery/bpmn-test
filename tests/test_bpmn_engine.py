@@ -185,6 +185,36 @@ class EngineTests(unittest.TestCase):
         with self.assertRaisesRegex(engine.LayoutError, "later phase"):
             engine.compute_layout(invalid, engine.Scope.top_level(invalid))
 
+    def test_phase_order_error_exposes_structured_layout_diagnostics(self) -> None:
+        model = replace(
+            self.make_model(),
+            phases=[("P0", "Main"), ("P1", "Option")],
+            nodes=[
+                engine.Node("Start", "start_message", "Lane_A", "Start", "P0"),
+                engine.Node("MainEnd", "task", "Lane_A", "Main end", "P0"),
+                engine.Node("MainFinish", "task", "Lane_A", "Main finish", "P0"),
+                engine.Node("Option", "task", "Lane_A", "Option", "P1"),
+                engine.Node("End", "end", "Lane_A", "End", "P1"),
+            ],
+            edges=[
+                engine.Edge("Start", "MainEnd"),
+                engine.Edge("MainEnd", "MainFinish"),
+                engine.Edge("MainFinish", "End"),
+                engine.Edge("Start", "Option"),
+                engine.Edge("Option", "End"),
+            ],
+            external_pools=[],
+            message_flows=[],
+        )
+        with self.assertRaises(engine.PhaseOrderError) as context:
+            engine.compute_layout(model, engine.Scope.top_level(model))
+        error = context.exception
+        self.assertEqual("Process_Custom", error.process_id)
+        self.assertEqual("P1", error.phase_id)
+        self.assertEqual("Option", error.offender_id)
+        self.assertEqual(1, error.offender_column)
+        self.assertIn("left of an earlier phase ending", str(error))
+
     def test_scope_layout_restarts_from_scope_start(self) -> None:
         model = self.make_model()
         scope = engine.Scope(

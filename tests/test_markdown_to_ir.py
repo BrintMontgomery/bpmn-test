@@ -95,6 +95,7 @@ class SemanticHandoffTests(unittest.TestCase):
         self.assertIn("lane IDs", prompt)
         self.assertIn("generated BPMN output manifest", prompt)
         self.assertIn("decomposition", prompt)
+        self.assertIn("global layout constraint", prompt)
 
     def valid_ir(self) -> dict:
         return {

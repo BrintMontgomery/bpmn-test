@@ -8,7 +8,8 @@ import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from bpmn_engine import DocumentSpec, ProcessBundle, write_bundle
+from bpmn_engine import DocumentSpec, ProcessBundle
+from decomposition import PreparedBundle, prepare_bundle_for_build, write_prepared_bundle
 from ir import IRValidationError, load_bundle, validate_document_manifest
 from validate_bpmn import FLOW_NODE_TAGS, local, validate_bundle
 
@@ -79,8 +80,25 @@ def _plane_node_counts(path: Path) -> list[tuple[str, int]]:
     return counts
 
 
+def preflight(
+    ir_files: list[str | Path], *, repair_layout: bool = False,
+) -> tuple[ProcessBundle, PreparedBundle]:
+    """Load, normalize, decompose, and layout a complete BPMN bundle."""
+
+    if not ir_files:
+        raise CLIError("at least one IR file is required")
+    ir_paths = [Path(path) for path in ir_files]
+    try:
+        bundle = _default_documents(ir_paths, load_bundle(ir_paths))
+        prepared = prepare_bundle_for_build(bundle, repair_layout=repair_layout)
+    except (OSError, IRValidationError, ValueError) as exc:
+        raise CLIError(str(exc)) from exc
+    return bundle, prepared
+
+
 def planned_output_paths(
     ir_files: list[str | Path], *, output_dir: str | Path | None = None,
+    repair_layout: bool = False,
 ) -> list[Path]:
     """Return the BPMN paths that :func:`run` would publish.
 
@@ -92,10 +110,7 @@ def planned_output_paths(
     if not ir_files:
         raise CLIError("at least one IR file is required")
     ir_paths = [Path(path) for path in ir_files]
-    try:
-        bundle = _default_documents(ir_paths, load_bundle(ir_paths))
-    except (OSError, IRValidationError, ValueError) as exc:
-        raise CLIError(str(exc)) from exc
+    bundle, _prepared = preflight(ir_paths, repair_layout=repair_layout)
     directory = Path(output_dir) if output_dir is not None else ir_paths[0].parent
     return [directory / document.file for document in bundle.documents]
 
@@ -104,6 +119,7 @@ def run(
     ir_files: list[str | Path],
     *,
     output_dir: str | Path | None = None,
+    repair_layout: bool = False,
 ) -> list[Path]:
     """Emit and validate a complete BPMN bundle, returning emitted paths."""
 
@@ -111,7 +127,7 @@ def run(
         raise CLIError("at least one IR file is required")
     ir_paths = [Path(path) for path in ir_files]
     try:
-        bundle = _default_documents(ir_paths, load_bundle(ir_paths))
+        bundle, prepared = preflight(ir_paths, repair_layout=repair_layout)
         directory = Path(output_dir) if output_dir is not None else ir_paths[0].parent
         directory.mkdir(parents=True, exist_ok=True)
     except (OSError, IRValidationError, ValueError) as exc:
@@ -121,7 +137,7 @@ def run(
     with tempfile.TemporaryDirectory(prefix=".bpmn-stage-", dir=directory) as staged_name:
         staged_directory = Path(staged_name)
         try:
-            staged_paths = write_bundle(staged_directory, bundle)
+            staged_paths = write_prepared_bundle(staged_directory, prepared)
         except (OSError, ValueError) as exc:
             raise CLIError(str(exc)) from exc
 
@@ -139,6 +155,8 @@ def run(
             staged_path.replace(final_path)
             paths.append(final_path)
 
+    for repair in prepared.repairs:
+        print(f"layout repair: {repair}")
     for path in paths:
         counts = ", ".join(
             f"{plane_id}: {count} flow nodes"
@@ -154,13 +172,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("ir_files", nargs="+", type=Path, help="main IR followed by bundle IR files")
     parser.add_argument("-o", "--output-dir", type=Path, help="BPMN output directory")
+    parser.add_argument(
+        "--repair-layout", action="store_true",
+        help="flatten incompatible authored phases in memory for this build",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        run(args.ir_files, output_dir=args.output_dir)
+        run(
+            args.ir_files,
+            output_dir=args.output_dir,
+            repair_layout=args.repair_layout,
+        )
     except CLIError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

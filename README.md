@@ -41,6 +41,12 @@ This project implements a deterministic pipeline that reads a strictly-formatted
    - No sequence flows crossing scope boundaries
    - Called-process resolution across the bundle
 
+   Before any BPMN output is staged, the build also preflights every process
+   scope through the layout engine. Layout-phase errors are rejected by
+   default. The CLI and desktop UI provide an explicit build-only repair mode
+   (`--repair-layout`) that flattens incompatible authored phases in memory;
+   the source IR is never rewritten.
+
 7. **Preview** — A self-contained HTML preview embeds the BPMN into a bpmn-js viewer with drill-down breadcrumbs, a document switcher for multi-file bundles, and dynamic download links.
 
 ## Markdown Authoring Convention
@@ -164,6 +170,9 @@ python src/markdown_extractor.py "examples/markdown/OFC-004 — Case Manager Int
 
 # After semantic modeling produces an IR JSON, emit BPMN
 python src/ir_to_bpmn.py examples/ir/OFC-004.ir.json
+
+# Explicitly repair incompatible authored phase layout in memory
+python src/ir_to_bpmn.py examples/ir/OFC-004.ir.json --repair-layout
 
 # Validate the emitted bundle
 python src/validate_bpmn.py examples/bpmn/OFC-004.bpmn

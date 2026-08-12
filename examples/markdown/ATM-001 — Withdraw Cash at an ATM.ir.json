@@ -357,7 +357,7 @@
       "lane": "lane_atm",
       "name": "Inform Cardholder that PIN could not be verified",
       "note": null,
-      "phase": "phase_option_a"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -368,7 +368,7 @@
       "lane": "lane_atm",
       "name": "PIN retry limit reached?",
       "note": null,
-      "phase": "phase_option_a"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -379,7 +379,7 @@
       "lane": "lane_atm",
       "name": "Permit another PIN entry",
       "note": null,
-      "phase": "phase_option_a"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -390,7 +390,7 @@
       "lane": "lane_atm",
       "name": "Retain or return card according to Financial Institution policy",
       "note": "a: PIN retry limits and card-retention behavior are set by the Financial Institution and may differ by card issuer.",
-      "phase": "phase_option_a"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -401,7 +401,7 @@
       "lane": "lane_atm",
       "name": "PIN transaction ended",
       "note": null,
-      "phase": "phase_option_a"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -412,7 +412,7 @@
       "lane": "lane_atm",
       "name": "Inform Cardholder that requested amount cannot be withdrawn",
       "note": null,
-      "phase": "phase_option_b"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -423,7 +423,7 @@
       "lane": "lane_atm",
       "name": "Prompt for a smaller amount or cancellation",
       "note": null,
-      "phase": "phase_option_b"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -434,7 +434,7 @@
       "lane": "lane_cardholder",
       "name": "Cardholder enters smaller amount or cancels?",
       "note": null,
-      "phase": "phase_option_b"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -445,7 +445,7 @@
       "lane": "lane_atm",
       "name": "Return card and end without dispensing cash",
       "note": null,
-      "phase": "phase_option_b"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -456,7 +456,7 @@
       "lane": "lane_atm",
       "name": "Insufficient-funds transaction ended",
       "note": null,
-      "phase": "phase_option_b"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -467,7 +467,7 @@
       "lane": "lane_atm",
       "name": "Cancel transaction before debiting account",
       "note": null,
-      "phase": "phase_option_c"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -478,7 +478,7 @@
       "lane": "lane_atm",
       "name": "Return debit card",
       "note": null,
-      "phase": "phase_option_c"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -489,7 +489,7 @@
       "lane": "lane_cardholder",
       "name": "Retrieve debit card",
       "note": null,
-      "phase": "phase_option_c"
+      "phase": "phase_main"
     },
     {
       "doc": [
@@ -500,7 +500,7 @@
       "lane": "lane_cardholder",
       "name": "Cancellation completed",
       "note": null,
-      "phase": "phase_option_c"
+      "phase": "phase_main"
     }
   ],
   "participant_id": "Participant_ATM_Withdrawal",
@@ -508,22 +508,10 @@
   "phases": [
     {
       "id": "phase_main",
-      "name": "Main path"
-    },
-    {
-      "id": "phase_option_a",
-      "name": "Option A — PIN Is Incorrect"
-    },
-    {
-      "id": "phase_option_b",
-      "name": "Option B — Account Has Insufficient Funds"
-    },
-    {
-      "id": "phase_option_c",
-      "name": "Option C — Cardholder Cancels the Transaction"
+      "name": "Main path and exception handling"
     }
   ],
-  "process_doc": "Source context: This procedure describes a cardholder withdrawing cash from an automated teller machine (ATM) using a debit card and PIN. Preconditions: the cardholder has an active debit card, knows the PIN, can access the selected account, and uses an available ATM with sufficient cash to operate. Outcome: the cardholder receives the requested cash and retrieves the debit card; the Financial Institution records the withdrawal. If completion fails, the ATM provides an appropriate message without dispensing cash. Modeling judgments: the first bold actor owns each main-path task. Option steps have no bold-actor extraction, so ownership follows the grammatical actor named in each step; this is an inference. The Financial Institution lane is retained because it is an extracted actor, but it has no separate task because it appears as a counterparty in the extracted ATM steps and no explicit lane handoff is specified. The start event, end events, and exclusive gateways are inferred BPMN control-flow elements. The three option triggers are represented by entry gateways in the main path. Option A has an internal retry-limit gateway; Option B has an internal smaller-amount-or-cancel gateway. Option C has no additional conditional branch. No decomposition proposals are made, so no split rationales are applicable.",
+  "process_doc": "Source context: This procedure describes a cardholder withdrawing cash from an automated teller machine (ATM) using a debit card and PIN. Preconditions: the cardholder has an active debit card, knows the PIN, can access the selected account, and uses an available ATM with sufficient cash to operate. Outcome: the cardholder receives the requested cash and retrieves the debit card; the Financial Institution records the withdrawal. If completion fails, the ATM provides an appropriate message without dispensing cash. Modeling judgments: the first bold actor owns each main-path task. Option steps have no bold-actor extraction, so ownership follows the grammatical actor named in each step; this is an inference. The Financial Institution lane is retained because it is an extracted actor, but it has no separate task because it appears as a counterparty in the extracted ATM steps and no explicit lane handoff is specified. The start event, end events, and exclusive gateways are inferred BPMN control-flow elements. The three option triggers are represented by entry gateways in the main path. Option A has an internal retry-limit gateway; Option B has an internal smaller-amount-or-cancel gateway. Option C has no additional conditional branch. All branches share the single Main path and exception handling phase because their loops and rejoin points make separate later phases incompatible with the global layout ordering. No decomposition proposals are made, so no split rationales are applicable.",
   "process_id": "atm_withdrawal_v1",
   "process_name": "Withdraw Cash at an ATM",
   "schema_version": 1,

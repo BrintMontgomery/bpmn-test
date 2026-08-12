@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Iterable
 
@@ -13,12 +13,26 @@ from bpmn_engine import (
     Node,
     ProcessBundle,
     ProcessModel,
+    PhaseOrderError,
     Scope,
+    Layout,
     build_mermaid,
     build_xml,
     compute_layout,
     write_bpmn,
 )
+
+
+LAYOUT_REPAIR_PHASE = "phase_layout_repair"
+
+
+@dataclass(frozen=True)
+class PreparedBundle:
+    """A decomposed bundle whose every BPMN scope has a computed layout."""
+
+    bundle: ProcessBundle
+    layouts: dict[str, dict[str, Layout]]
+    repairs: tuple[str, ...] = ()
 
 
 def _phase_members(model: ProcessModel, phase_id: str,
@@ -218,9 +232,79 @@ def prepare_bundle(bundle: ProcessBundle) -> ProcessBundle:
     return ProcessBundle(models=models, documents=bundle.documents)
 
 
-def write_bundle(directory: Path, bundle: ProcessBundle) -> list[Path]:
-    """Write every process in a bundle and return paths in document order."""
-    bundle = prepare_bundle(bundle)
+def _layout_bundle(bundle: ProcessBundle) -> dict[str, dict[str, Layout]]:
+    return {
+        model.process_id: {
+            scope.id: compute_layout(model, scope)
+            for scope in scopes_for(model)
+        }
+        for model in bundle.models
+    }
+
+
+def _repair_phase_layout(model: ProcessModel) -> ProcessModel:
+    """Flatten authored phases in a copy for one explicitly repaired build."""
+
+    repair_note = (
+        "Build-only layout repair: authored phases were flattened into "
+        "phase_layout_repair because their global order conflicted with "
+        "the process branching topology. The source IR was not modified."
+    )
+    process_doc = model.process_doc
+    if process_doc:
+        process_doc += "\n\n" + repair_note
+    else:
+        process_doc = repair_note
+    return replace(
+        model,
+        phases=[(LAYOUT_REPAIR_PHASE, "Layout-normalized process")],
+        nodes=[replace(node, phase=LAYOUT_REPAIR_PHASE) for node in model.nodes],
+        process_doc=process_doc,
+        decomposition=replace(
+            model.decomposition,
+            mode="off",
+            collapse_phases=(),
+        ),
+    )
+
+
+def prepare_bundle_for_build(
+    bundle: ProcessBundle, *, repair_layout: bool = False,
+) -> PreparedBundle:
+    """Decompose and preflight every scope before any output is created."""
+
+    working = bundle
+    repairs: list[str] = []
+    repaired_processes: set[str] = set()
+    while True:
+        try:
+            prepared = prepare_bundle(working)
+            layouts = _layout_bundle(prepared)
+            return PreparedBundle(prepared, layouts, tuple(repairs))
+        except PhaseOrderError as exc:
+            if not repair_layout or exc.process_id in repaired_processes:
+                raise
+            repaired_processes.add(exc.process_id)
+            models = []
+            for model in working.models:
+                if model.process_id == exc.process_id:
+                    models.append(_repair_phase_layout(model))
+                else:
+                    models.append(model)
+            working = ProcessBundle(models=models, documents=working.documents)
+            repairs.append(
+                f"{exc.process_id}/{exc.scope_id}: flattened authored phases "
+                f"after {exc.phase_id} placed {exc.offender_id} before "
+                f"{exc.earlier_phase_id} ended"
+            )
+
+
+def write_prepared_bundle(
+    directory: Path, prepared: PreparedBundle,
+) -> list[Path]:
+    """Write a preflighted bundle using its already-computed layouts."""
+
+    bundle = prepared.bundle
     directory.mkdir(parents=True, exist_ok=True)
     specs = list(bundle.documents)
     if not specs:
@@ -236,13 +320,23 @@ def write_bundle(directory: Path, bundle: ProcessBundle) -> list[Path]:
         if model is None:
             raise ValueError(f"bundle document {spec.id!r} has no process model")
         scopes = scopes_for(model)
-        layouts = {scope.id: compute_layout(model, scope) for scope in scopes}
+        layouts = prepared.layouts[model.process_id]
         path = directory / spec.file
         write_bpmn(path, model, layouts[scopes[0].id], scopes[0], layouts=layouts)
         paths.append(path)
     return paths
 
 
+def write_bundle(
+    directory: Path, bundle: ProcessBundle, *, repair_layout: bool = False,
+) -> list[Path]:
+    """Preflight and write every process in a bundle."""
+
+    prepared = prepare_bundle_for_build(bundle, repair_layout=repair_layout)
+    return write_prepared_bundle(directory, prepared)
+
+
 __all__ = [
-    "decompose_model", "prepare_bundle", "scopes_for", "write_bundle",
+    "decompose_model", "prepare_bundle", "prepare_bundle_for_build",
+    "PreparedBundle", "scopes_for", "write_bundle", "write_prepared_bundle",
 ]

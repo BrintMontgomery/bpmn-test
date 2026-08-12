@@ -36,7 +36,12 @@ MODELING_RULES = """Modeling rules:
 8. Every branching `gateway_x` must have exactly one outgoing edge whose
    `condition` is omitted or an empty string; every other outgoing edge must
    have a non-empty condition.
-9. Return one JSON object conforming to the supplied IR schema. Do not return
+9. Phase order is a global layout constraint: a later phase cannot contain a
+   branch node whose path begins before an earlier phase finishes. Branching
+   options should share the enclosing phase unless they are decomposed into a
+   separate BPMN scope. Do not assign exception branches to later phases when
+   they rejoin or loop back into an earlier main-path step.
+10. Return one JSON object conforming to the supplied IR schema. Do not return
    Markdown, commentary, or a second representation of the IR.
 """
 

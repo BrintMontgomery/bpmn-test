@@ -222,6 +222,38 @@ class SOPToBPMNControllerTests(unittest.TestCase):
             with self.assertRaises(OverwriteRequired):
                 controller.build_bpmn()
 
+    def test_controller_can_opt_into_build_only_layout_repair(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = self.make_source(root)
+            controller = SOPToBPMNController()
+            controller.prepare_source(source)
+            document = valid_ir()
+            document["phases"] = [
+                {"id": "P0", "name": "Main"},
+                {"id": "P1", "name": "Exception"},
+            ]
+            document["nodes"] = [
+                {"id": "Start", "kind": "start_message", "lane": "A", "phase": "P0", "name": "Start"},
+                {"id": "Main1", "kind": "task", "lane": "A", "phase": "P0", "name": "Main 1"},
+                {"id": "Main2", "kind": "task", "lane": "A", "phase": "P0", "name": "Main 2"},
+                {"id": "Option", "kind": "task", "lane": "A", "phase": "P1", "name": "Exception"},
+                {"id": "End", "kind": "end", "lane": "A", "phase": "P1", "name": "End"},
+            ]
+            document["edges"] = [
+                {"source": "Start", "target": "Main1"},
+                {"source": "Main1", "target": "Main2"},
+                {"source": "Main2", "target": "End"},
+                {"source": "Start", "target": "Option"},
+                {"source": "Option", "target": "End"},
+            ]
+            controller.save_semantic_response(json.dumps(document))
+            with self.assertRaisesRegex(WorkflowError, "left of an earlier phase"):
+                controller.planned_outputs()
+            result = controller.build_bpmn(repair_layout=True)
+            self.assertEqual(1, len(result.paths))
+            self.assertTrue(result.repairs)
+
     def test_bundle_results_and_build_errors_are_returned_without_success(self) -> None:
         with TemporaryDirectory() as directory:
             source = self.make_source(Path(directory))
