@@ -29,6 +29,10 @@ class WorkflowError(ValueError):
     """An actionable error while preparing or building a BPMN bundle."""
 
 
+class IRResponseValidationError(WorkflowError):
+    """Raised when the submitted semantic response fails IR validation."""
+
+
 class OverwriteRequired(WorkflowError):
     """Raised before an existing generated artifact would be replaced."""
 
@@ -50,6 +54,23 @@ class SourcePreparation:
 @dataclass(frozen=True)
 class BuildResult:
     paths: tuple[Path, ...]
+
+
+def build_ir_validation_feedback(response: str, error: object) -> str:
+    """Build a correction prompt containing an IR validation error and raw response."""
+
+    response_suffix = "" if response.endswith("\n") else "\n"
+    return (
+        "Please correct the submitted IR so that it passes validation. "
+        "Return only the corrected IR JSON object.\n\n"
+        "Validation error:\n"
+        f"{error}\n\n"
+        "Submitted response (raw):\n"
+        "--- BEGIN SUBMITTED RESPONSE ---\n"
+        + response
+        + response_suffix
+        + "--- END SUBMITTED RESPONSE ---"
+    )
 
 
 class SOPToBPMNController:
@@ -101,7 +122,9 @@ class SOPToBPMNController:
             document = parse_semantic_response(response)
             load_ir(document)
         except (TypeError, ValueError) as exc:
-            raise WorkflowError(f"Semantic response failed IR validation: {exc}") from exc
+            raise IRResponseValidationError(
+                f"Semantic response failed IR validation: {exc}"
+            ) from exc
 
         destination = default_ir_path(self.source)
         if destination.exists() and not overwrite:
@@ -149,6 +172,7 @@ class SOPToBPMNApp:
         self.root = root
         self.controller = SOPToBPMNController()
         self.busy = False
+        self.ir_validation_feedback = ""
         self.source_var = tk.StringVar(value="No Markdown file selected")
         self.status_var = tk.StringVar(value="1. Select a Markdown SOP file.")
         self.existing_ir_var = tk.StringVar(value="")
@@ -199,6 +223,8 @@ class SOPToBPMNApp:
         ttk.Label(prompt_frame, text="Paste the returned IR JSON, or load it from a file:").grid(row=3, column=0, sticky="w", pady=(10, 0))
         self.response_box = scrolledtext.ScrolledText(prompt_frame, height=7, wrap=tk.WORD)
         self.response_box.grid(row=4, column=0, sticky="ew", pady=(4, 6))
+        self.response_box.bind("<<Modified>>", self._response_modified)
+        self.response_box.edit_modified(False)
         response_buttons = ttk.Frame(prompt_frame)
         response_buttons.grid(row=5, column=0, sticky="w")
         self.load_response_button = ttk.Button(response_buttons, text="Load JSON…", command=self._load_response)
@@ -215,7 +241,14 @@ class SOPToBPMNApp:
 
         status_frame = ttk.LabelFrame(frame, text="Status", padding=10)
         status_frame.grid(row=4, column=0, sticky="ew", pady=(8, 0))
-        ttk.Label(status_frame, textvariable=self.status_var, wraplength=700).grid(sticky="w")
+        status_frame.columnconfigure(0, weight=1)
+        ttk.Label(status_frame, textvariable=self.status_var, wraplength=700).grid(
+            row=0, column=0, sticky="w"
+        )
+        self.copy_feedback_button = ttk.Button(
+            status_frame, text="Copy IR feedback", command=self._copy_ir_feedback
+        )
+        self.copy_feedback_button.grid(row=1, column=0, sticky="w", pady=(8, 0))
 
     def _refresh_controls(self) -> None:
         prepared = self.controller.source is not None and bool(self.controller.prompt)
@@ -227,6 +260,9 @@ class SOPToBPMNApp:
         self.existing_ir_button.configure(state=normal if candidate and prepared else tk.DISABLED)
         for button in (self.copy_button, self.save_prompt_button, self.load_response_button, self.save_ir_button):
             button.configure(state=normal if prepared else tk.DISABLED)
+        self.copy_feedback_button.configure(
+            state=normal if prepared and self.ir_validation_feedback else tk.DISABLED
+        )
         self.build_button.configure(state=normal if has_ir else tk.DISABLED)
 
     def _set_prompt(self, prompt: str) -> None:
@@ -234,6 +270,13 @@ class SOPToBPMNApp:
         self.prompt_box.delete("1.0", tk.END)
         self.prompt_box.insert("1.0", prompt)
         self.prompt_box.configure(state=tk.DISABLED)
+
+    def _response_modified(self, _event: tk.Event[tk.Misc] | None = None) -> None:
+        if not self.response_box.edit_modified():
+            return
+        self.response_box.edit_modified(False)
+        if self.ir_validation_feedback:
+            self._clear_ir_validation_feedback()
 
     def _browse(self) -> None:
         filename = filedialog.askopenfilename(
@@ -248,6 +291,7 @@ class SOPToBPMNApp:
             self.existing_ir_var.set("")
             self._set_prompt("")
             self.response_box.delete("1.0", tk.END)
+            self._clear_ir_validation_feedback()
             self.results.delete(0, tk.END)
             self.status_var.set("Click ‘Validate template’ to continue.")
             self._refresh_controls()
@@ -313,6 +357,18 @@ class SOPToBPMNApp:
         self.root.clipboard_append(self.controller.prompt)
         self.status_var.set("Semantic prompt copied to the clipboard.")
 
+    def _copy_ir_feedback(self) -> None:
+        if not self.ir_validation_feedback:
+            return
+        self.root.clipboard_clear()
+        self.root.clipboard_append(self.ir_validation_feedback)
+        self.status_var.set("IR validation feedback copied to the clipboard.")
+
+    def _clear_ir_validation_feedback(self) -> None:
+        self.ir_validation_feedback = ""
+        if hasattr(self, "copy_feedback_button"):
+            self._refresh_controls()
+
     def _save_prompt(self) -> None:
         if self.controller.source is None:
             return
@@ -343,12 +399,14 @@ class SOPToBPMNApp:
                 return
             self.response_box.delete("1.0", tk.END)
             self.response_box.insert("1.0", result or "")
+            self._clear_ir_validation_feedback()
             self.status_var.set("Loaded semantic response. Validate it before building BPMN.")
 
         self._run_async(lambda: Path(filename).read_text(encoding="utf-8"), done)
 
     def _save_ir(self, *, overwrite: bool = False) -> None:
         response = self.response_box.get("1.0", tk.END)
+        self._clear_ir_validation_feedback()
 
         def done(result: Path | None, error: Exception | None) -> None:
             if isinstance(error, OverwriteRequired):
@@ -358,9 +416,12 @@ class SOPToBPMNApp:
                     self.status_var.set("IR was not replaced.")
                 return
             if error:
+                if isinstance(error, IRResponseValidationError):
+                    self.ir_validation_feedback = build_ir_validation_feedback(response, error)
                 self.status_var.set(str(error))
                 return
             assert result is not None
+            self._clear_ir_validation_feedback()
             self.status_var.set(f"IR is valid and saved as {result.name}. You can now build BPMN.")
 
         self._run_async(lambda: self.controller.save_semantic_response(response, overwrite=overwrite), done)

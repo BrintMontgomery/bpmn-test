@@ -11,9 +11,11 @@ from unittest.mock import patch
 import ir_to_bpmn
 from project_paths import EXAMPLE_MARKDOWN_DIR
 from sop_to_bpmn_ui import (
+    IRResponseValidationError,
     OverwriteRequired,
     SOPToBPMNController,
     WorkflowError,
+    build_ir_validation_feedback,
 )
 
 
@@ -99,6 +101,47 @@ class SOPToBPMNControllerTests(unittest.TestCase):
             with self.assertRaises(OverwriteRequired):
                 controller.save_semantic_response(json.dumps(valid_ir()))
             controller.save_semantic_response(json.dumps(valid_ir()), overwrite=True)
+
+    def test_validation_feedback_preserves_error_and_raw_response(self) -> None:
+        response = "```json\n{\"nodes\": [\n\tbroken\n]}\n```"
+        error = IRResponseValidationError(
+            "Semantic response failed IR validation: response is not valid JSON"
+        )
+
+        feedback = build_ir_validation_feedback(response, error)
+
+        self.assertIn("Return only the corrected IR JSON object.", feedback)
+        self.assertIn(str(error), feedback)
+        self.assertIn(response, feedback)
+        self.assertIn("--- BEGIN SUBMITTED RESPONSE ---", feedback)
+        self.assertIn("--- END SUBMITTED RESPONSE ---", feedback)
+
+    def test_invalid_semantic_response_raises_copyable_validation_error(self) -> None:
+        with TemporaryDirectory() as directory:
+            source = self.make_source(Path(directory))
+            controller = SOPToBPMNController()
+            controller.prepare_source(source)
+
+            with self.assertRaises(IRResponseValidationError) as context:
+                controller.save_semantic_response("not JSON")
+
+            feedback = build_ir_validation_feedback("not JSON", context.exception)
+            self.assertIn("not JSON", feedback)
+            self.assertIn("not valid JSON", feedback)
+            self.assertFalse(source.with_suffix(".ir.json").exists())
+
+    def test_valid_response_can_be_saved_after_invalid_response(self) -> None:
+        with TemporaryDirectory() as directory:
+            source = self.make_source(Path(directory))
+            controller = SOPToBPMNController()
+            controller.prepare_source(source)
+
+            with self.assertRaises(IRResponseValidationError):
+                controller.save_semantic_response("not JSON")
+
+            saved = controller.save_semantic_response(json.dumps(valid_ir()))
+
+            self.assertEqual(source.with_suffix(".ir.json"), saved)
 
     def test_builds_bpmn_beside_markdown_and_requires_output_consent(self) -> None:
         with TemporaryDirectory() as directory:
