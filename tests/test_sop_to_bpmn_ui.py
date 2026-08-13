@@ -319,6 +319,9 @@ class CollapsibleSectionTests(unittest.TestCase):
         for section in sections:
             self.assertTrue(section.expanded)
             self.assertEqual("▾", section.toggle_button.cget("text"))
+            self.assertEqual("#dbeafe", section.toggle_button.cget("background"))
+            self.assertEqual(0, int(section.toggle_button.grid_info()["column"]))
+            self.assertEqual(1, int(section.title_label.grid_info()["column"]))
             self.assertEqual("grid", section.body.winfo_manager())
 
     def test_sections_toggle_independently_and_retain_contents(self) -> None:

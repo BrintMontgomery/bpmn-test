@@ -194,21 +194,36 @@ class CollapsibleSection:
     """A titled section whose contents can be hidden without being destroyed."""
 
     def __init__(self, parent: tk.Misc, title: str, *, padding: int = 10) -> None:
-        self.frame = ttk.LabelFrame(parent, text=title, padding=padding)
+        self.frame = ttk.LabelFrame(parent, padding=padding)
         self.frame.columnconfigure(0, weight=1)
+
+        # Use a custom label widget so the toggle is visibly before the
+        # numbered section title rather than being overlaid on the frame.
+        self.header = ttk.Frame(self.frame)
+        self.toggle_button = tk.Button(
+            self.header,
+            width=2,
+            padx=2,
+            pady=0,
+            relief=tk.RAISED,
+            borderwidth=1,
+            highlightthickness=0,
+            bg="#dbeafe",
+            activebackground="#bfdbfe",
+            fg="#1e3a5f",
+            activeforeground="#1e3a5f",
+            font=("Segoe UI", 9, "bold"),
+            command=self.toggle,
+        )
+        self.toggle_button.grid(row=0, column=0, padx=(0, 5))
+        self.title_label = ttk.Label(self.header, text=title)
+        self.title_label.grid(row=0, column=1, sticky="w")
+        self.frame.configure(labelwidget=self.header)
+
         self.body = ttk.Frame(self.frame)
         self.body.grid(row=0, column=0, sticky="nsew")
         self.body.columnconfigure(0, weight=1)
 
-        # Keep the toggle outside the body so it remains available when the
-        # section is collapsed.  It sits over the upper-right corner of the
-        # existing LabelFrame border and does not change the section layout.
-        self.toggle_button = ttk.Button(
-            self.frame,
-            width=2,
-            command=self.toggle,
-        )
-        self.toggle_button.place(relx=1.0, x=-4, y=-2, anchor="ne")
         self.expanded = True
         self._refresh_toggle()
 
