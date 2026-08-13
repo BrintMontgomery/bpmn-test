@@ -290,7 +290,7 @@ changes needed. No later phase in this plan builds on this one.
 * **Acceptance Criteria:** both new tests pass; `pytest`'s full-suite pass count does not drop; no
   observable behavior change for well-formed input (golden check untouched); a malformed staged
   BPMN file surfaces as `WorkflowError` in the desktop UI and as a single `error: …` CLI line,
-  never a traceback.
+  never a traceback. 
 
 ---
 
