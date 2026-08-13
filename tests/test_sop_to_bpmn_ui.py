@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import tkinter as tk
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -292,6 +293,60 @@ class SOPToBPMNControllerTests(unittest.TestCase):
             ):
                 with self.assertRaisesRegex(WorkflowError, "validation failed"):
                     controller.build_bpmn(overwrite=True)
+
+
+class CollapsibleSectionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        try:
+            self.root = tk.Tk()
+        except tk.TclError as exc:
+            self.skipTest(f"Tk display is unavailable: {exc}")
+        self.root.withdraw()
+        self.app = SOPToBPMNApp(self.root)
+
+    def tearDown(self) -> None:
+        if hasattr(self, "root"):
+            self.root.destroy()
+
+    def test_all_sections_start_expanded_with_expanded_icon(self) -> None:
+        sections = (
+            self.app.source_section,
+            self.app.prompt_section,
+            self.app.build_section,
+            self.app.status_section,
+        )
+
+        for section in sections:
+            self.assertTrue(section.expanded)
+            self.assertEqual("▾", section.toggle_button.cget("text"))
+            self.assertEqual("grid", section.body.winfo_manager())
+
+    def test_sections_toggle_independently_and_retain_contents(self) -> None:
+        source = self.app.source_section
+        prompt = self.app.prompt_section
+        build = self.app.build_section
+        status = self.app.status_section
+
+        self.app.response_box.insert("1.0", "response retained")
+        source.toggle()
+        self.assertFalse(source.expanded)
+        self.assertEqual("▸", source.toggle_button.cget("text"))
+        self.assertEqual("", source.body.winfo_manager())
+        self.assertEqual("grid", prompt.body.winfo_manager())
+        self.assertEqual("grid", build.body.winfo_manager())
+        self.assertEqual("grid", status.body.winfo_manager())
+
+        prompt.toggle()
+        self.assertFalse(prompt.expanded)
+        self.assertEqual("", prompt.body.winfo_manager())
+        self.assertEqual("response retained", self.app.response_box.get("1.0", "end-1c"))
+
+        source.toggle()
+        prompt.toggle()
+        self.assertTrue(source.expanded)
+        self.assertTrue(prompt.expanded)
+        self.assertEqual("grid", source.body.winfo_manager())
+        self.assertEqual("grid", prompt.body.winfo_manager())
 
 
 if __name__ == "__main__":

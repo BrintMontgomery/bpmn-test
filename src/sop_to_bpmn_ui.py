@@ -190,6 +190,47 @@ class SOPToBPMNController:
 ResultT = TypeVar("ResultT")
 
 
+class CollapsibleSection:
+    """A titled section whose contents can be hidden without being destroyed."""
+
+    def __init__(self, parent: tk.Misc, title: str, *, padding: int = 10) -> None:
+        self.frame = ttk.LabelFrame(parent, text=title, padding=padding)
+        self.frame.columnconfigure(0, weight=1)
+        self.body = ttk.Frame(self.frame)
+        self.body.grid(row=0, column=0, sticky="nsew")
+        self.body.columnconfigure(0, weight=1)
+
+        # Keep the toggle outside the body so it remains available when the
+        # section is collapsed.  It sits over the upper-right corner of the
+        # existing LabelFrame border and does not change the section layout.
+        self.toggle_button = ttk.Button(
+            self.frame,
+            width=2,
+            command=self.toggle,
+        )
+        self.toggle_button.place(relx=1.0, x=-4, y=-2, anchor="ne")
+        self.expanded = True
+        self._refresh_toggle()
+
+    def grid(self, **kwargs: Any) -> None:
+        """Grid the section in its parent using the supplied options."""
+        self.frame.grid(**kwargs)
+
+    def toggle(self) -> None:
+        """Toggle visibility of the section body while retaining its state."""
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.body.grid()
+        else:
+            self.body.grid_remove()
+        self._refresh_toggle()
+
+    def _refresh_toggle(self) -> None:
+        self.toggle_button.configure(
+            text="▾" if self.expanded else "▸",
+        )
+
+
 class SOPToBPMNApp:
     """Tk presentation layer for :class:`SOPToBPMNController`."""
 
@@ -218,8 +259,9 @@ class SOPToBPMNApp:
         ttk.Label(frame, text="SOP Markdown to BPMN", font=("Segoe UI", 16, "bold")).grid(
             row=0, column=0, sticky="w"
         )
-        source_frame = ttk.LabelFrame(frame, text="1. Select and validate Markdown", padding=10)
-        source_frame.grid(row=1, column=0, sticky="ew", pady=(12, 8))
+        self.source_section = CollapsibleSection(frame, "1. Select and validate Markdown")
+        source_frame = self.source_section.body
+        self.source_section.grid(row=1, column=0, sticky="ew", pady=(12, 8))
         source_frame.columnconfigure(0, weight=1)
         ttk.Label(source_frame, textvariable=self.source_var, wraplength=620).grid(
             row=0, column=0, sticky="w"
@@ -234,8 +276,9 @@ class SOPToBPMNApp:
             row=2, column=0, columnspan=2, sticky="w", pady=(6, 0)
         )
 
-        prompt_frame = ttk.LabelFrame(frame, text="2. Create or review semantic IR", padding=10)
-        prompt_frame.grid(row=2, column=0, sticky="nsew", pady=8)
+        self.prompt_section = CollapsibleSection(frame, "2. Create or review semantic IR")
+        prompt_frame = self.prompt_section.body
+        self.prompt_section.grid(row=2, column=0, sticky="nsew", pady=8)
         prompt_frame.columnconfigure(0, weight=1)
         ttk.Label(prompt_frame, text="Semantic prompt (use with your approved modeling process):").grid(row=0, column=0, sticky="w")
         self.prompt_box = scrolledtext.ScrolledText(prompt_frame, height=7, wrap=tk.WORD, state=tk.DISABLED)
@@ -258,8 +301,9 @@ class SOPToBPMNApp:
         self.save_ir_button = ttk.Button(response_buttons, text="Validate and save IR", command=self._save_ir)
         self.save_ir_button.grid(row=0, column=1, padx=(8, 0))
 
-        build_frame = ttk.LabelFrame(frame, text="3. Build BPMN", padding=10)
-        build_frame.grid(row=3, column=0, sticky="ew", pady=8)
+        self.build_section = CollapsibleSection(frame, "3. Build BPMN")
+        build_frame = self.build_section.body
+        self.build_section.grid(row=3, column=0, sticky="ew", pady=8)
         self.build_button = ttk.Button(build_frame, text="Build and validate BPMN", command=self._build_bpmn)
         self.build_button.grid(row=0, column=0, sticky="w")
         self.repair_layout_check = ttk.Checkbutton(
@@ -271,8 +315,9 @@ class SOPToBPMNApp:
         self.results = tk.Listbox(build_frame, height=4)
         self.results.grid(row=1, column=0, sticky="ew", pady=(8, 0))
 
-        status_frame = ttk.LabelFrame(frame, text="Status", padding=10)
-        status_frame.grid(row=4, column=0, sticky="ew", pady=(8, 0))
+        self.status_section = CollapsibleSection(frame, "Status")
+        status_frame = self.status_section.body
+        self.status_section.grid(row=4, column=0, sticky="ew", pady=(8, 0))
         status_frame.columnconfigure(0, weight=1)
         ttk.Label(status_frame, textvariable=self.status_var, wraplength=700).grid(
             row=0, column=0, sticky="w"
