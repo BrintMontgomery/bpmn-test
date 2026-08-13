@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_trv_001_approve_travel_request" targetNamespace="http://oklahoma.gov/odmhsas/ofc/bpmn" exporter="ir.py" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_trv_001_approve_travel_request">
+    <bpmn:participant id="Participant_trv_001_approve_travel_request" name="Travel Request Approval" processRef="trv_001_approve_travel_request"/>
+  </bpmn:collaboration>
+  <bpmn:process id="trv_001_approve_travel_request" name="Approve a Travel Request" isExecutable="false">
+    <bpmn:documentation>- Source: TRV-001 - Approve a Travel Request. Modeling judgments: Travel Approver and Travel Request System are lanes because they own explicit main-path steps. Requestor is not modeled as a lane because the extraction gives no task or lane handoff for that actor. Option A steps are assigned to the Travel Approver lane because their text identifies that actor but contains no bold-actor metadata. The option-entry gateway follows the system display of the approval button, where the option trigger can be evaluated. Option A rejoins before the system records approval because its final step selects the approval button. The precondition that the approver received the email link is modeled as the start event.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_trv_001_approve_travel_request">
+      <bpmn:lane id="travel_approver" name="Travel Approver">
+        <bpmn:flowNodeRef>start_travel_request_link_received</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_open_travel_request_link</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_select_requests</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_select_request_details</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_move_to_second_page</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_approval_button_displayed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_select_approval_button</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_close_travel_request_window</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_open_approval_worklist</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_disable_popup_blocker</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_open_request_from_worklist</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_select_approval_button_from_worklist</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_verify_request_approved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_request_approved</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="travel_request_system" name="Travel Request System">
+        <bpmn:flowNodeRef>task_display_home_page</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_display_request_list</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_display_travel_request</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_display_approval_button</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_record_approval</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_travel_request_link_received" name="Travel-request link received by email">
+      <bpmn:outgoing>Flow_start_travel_request_link_received__task_open_travel_request_link</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MsgDef_start_travel_request_link_received"/>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_open_travel_request_link" name="Open the travel-request link in Microsoft Edge">
+      <bpmn:incoming>Flow_start_travel_request_link_received__task_open_travel_request_link</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_open_travel_request_link__task_display_home_page</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="task_display_home_page" name="Display the home page to the Travel Approver">
+      <bpmn:incoming>Flow_task_open_travel_request_link__task_display_home_page</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_display_home_page__task_select_requests</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="task_select_requests" name="Select Requests">
+      <bpmn:incoming>Flow_task_display_home_page__task_select_requests</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_select_requests__task_display_request_list</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="task_display_request_list" name="Display the Travel Approver's request list">
+      <bpmn:incoming>Flow_task_select_requests__task_display_request_list</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_display_request_list__task_select_request_details</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="task_select_request_details" name="Select Details for the travel request awaiting signature">
+      <bpmn:incoming>Flow_task_display_request_list__task_select_request_details</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_select_request_details__task_display_travel_request</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="task_display_travel_request" name="Display the travel request for the Travel Approver">
+      <bpmn:incoming>Flow_task_select_request_details__task_display_travel_request</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_display_travel_request__task_move_to_second_page</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="task_move_to_second_page" name="Move to the second page of the travel request">
+      <bpmn:incoming>Flow_task_display_travel_request__task_move_to_second_page</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_move_to_second_page__task_display_approval_button</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="task_display_approval_button" name="Display the approval button at the bottom of the second page">
+      <bpmn:incoming>Flow_task_move_to_second_page__task_display_approval_button</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_display_approval_button__gateway_approval_button_displayed</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="gateway_approval_button_displayed" name="Is the approval button displayed?" default="Flow_gateway_approval_button_displayed__task_close_travel_request_window">
+      <bpmn:incoming>Flow_task_display_approval_button__gateway_approval_button_displayed</bpmn:incoming>
+      <bpmn:outgoing>Flow_gateway_approval_button_displayed__task_select_approval_button</bpmn:outgoing>
+      <bpmn:outgoing>Flow_gateway_approval_button_displayed__task_close_travel_request_window</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_select_approval_button" name="Select the approval button">
+      <bpmn:incoming>Flow_gateway_approval_button_displayed__task_select_approval_button</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_select_approval_button__task_record_approval</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_close_travel_request_window" name="Close the travel-request window">
+      <bpmn:incoming>Flow_gateway_approval_button_displayed__task_close_travel_request_window</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_close_travel_request_window__task_open_approval_worklist</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_open_approval_worklist" name="Open the Approval Worklist in the Travel Request System">
+      <bpmn:incoming>Flow_task_close_travel_request_window__task_open_approval_worklist</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_open_approval_worklist__task_disable_popup_blocker</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_disable_popup_blocker" name="Disable the Microsoft Edge pop-up blocker for the Travel Request System">
+      <bpmn:incoming>Flow_task_open_approval_worklist__task_disable_popup_blocker</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_disable_popup_blocker__task_open_request_from_worklist</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_open_request_from_worklist" name="Open the travel request from the Approval Worklist">
+      <bpmn:incoming>Flow_task_disable_popup_blocker__task_open_request_from_worklist</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_open_request_from_worklist__task_select_approval_button_from_worklist</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_select_approval_button_from_worklist" name="Move to the second page and select the approval button">
+      <bpmn:incoming>Flow_task_open_request_from_worklist__task_select_approval_button_from_worklist</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_select_approval_button_from_worklist__task_record_approval</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="task_record_approval" name="Record the approval and update the request status">
+      <bpmn:incoming>Flow_task_select_approval_button__task_record_approval</bpmn:incoming>
+      <bpmn:incoming>Flow_task_select_approval_button_from_worklist__task_record_approval</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_record_approval__task_verify_request_approved</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="task_verify_request_approved" name="Return to Requests and verify that the travel request shows as approved">
+      <bpmn:incoming>Flow_task_record_approval__task_verify_request_approved</bpmn:incoming>
+      <bpmn:outgoing>Flow_task_verify_request_approved__end_request_approved</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_request_approved" name="Travel request approved and continuing through the approval process">
+      <bpmn:incoming>Flow_task_verify_request_approved__end_request_approved</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_start_travel_request_link_received__task_open_travel_request_link" sourceRef="start_travel_request_link_received" targetRef="task_open_travel_request_link"/>
+    <bpmn:sequenceFlow id="Flow_task_open_travel_request_link__task_display_home_page" sourceRef="task_open_travel_request_link" targetRef="task_display_home_page"/>
+    <bpmn:sequenceFlow id="Flow_task_display_home_page__task_select_requests" sourceRef="task_display_home_page" targetRef="task_select_requests"/>
+    <bpmn:sequenceFlow id="Flow_task_select_requests__task_display_request_list" sourceRef="task_select_requests" targetRef="task_display_request_list"/>
+    <bpmn:sequenceFlow id="Flow_task_display_request_list__task_select_request_details" sourceRef="task_display_request_list" targetRef="task_select_request_details"/>
+    <bpmn:sequenceFlow id="Flow_task_select_request_details__task_display_travel_request" sourceRef="task_select_request_details" targetRef="task_display_travel_request"/>
+    <bpmn:sequenceFlow id="Flow_task_display_travel_request__task_move_to_second_page" sourceRef="task_display_travel_request" targetRef="task_move_to_second_page"/>
+    <bpmn:sequenceFlow id="Flow_task_move_to_second_page__task_display_approval_button" sourceRef="task_move_to_second_page" targetRef="task_display_approval_button"/>
+    <bpmn:sequenceFlow id="Flow_task_display_approval_button__gateway_approval_button_displayed" sourceRef="task_display_approval_button" targetRef="gateway_approval_button_displayed"/>
+    <bpmn:sequenceFlow id="Flow_gateway_approval_button_displayed__task_select_approval_button" sourceRef="gateway_approval_button_displayed" targetRef="task_select_approval_button" name="Approval button is displayed">
+      <bpmn:conditionExpression>Approval button is displayed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_gateway_approval_button_displayed__task_close_travel_request_window" sourceRef="gateway_approval_button_displayed" targetRef="task_close_travel_request_window" name="Approval button is not displayed"/>
+    <bpmn:sequenceFlow id="Flow_task_close_travel_request_window__task_open_approval_worklist" sourceRef="task_close_travel_request_window" targetRef="task_open_approval_worklist"/>
+    <bpmn:sequenceFlow id="Flow_task_open_approval_worklist__task_disable_popup_blocker" sourceRef="task_open_approval_worklist" targetRef="task_disable_popup_blocker"/>
+    <bpmn:sequenceFlow id="Flow_task_disable_popup_blocker__task_open_request_from_worklist" sourceRef="task_disable_popup_blocker" targetRef="task_open_request_from_worklist"/>
+    <bpmn:sequenceFlow id="Flow_task_open_request_from_worklist__task_select_approval_button_from_worklist" sourceRef="task_open_request_from_worklist" targetRef="task_select_approval_button_from_worklist"/>
+    <bpmn:sequenceFlow id="Flow_task_select_approval_button__task_record_approval" sourceRef="task_select_approval_button" targetRef="task_record_approval"/>
+    <bpmn:sequenceFlow id="Flow_task_select_approval_button_from_worklist__task_record_approval" sourceRef="task_select_approval_button_from_worklist" targetRef="task_record_approval"/>
+    <bpmn:sequenceFlow id="Flow_task_record_approval__task_verify_request_approved" sourceRef="task_record_approval" targetRef="task_verify_request_approved"/>
+    <bpmn:sequenceFlow id="Flow_task_verify_request_approved__end_request_approved" sourceRef="task_verify_request_approved" targetRef="end_request_approved"/>
+    <bpmn:textAnnotation id="Ann_task_verify_request_approved">
+      <bpmn:text>Hovering over the request in the request list may display the approval time and confirm that the approval was recorded.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_task_verify_request_approved" sourceRef="task_verify_request_approved" targetRef="Ann_task_verify_request_approved"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_trv_001_approve_travel_request">
+    <bpmndi:BPMNPlane id="BPMNPlane_trv_001_approve_travel_request" bpmnElement="Collaboration_trv_001_approve_travel_request">
+      <bpmndi:BPMNShape id="Shape_Participant_trv_001_approve_travel_request" bpmnElement="Participant_trv_001_approve_travel_request" isHorizontal="true">
+        <dc:Bounds x="200" y="260" width="3734" height="599"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_travel_approver" bpmnElement="travel_approver" isHorizontal="true">
+        <dc:Bounds x="230" y="260" width="3704" height="419"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_travel_request_system" bpmnElement="travel_request_system" isHorizontal="true">
+        <dc:Bounds x="230" y="679" width="3704" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_start_travel_request_link_received" bpmnElement="start_travel_request_link_received">
+        <dc:Bounds x="308" y="421" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="271" y="462" width="110" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_open_travel_request_link" bpmnElement="task_open_travel_request_link">
+        <dc:Bounds x="422" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_display_home_page" bpmnElement="task_display_home_page">
+        <dc:Bounds x="640" y="729" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_select_requests" bpmnElement="task_select_requests">
+        <dc:Bounds x="858" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_display_request_list" bpmnElement="task_display_request_list">
+        <dc:Bounds x="1076" y="729" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_select_request_details" bpmnElement="task_select_request_details">
+        <dc:Bounds x="1294" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_display_travel_request" bpmnElement="task_display_travel_request">
+        <dc:Bounds x="1512" y="729" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_move_to_second_page" bpmnElement="task_move_to_second_page">
+        <dc:Bounds x="1730" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_display_approval_button" bpmnElement="task_display_approval_button">
+        <dc:Bounds x="1948" y="729" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_gateway_approval_button_displayed" bpmnElement="gateway_approval_button_displayed" isMarkerVisible="true">
+        <dc:Bounds x="2166" y="414" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2121" y="376" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_select_approval_button" bpmnElement="task_select_approval_button">
+        <dc:Bounds x="2294" y="549" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_close_travel_request_window" bpmnElement="task_close_travel_request_window">
+        <dc:Bounds x="2294" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_open_approval_worklist" bpmnElement="task_open_approval_worklist">
+        <dc:Bounds x="2512" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_disable_popup_blocker" bpmnElement="task_disable_popup_blocker">
+        <dc:Bounds x="2730" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_open_request_from_worklist" bpmnElement="task_open_request_from_worklist">
+        <dc:Bounds x="2948" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_select_approval_button_from_worklist" bpmnElement="task_select_approval_button_from_worklist">
+        <dc:Bounds x="3166" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_record_approval" bpmnElement="task_record_approval">
+        <dc:Bounds x="3384" y="729" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_task_verify_request_approved" bpmnElement="task_verify_request_approved">
+        <dc:Bounds x="3602" y="399" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_end_request_approved" bpmnElement="end_request_approved">
+        <dc:Bounds x="3820" y="421" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3783" y="462" width="110" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_task_verify_request_approved" bpmnElement="Ann_task_verify_request_approved">
+        <dc:Bounds x="3532" y="288" width="280" height="63"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_start_travel_request_link_received__task_open_travel_request_link" bpmnElement="Flow_start_travel_request_link_received__task_open_travel_request_link">
+        <di:waypoint x="344" y="439"/>
+        <di:waypoint x="422" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_open_travel_request_link__task_display_home_page" bpmnElement="Flow_task_open_travel_request_link__task_display_home_page">
+        <di:waypoint x="562" y="439"/>
+        <di:waypoint x="601" y="439"/>
+        <di:waypoint x="601" y="769"/>
+        <di:waypoint x="640" y="769"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_display_home_page__task_select_requests" bpmnElement="Flow_task_display_home_page__task_select_requests">
+        <di:waypoint x="780" y="769"/>
+        <di:waypoint x="819" y="769"/>
+        <di:waypoint x="819" y="439"/>
+        <di:waypoint x="858" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_select_requests__task_display_request_list" bpmnElement="Flow_task_select_requests__task_display_request_list">
+        <di:waypoint x="998" y="439"/>
+        <di:waypoint x="1037" y="439"/>
+        <di:waypoint x="1037" y="769"/>
+        <di:waypoint x="1076" y="769"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_display_request_list__task_select_request_details" bpmnElement="Flow_task_display_request_list__task_select_request_details">
+        <di:waypoint x="1216" y="769"/>
+        <di:waypoint x="1255" y="769"/>
+        <di:waypoint x="1255" y="439"/>
+        <di:waypoint x="1294" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_select_request_details__task_display_travel_request" bpmnElement="Flow_task_select_request_details__task_display_travel_request">
+        <di:waypoint x="1434" y="439"/>
+        <di:waypoint x="1473" y="439"/>
+        <di:waypoint x="1473" y="769"/>
+        <di:waypoint x="1512" y="769"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_display_travel_request__task_move_to_second_page" bpmnElement="Flow_task_display_travel_request__task_move_to_second_page">
+        <di:waypoint x="1652" y="769"/>
+        <di:waypoint x="1691" y="769"/>
+        <di:waypoint x="1691" y="439"/>
+        <di:waypoint x="1730" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_move_to_second_page__task_display_approval_button" bpmnElement="Flow_task_move_to_second_page__task_display_approval_button">
+        <di:waypoint x="1870" y="439"/>
+        <di:waypoint x="1909" y="439"/>
+        <di:waypoint x="1909" y="769"/>
+        <di:waypoint x="1948" y="769"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_display_approval_button__gateway_approval_button_displayed" bpmnElement="Flow_task_display_approval_button__gateway_approval_button_displayed">
+        <di:waypoint x="2088" y="769"/>
+        <di:waypoint x="2127" y="769"/>
+        <di:waypoint x="2127" y="439"/>
+        <di:waypoint x="2166" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_gateway_approval_button_displayed__task_select_approval_button" bpmnElement="Flow_gateway_approval_button_displayed__task_select_approval_button">
+        <di:waypoint x="2216" y="439"/>
+        <di:waypoint x="2255" y="439"/>
+        <di:waypoint x="2255" y="589"/>
+        <di:waypoint x="2294" y="589"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2220" y="445" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_gateway_approval_button_displayed__task_close_travel_request_window" bpmnElement="Flow_gateway_approval_button_displayed__task_close_travel_request_window">
+        <di:waypoint x="2216" y="439"/>
+        <di:waypoint x="2294" y="439"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2240" y="415" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_close_travel_request_window__task_open_approval_worklist" bpmnElement="Flow_task_close_travel_request_window__task_open_approval_worklist">
+        <di:waypoint x="2434" y="439"/>
+        <di:waypoint x="2512" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_open_approval_worklist__task_disable_popup_blocker" bpmnElement="Flow_task_open_approval_worklist__task_disable_popup_blocker">
+        <di:waypoint x="2652" y="439"/>
+        <di:waypoint x="2730" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_disable_popup_blocker__task_open_request_from_worklist" bpmnElement="Flow_task_disable_popup_blocker__task_open_request_from_worklist">
+        <di:waypoint x="2870" y="439"/>
+        <di:waypoint x="2948" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_open_request_from_worklist__task_select_approval_button_from_worklist" bpmnElement="Flow_task_open_request_from_worklist__task_select_approval_button_from_worklist">
+        <di:waypoint x="3088" y="439"/>
+        <di:waypoint x="3166" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_select_approval_button__task_record_approval" bpmnElement="Flow_task_select_approval_button__task_record_approval">
+        <di:waypoint x="2434" y="589"/>
+        <di:waypoint x="3339" y="589"/>
+        <di:waypoint x="3339" y="769"/>
+        <di:waypoint x="3384" y="769"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_select_approval_button_from_worklist__task_record_approval" bpmnElement="Flow_task_select_approval_button_from_worklist__task_record_approval">
+        <di:waypoint x="3306" y="439"/>
+        <di:waypoint x="3351" y="439"/>
+        <di:waypoint x="3351" y="769"/>
+        <di:waypoint x="3384" y="769"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_record_approval__task_verify_request_approved" bpmnElement="Flow_task_record_approval__task_verify_request_approved">
+        <di:waypoint x="3524" y="769"/>
+        <di:waypoint x="3563" y="769"/>
+        <di:waypoint x="3563" y="439"/>
+        <di:waypoint x="3602" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_task_verify_request_approved__end_request_approved" bpmnElement="Flow_task_verify_request_approved__end_request_approved">
+        <di:waypoint x="3742" y="439"/>
+        <di:waypoint x="3820" y="439"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_task_verify_request_approved" bpmnElement="Assoc_task_verify_request_approved">
+        <di:waypoint x="3672" y="399"/>
+        <di:waypoint x="3672" y="351"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

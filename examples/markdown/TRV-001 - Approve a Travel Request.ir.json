@@ -1,0 +1,267 @@
+{
+  "documents": [
+    {
+      "file": "trv_001_approve_travel_request.bpmn",
+      "id": "trv_001_approve_travel_request",
+      "role": "main"
+    }
+  ],
+  "edges": [
+    {
+      "source": "start_travel_request_link_received",
+      "target": "task_open_travel_request_link"
+    },
+    {
+      "source": "task_open_travel_request_link",
+      "target": "task_display_home_page"
+    },
+    {
+      "source": "task_display_home_page",
+      "target": "task_select_requests"
+    },
+    {
+      "source": "task_select_requests",
+      "target": "task_display_request_list"
+    },
+    {
+      "source": "task_display_request_list",
+      "target": "task_select_request_details"
+    },
+    {
+      "source": "task_select_request_details",
+      "target": "task_display_travel_request"
+    },
+    {
+      "source": "task_display_travel_request",
+      "target": "task_move_to_second_page"
+    },
+    {
+      "source": "task_move_to_second_page",
+      "target": "task_display_approval_button"
+    },
+    {
+      "source": "task_display_approval_button",
+      "target": "gateway_approval_button_displayed"
+    },
+    {
+      "condition": "Approval button is displayed",
+      "label": "Approval button is displayed",
+      "source": "gateway_approval_button_displayed",
+      "target": "task_select_approval_button"
+    },
+    {
+      "condition": "",
+      "label": "Approval button is not displayed",
+      "source": "gateway_approval_button_displayed",
+      "target": "task_close_travel_request_window"
+    },
+    {
+      "source": "task_close_travel_request_window",
+      "target": "task_open_approval_worklist"
+    },
+    {
+      "source": "task_open_approval_worklist",
+      "target": "task_disable_popup_blocker"
+    },
+    {
+      "source": "task_disable_popup_blocker",
+      "target": "task_open_request_from_worklist"
+    },
+    {
+      "source": "task_open_request_from_worklist",
+      "target": "task_select_approval_button_from_worklist"
+    },
+    {
+      "source": "task_select_approval_button",
+      "target": "task_record_approval"
+    },
+    {
+      "source": "task_select_approval_button_from_worklist",
+      "target": "task_record_approval"
+    },
+    {
+      "source": "task_record_approval",
+      "target": "task_verify_request_approved"
+    },
+    {
+      "source": "task_verify_request_approved",
+      "target": "end_request_approved"
+    }
+  ],
+  "lanes": [
+    {
+      "id": "travel_approver",
+      "name": "Travel Approver"
+    },
+    {
+      "id": "travel_request_system",
+      "name": "Travel Request System"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start_travel_request_link_received",
+      "kind": "start_message",
+      "lane": "travel_approver",
+      "name": "Travel-request link received by email",
+      "phase": "access_request"
+    },
+    {
+      "id": "task_open_travel_request_link",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Open the travel-request link in Microsoft Edge",
+      "phase": "access_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_display_home_page",
+      "kind": "task",
+      "lane": "travel_request_system",
+      "name": "Display the home page to the Travel Approver",
+      "phase": "access_request"
+    },
+    {
+      "id": "task_select_requests",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Select Requests",
+      "phase": "access_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_display_request_list",
+      "kind": "task",
+      "lane": "travel_request_system",
+      "name": "Display the Travel Approver's request list",
+      "phase": "access_request"
+    },
+    {
+      "id": "task_select_request_details",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Select Details for the travel request awaiting signature",
+      "phase": "access_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_display_travel_request",
+      "kind": "task",
+      "lane": "travel_request_system",
+      "name": "Display the travel request for the Travel Approver",
+      "phase": "access_request"
+    },
+    {
+      "id": "task_move_to_second_page",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Move to the second page of the travel request",
+      "phase": "approve_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_display_approval_button",
+      "kind": "task",
+      "lane": "travel_request_system",
+      "name": "Display the approval button at the bottom of the second page",
+      "phase": "approve_request"
+    },
+    {
+      "id": "gateway_approval_button_displayed",
+      "kind": "gateway_x",
+      "lane": "travel_approver",
+      "name": "Is the approval button displayed?",
+      "phase": "approve_request"
+    },
+    {
+      "id": "task_select_approval_button",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Select the approval button",
+      "phase": "approve_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_close_travel_request_window",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Close the travel-request window",
+      "phase": "approve_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_open_approval_worklist",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Open the Approval Worklist in the Travel Request System",
+      "phase": "approve_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_disable_popup_blocker",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Disable the Microsoft Edge pop-up blocker for the Travel Request System",
+      "phase": "approve_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_open_request_from_worklist",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Open the travel request from the Approval Worklist",
+      "phase": "approve_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_select_approval_button_from_worklist",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Move to the second page and select the approval button",
+      "phase": "approve_request",
+      "ttype": "user"
+    },
+    {
+      "id": "task_record_approval",
+      "kind": "task",
+      "lane": "travel_request_system",
+      "name": "Record the approval and update the request status",
+      "phase": "approve_request"
+    },
+    {
+      "id": "task_verify_request_approved",
+      "kind": "task",
+      "lane": "travel_approver",
+      "name": "Return to Requests and verify that the travel request shows as approved",
+      "note": "Hovering over the request in the request list may display the approval time and confirm that the approval was recorded.",
+      "phase": "confirm_approval",
+      "ttype": "user"
+    },
+    {
+      "id": "end_request_approved",
+      "kind": "end",
+      "lane": "travel_approver",
+      "name": "Travel request approved and continuing through the approval process",
+      "phase": "confirm_approval"
+    }
+  ],
+  "participant_name": "Travel Request Approval",
+  "phases": [
+    {
+      "id": "access_request",
+      "name": "Access Travel Request"
+    },
+    {
+      "id": "approve_request",
+      "name": "Approve Travel Request"
+    },
+    {
+      "id": "confirm_approval",
+      "name": "Confirm Approval"
+    }
+  ],
+  "process_doc": "Source: TRV-001 - Approve a Travel Request. Modeling judgments: Travel Approver and Travel Request System are lanes because they own explicit main-path steps. Requestor is not modeled as a lane because the extraction gives no task or lane handoff for that actor. Option A steps are assigned to the Travel Approver lane because their text identifies that actor but contains no bold-actor metadata. The option-entry gateway follows the system display of the approval button, where the option trigger can be evaluated. Option A rejoins before the system records approval because its final step selects the approval button. The precondition that the approver received the email link is modeled as the start event.",
+  "process_id": "trv_001_approve_travel_request",
+  "process_name": "Approve a Travel Request",
+  "schema_version": 1
+}
