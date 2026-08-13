@@ -848,6 +848,21 @@ def compute_layout(model: ProcessModel, scope: Scope | None = None) -> Layout:
     return layout
 
 
+def initial_layout_findings(
+    model: ProcessModel, scope: Scope | None = None,
+) -> list[GeometryFinding]:
+    """Return geometry findings before the bounded layout repair is applied.
+
+    Presentation preprocessing uses this to compare annotation-band choices
+    deterministically.  It deliberately shares the normal topology and
+    geometry calculations, so it cannot disagree with the renderer about
+    what counts as a collision.
+    """
+    scope = scope or Scope.top_level(model)
+    placements = _auto_placements(model, scope)
+    return layout_findings(model, scope, _build_layout(model, scope, placements))
+
+
 def corridor_offsets(
     model: ProcessModel,
     scope: Scope | None = None,

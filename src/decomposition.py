@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass, replace
+from itertools import product
 from pathlib import Path
 
 from bpmn_engine import (
@@ -13,10 +14,12 @@ from bpmn_engine import (
     Node,
     ProcessBundle,
     ProcessModel,
+    LayoutError,
     PhaseOrderError,
     Scope,
     Layout,
     compute_layout,
+    initial_layout_findings,
     write_bpmn,
 )
 
@@ -225,6 +228,137 @@ def scopes_for(model: ProcessModel) -> list[Scope]:
     return scopes
 
 
+def _normalize_branch_labels(model: ProcessModel) -> tuple[ProcessModel, list[str]]:
+    """Supply safe display labels for semantic responses that omitted them."""
+    outgoing: dict[str, list[Edge]] = {}
+    for edge in model.edges:
+        outgoing.setdefault(edge.source, []).append(edge)
+    node_by_id = model.by_id()
+    changed: list[str] = []
+    edges: list[Edge] = []
+    for edge in model.edges:
+        branches = outgoing[edge.source]
+        source = node_by_id[edge.source]
+        if source.kind != "gateway_x" or len(branches) < 2 or edge.label.strip():
+            edges.append(edge)
+            continue
+        label = edge.condition or "Otherwise"
+        edges.append(replace(edge, label=label))
+        changed.append(f"{model.process_id}: labeled {edge.source}->{edge.target} as {label!r}")
+
+    normalized = replace(model, edges=edges)
+    for gateway_id, branches in outgoing.items():
+        if node_by_id[gateway_id].kind != "gateway_x" or len(branches) < 2:
+            continue
+        normalized_branches = [edge for edge in normalized.edges if edge.source == gateway_id]
+        if any(not edge.label.strip() for edge in normalized_branches):
+            raise LayoutError(
+                f"exclusive gateway {gateway_id} has an unlabeled branch after presentation normalization"
+            )
+    return normalized, changed
+
+
+def _note_lanes(model: ProcessModel) -> tuple[str, ...]:
+    lane_ids = {lane_id for lane_id, _ in model.lanes}
+    note_lanes: list[str] = []
+    for node in model.nodes:
+        if node.note is None:
+            continue
+        if not node.note.strip():
+            raise LayoutError(f"node {node.id} has an empty note annotation")
+        if node.lane in lane_ids and node.lane not in note_lanes:
+            note_lanes.append(node.lane)
+    return tuple(note_lanes)
+
+
+def _annotation_candidates(model: ProcessModel) -> list[ProcessModel]:
+    """Return every deterministic above/below arrangement for note lanes."""
+    note_lanes = _note_lanes(model)
+    base = set(model.ann_above)
+    candidates: list[ProcessModel] = []
+    for flags in product((False, True), repeat=len(note_lanes)):
+        above = base - set(note_lanes)
+        above.update(
+            lane_id for lane_id, above_lane in zip(note_lanes, flags) if above_lane
+        )
+        candidates.append(replace(model, ann_above=above))
+    return candidates
+
+
+def _normalize_annotation_placement(
+    model: ProcessModel,
+) -> tuple[ProcessModel, list[str]]:
+    """Choose the cleanest collision-free annotation-band arrangement.
+
+    The raw finding count provides a stable preference among safe candidates;
+    ties retain the authored placement whenever possible.  ``compute_layout``
+    remains the authoritative final safety check because it also exercises the
+    bounded placement repair used by the renderer.
+    """
+    candidates = _annotation_candidates(model)
+    if len(candidates) == 1:
+        return model, []
+
+    scored: list[tuple[tuple[int, int, tuple[bool, ...]], ProcessModel]] = []
+    failures: list[str] = []
+    note_lanes = _note_lanes(model)
+    for candidate in candidates:
+        try:
+            findings = sum(
+                len(initial_layout_findings(candidate, scope))
+                for scope in scopes_for(candidate)
+            )
+            for scope in scopes_for(candidate):
+                compute_layout(candidate, scope)
+        except PhaseOrderError:
+            raise
+        except LayoutError as exc:
+            failures.append(str(exc))
+            continue
+        score = (
+            findings,
+            len(candidate.ann_above ^ model.ann_above),
+            tuple(lane_id in candidate.ann_above for lane_id in note_lanes),
+        )
+        scored.append((score, candidate))
+
+    if not scored:
+        first_failure = failures[0] if failures else "no viable layout candidate"
+        raise LayoutError(
+            f"no collision-free annotation-band placement for {model.process_id}; "
+            f"tried {len(candidates)} above/below arrangement(s): {first_failure}"
+        )
+    selected = min(scored, key=lambda item: item[0])[1]
+    if selected.ann_above == model.ann_above:
+        return selected, []
+    placement = ", ".join(
+        lane_id for lane_id, _ in model.lanes if lane_id in selected.ann_above
+    ) or "none"
+    return selected, [
+        f"{model.process_id}: selected annotation bands above {placement} "
+        "for collision-free layout"
+    ]
+
+
+def normalize_presentation(model: ProcessModel) -> tuple[ProcessModel, list[str]]:
+    """Apply build-only presentation repairs before geometry is emitted."""
+    labeled, changes = _normalize_branch_labels(model)
+    positioned, position_changes = _normalize_annotation_placement(labeled)
+    return positioned, changes + position_changes
+
+
+def _normalize_bundle_presentation(
+    bundle: ProcessBundle,
+) -> tuple[ProcessBundle, list[str]]:
+    models: list[ProcessModel] = []
+    repairs: list[str] = []
+    for model in bundle.models:
+        normalized, changes = normalize_presentation(model)
+        models.append(normalized)
+        repairs.extend(changes)
+    return ProcessBundle(models=models, documents=bundle.documents), repairs
+
+
 def prepare_bundle(bundle: ProcessBundle) -> ProcessBundle:
     models = [decompose_model(model) for model in bundle.models]
     return ProcessBundle(models=models, documents=bundle.documents)
@@ -271,12 +405,16 @@ def prepare_bundle_for_build(
 ) -> PreparedBundle:
     """Decompose and preflight every scope before any output is created."""
 
-    working = bundle
-    repairs: list[str] = []
+    # Normalize once on the authored process and again after decomposition:
+    # each scope has independent geometry, so a safe annotation side can
+    # legitimately change when a phase becomes a collapsed subprocess.
+    working, repairs = _normalize_bundle_presentation(bundle)
     repaired_processes: set[str] = set()
     while True:
         try:
             prepared = prepare_bundle(working)
+            prepared, post_decomposition_repairs = _normalize_bundle_presentation(prepared)
+            repairs.extend(post_decomposition_repairs)
             layouts = _layout_bundle(prepared)
             return PreparedBundle(prepared, layouts, tuple(repairs))
         except PhaseOrderError as exc:

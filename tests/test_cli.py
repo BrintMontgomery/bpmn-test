@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import copy
 import io
 import json
+import re
 import sys
 import unittest
 import xml.etree.ElementTree as ET
@@ -17,6 +19,18 @@ from project_paths import EXAMPLE_MARKDOWN_DIR
 
 
 SOURCE = next(EXAMPLE_MARKDOWN_DIR.glob("OFC-004*.md"))
+TRV_SOURCE = next(EXAMPLE_MARKDOWN_DIR.glob("TRV-001*.md"))
+TRV_RESPONSE = Path(__file__).with_name("fixtures") / "trv-001-semantic-response.json"
+
+
+def source_without_inline_notes() -> str:
+    """Keep the required Notes section while removing only inline markers.
+
+    Generic CLI fixtures intentionally model a two-node process; use this
+    variant so source-aware note attachment validation is not bypassed.
+    """
+    before_notes, marker, notes = SOURCE.read_text(encoding="utf-8").partition("## Notes")
+    return re.sub(r"\\\[[A-Za-z0-9_-]+\\\]", "", before_notes) + marker + notes
 
 
 def valid_ir(
@@ -78,12 +92,47 @@ def phase_order_invalid_ir() -> dict:
 
 
 class SopToIRTests(unittest.TestCase):
+    def test_trv_note_keys_are_resolved_and_attached_exactly_once(self) -> None:
+        response = json.loads(TRV_RESPONSE.read_text(encoding="utf-8"))
+        extraction = sop_to_ir.extract_markdown(TRV_SOURCE)
+        expected_note = extraction.notes[0].text
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            response_path = root / "trv-response.json"
+            response_path.write_text(json.dumps(response), encoding="utf-8")
+            output = sop_to_ir.run(
+                TRV_SOURCE, output=root / "TRV-001.ir.json",
+                response_file=str(response_path), prompt_stream=io.StringIO(),
+            )
+            document = json.loads(output.read_text(encoding="utf-8"))
+        verification = next(node for node in document["nodes"]
+                            if node["id"] == "task_verify_approval")
+        self.assertEqual(expected_note, verification["note"])
+
+    def test_trv_note_attachment_guards_reject_missing_duplicate_and_unknown_notes(self) -> None:
+        extraction = sop_to_ir.extract_markdown(TRV_SOURCE)
+        response = json.loads(TRV_RESPONSE.read_text(encoding="utf-8"))
+        cases = []
+        missing = copy.deepcopy(response)
+        next(node for node in missing["nodes"] if node["id"] == "task_verify_approval").pop("note")
+        cases.append((missing, "missing note attachment"))
+        unknown = copy.deepcopy(response)
+        next(node for node in unknown["nodes"] if node["id"] == "task_verify_approval")["note"] = "z"
+        cases.append((unknown, "does not resolve"))
+        duplicate = copy.deepcopy(response)
+        next(node for node in duplicate["nodes"] if node["id"] == "end_approval_confirmed")["note"] = "a"
+        cases.append((duplicate, "duplicate or misplaced"))
+        for document, message in cases:
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(sop_to_ir.CLIError, message):
+                    sop_to_ir._resolve_source_notes(document, extraction)
+
     def test_response_file_is_validated_before_deterministic_write(self) -> None:
         document = valid_ir()
         with TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "Process.md"
-            source.write_text(SOURCE.read_text(encoding="utf-8"), encoding="utf-8")
+            source.write_text(source_without_inline_notes(), encoding="utf-8")
             response = root / "model.json"
             response.write_text(json.dumps(document), encoding="utf-8")
             prompt = io.StringIO()
@@ -103,7 +152,7 @@ class SopToIRTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "Process.md"
-            source.write_text(SOURCE.read_text(encoding="utf-8"), encoding="utf-8")
+            source.write_text(source_without_inline_notes(), encoding="utf-8")
             output = root / "result.ir.json"
             sop_to_ir.run(
                 source,
@@ -135,7 +184,7 @@ class SopToIRTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "Process.md"
-            source.write_text(SOURCE.read_text(encoding="utf-8"), encoding="utf-8")
+            source.write_text(source_without_inline_notes(), encoding="utf-8")
             response = root / "model.json"
             response.write_text(json.dumps(document), encoding="utf-8")
             output = root / "invalid.ir.json"
@@ -153,7 +202,7 @@ class SopToIRTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "Process.md"
-            source.write_text(SOURCE.read_text(encoding="utf-8"), encoding="utf-8")
+            source.write_text(source_without_inline_notes(), encoding="utf-8")
             response = root / "model.json"
             response.write_text(json.dumps(valid_ir()), encoding="utf-8")
             with patch.object(sys, "argv", ["unexpected", "arguments"]):
@@ -180,6 +229,32 @@ class IRToBPMNTests(unittest.TestCase):
             self.assertEqual([root / "Process.bpmn"], paths)
             self.assertIn("BPMNPlane_CLI", output.getvalue())
             self.assertIn("2 flow nodes", output.getvalue())
+
+    def test_trv_pipeline_normalizes_labels_and_annotation_placement_without_rewriting_ir(self) -> None:
+        response = json.loads(TRV_RESPONSE.read_text(encoding="utf-8"))
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            response_path = root / "trv-response.json"
+            response_path.write_text(json.dumps(response), encoding="utf-8")
+            ir_path = sop_to_ir.run(
+                TRV_SOURCE, output=root / "TRV-001.ir.json",
+                response_file=str(response_path), prompt_stream=io.StringIO(),
+            )
+            original_ir = ir_path.read_bytes()
+            _bundle, prepared = ir_to_bpmn.preflight([ir_path])
+            model = prepared.bundle.main
+            self.assertEqual({"lane_travel_approver"}, model.ann_above)
+            labels = {
+                edge.target: edge.label for edge in model.edges
+                if edge.source == "gateway_approval_button_displayed"
+            }
+            self.assertEqual("Approval button is displayed", labels["task_select_approval"])
+            self.assertEqual("Otherwise", labels["task_open_worklist"])
+            self.assertTrue(any("labeled" in repair for repair in prepared.repairs))
+            self.assertTrue(any("annotation bands" in repair for repair in prepared.repairs))
+            paths = ir_to_bpmn.run([ir_path], output_dir=root / "out")
+            self.assertEqual(original_ir, ir_path.read_bytes())
+            self.assertTrue(paths[0].exists())
 
     def test_explicit_multi_document_bundle_is_emitted_and_validated(self) -> None:
         with TemporaryDirectory() as directory:
@@ -307,7 +382,7 @@ class ConvenienceWrapperTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "Process.md"
-            source.write_text(SOURCE.read_text(encoding="utf-8"), encoding="utf-8")
+            source.write_text(source_without_inline_notes(), encoding="utf-8")
             response = root / "model.json"
             response.write_text(json.dumps(valid_ir()), encoding="utf-8")
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):

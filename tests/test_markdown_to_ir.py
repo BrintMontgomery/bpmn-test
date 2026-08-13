@@ -111,6 +111,8 @@ class SemanticHandoffTests(unittest.TestCase):
         self.assertIn("generated BPMN output manifest", prompt)
         self.assertIn("decomposition", prompt)
         self.assertIn("global layout constraint", prompt)
+        self.assertIn("full\n   text", prompt)
+        self.assertIn("outgoing edge of a branching", prompt)
 
     def test_format_semantic_prompt_is_pure_templating_with_no_filesystem_access(self) -> None:
         prompt = _format_semantic_prompt(

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import bpmn_engine as engine
-from decomposition import decompose_model, scopes_for
+from decomposition import decompose_model, normalize_presentation, scopes_for
 from ir import IRValidationError, load_bundle, load_ir, validate_ir
 from validate_bpmn import Validator, validate_bundle
 
@@ -43,6 +44,16 @@ def model(config: engine.DecompositionConfig | None = None) -> engine.ProcessMod
 
 
 class DecompositionTests(unittest.TestCase):
+    def test_annotation_normalization_reports_when_no_placement_is_safe(self) -> None:
+        noted = model()
+        noted.nodes[1].note = "A note that needs a placement choice."
+        with patch("decomposition.compute_layout", side_effect=engine.LayoutError("edge collision")):
+            with self.assertRaisesRegex(
+                engine.LayoutError,
+                r"no collision-free annotation-band placement.*tried 2.*edge collision",
+            ):
+                normalize_presentation(noted)
+
     def test_phase_boundary_rewrite_and_child_plane_validate(self) -> None:
         decomposed = decompose_model(model(engine.DecompositionConfig(
             mode="auto", collapse_phases=("P1",),

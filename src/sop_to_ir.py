@@ -8,6 +8,7 @@ prompt with the provider of their choice.
 from __future__ import annotations
 
 import argparse
+import copy
 import logging
 import sys
 from pathlib import Path
@@ -16,7 +17,7 @@ from typing import Any, TextIO
 from cli_support import run_cli
 from ir import dumps_ir_document, load_bundle
 from logging_setup import configure
-from markdown_extractor import extract_markdown
+from markdown_extractor import ExtractedSOP, extract_markdown
 from semantic_handoff import build_semantic_prompt, parse_semantic_response
 
 configure()
@@ -60,9 +61,64 @@ def _emit_prompt(
         (prompt_stream if prompt_stream is not None else sys.stderr).write(prompt + "\n")
 
 
+def _resolve_source_notes(
+    document: dict[str, Any], extraction: ExtractedSOP,
+) -> dict[str, Any]:
+    """Resolve and validate note attachments against the extracted SOP.
+
+    Semantic responses historically used a note key such as ``"a"`` even
+    though the IR's ``note`` field is the rendered annotation text.  Accept
+    that narrow legacy form, normalize it to the source text, and reject any
+    response that loses, duplicates, or invents an inline-note attachment.
+    """
+    normalized = copy.deepcopy(document)
+    note_text = {note.key: note.text for note in extraction.notes}
+    keys_by_text: dict[str, list[str]] = {}
+    for key, text in note_text.items():
+        keys_by_text.setdefault(text, []).append(key)
+    expected = [reference.key for reference in extraction.inline_references]
+    attached: list[str] = []
+
+    for index, node in enumerate(normalized.get("nodes", [])):
+        if not isinstance(node, dict) or "note" not in node:
+            continue
+        value = node["note"]
+        if not isinstance(value, str) or not value.strip():
+            raise CLIError(f"nodes[{index}].note must be a non-empty string")
+        if value in note_text:
+            key = value
+            node["note"] = note_text[key]
+        else:
+            matches = keys_by_text.get(value, [])
+            if len(matches) != 1:
+                raise CLIError(
+                    f"nodes[{index}].note does not resolve to an extracted Notes entry"
+                )
+            key = matches[0]
+        attached.append(key)
+
+    missing = sorted(set(expected) - set(attached))
+    unexpected = sorted(set(attached) - set(expected))
+    duplicate = sorted(
+        key for key in set(attached)
+        if attached.count(key) != expected.count(key)
+    )
+    if missing or unexpected or duplicate:
+        details: list[str] = []
+        if missing:
+            details.append(f"missing note attachment(s): {missing}")
+        if unexpected:
+            details.append(f"unexpected note attachment(s): {unexpected}")
+        if duplicate:
+            details.append(f"duplicate or misplaced note attachment(s): {duplicate}")
+        raise CLIError("; ".join(details))
+    return normalized
+
+
 def _resolve_document(
     response_file: str | None,
     *,
+    extraction: ExtractedSOP,
     input_stream: TextIO | None,
 ) -> dict[str, Any]:
     if response_file is None:
@@ -72,7 +128,7 @@ def _resolve_document(
         )
     response = _read_response(response_file, input_stream=input_stream)
     try:
-        document = parse_semantic_response(response)
+        document = _resolve_source_notes(parse_semantic_response(response), extraction)
         load_bundle([document])
     except (OSError, TypeError, ValueError) as exc:
         raise CLIError(f"semantic response failed IR validation: {exc}") from exc
@@ -111,7 +167,9 @@ def run(
         raise CLIError(str(exc)) from exc
 
     _emit_prompt(prompt, prompt_file=prompt_file, prompt_stream=prompt_stream)
-    document = _resolve_document(response_file, input_stream=input_stream)
+    document = _resolve_document(
+        response_file, extraction=extraction, input_stream=input_stream
+    )
 
     output_path = Path(output) if output is not None else default_ir_path(source_path)
     _write_ir_document(document, output_path)

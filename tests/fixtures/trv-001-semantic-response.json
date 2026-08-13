@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "process_id": "trv_001_approve_travel_request",
+  "participant_name": "Travel Request Approval",
+  "process_name": "Approve a Travel Request",
+  "process_doc": "TRV-001 regression semantic response.",
+  "lanes": [
+    {"id": "lane_travel_approver", "name": "Travel Approver"},
+    {"id": "lane_travel_request_system", "name": "Travel Request System"}
+  ],
+  "phases": [{"id": "phase_approve", "name": "Approve Request"}],
+  "nodes": [
+    {"id": "start_link_received", "kind": "start_message", "lane": "lane_travel_approver", "phase": "phase_approve", "name": "Travel-request link received"},
+    {"id": "task_display_request", "kind": "task", "lane": "lane_travel_request_system", "phase": "phase_approve", "name": "Display travel request"},
+    {"id": "gateway_approval_button_displayed", "kind": "gateway_x", "lane": "lane_travel_approver", "phase": "phase_approve", "name": "Approval button displayed?"},
+    {"id": "task_select_approval", "kind": "task", "lane": "lane_travel_approver", "phase": "phase_approve", "name": "Select approval button", "ttype": "user"},
+    {"id": "task_open_worklist", "kind": "task", "lane": "lane_travel_approver", "phase": "phase_approve", "name": "Open Approval Worklist", "ttype": "user"},
+    {"id": "task_record_approval", "kind": "task", "lane": "lane_travel_request_system", "phase": "phase_approve", "name": "Record approval"},
+    {"id": "task_verify_approval", "kind": "task", "lane": "lane_travel_approver", "phase": "phase_approve", "name": "Verify approval", "ttype": "user", "note": "a"},
+    {"id": "end_approval_confirmed", "kind": "end", "lane": "lane_travel_approver", "phase": "phase_approve", "name": "Approval confirmed"}
+  ],
+  "edges": [
+    {"source": "start_link_received", "target": "task_display_request"},
+    {"source": "task_display_request", "target": "gateway_approval_button_displayed"},
+    {"source": "gateway_approval_button_displayed", "target": "task_select_approval", "condition": "Approval button is displayed"},
+    {"source": "gateway_approval_button_displayed", "target": "task_open_worklist"},
+    {"source": "task_select_approval", "target": "task_record_approval"},
+    {"source": "task_open_worklist", "target": "task_record_approval"},
+    {"source": "task_record_approval", "target": "task_verify_approval"},
+    {"source": "task_verify_approval", "target": "end_approval_confirmed"}
+  ]
+}

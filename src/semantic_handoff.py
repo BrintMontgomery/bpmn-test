@@ -22,8 +22,9 @@ MODELING_RULES = """Modeling rules:
    gives them a separate task and lane handoff.
 3. Each option has an entry gateway in the main path; conditional branches
    inside an option require their own internal gateway in that option.
-4. Note references must resolve to extracted Notes entries and should attach
-   to the modeled task or event that carries the reference.
+4. Every extracted inline note reference must attach exactly once to the
+   modeled task or event that carries it. Set that node's `note` to the full
+   text of the matching extracted Notes entry, never merely its key.
 5. Decomposition proposals must include a one-line rationale for every split.
 6. `ann_above`, when present, is an array of lane IDs from `lanes`; never put
    source filenames, version text, lane names, or other prose there. Omit it
@@ -41,7 +42,10 @@ MODELING_RULES = """Modeling rules:
    options should share the enclosing phase unless they are decomposed into a
    separate BPMN scope. Do not assign exception branches to later phases when
    they rejoin or loop back into an earlier main-path step.
-10. Return one JSON object conforming to the supplied IR schema. Do not return
+10. Give every outgoing edge of a branching `gateway_x` a non-empty `label`.
+    Use the branch condition as the label when it is concise; use `Otherwise`
+    for its default branch when no more specific evidence is available.
+11. Return one JSON object conforming to the supplied IR schema. Do not return
    Markdown, commentary, or a second representation of the IR.
 """
 
