@@ -191,15 +191,16 @@ ResultT = TypeVar("ResultT")
 
 
 class CollapsibleSection:
-    """A titled section whose contents can be hidden without being destroyed."""
+    """A titled section that removes its body from layout when collapsed."""
 
     def __init__(self, parent: tk.Misc, title: str, *, padding: int = 10) -> None:
-        self.frame = ttk.LabelFrame(parent, padding=padding)
+        self.frame = ttk.Frame(parent)
         self.frame.columnconfigure(0, weight=1)
 
-        # Use a custom label widget so the toggle is visibly before the
-        # numbered section title rather than being overlaid on the frame.
-        self.header = ttk.Frame(self.frame)
+        # Keep the header separate from the body. This makes collapsing remove
+        # the body's grid row entirely, allowing the surrounding UI to shrink.
+        self.header = ttk.Frame(self.frame, borderwidth=1, relief=tk.GROOVE, padding=(6, 2))
+        self.header.grid(row=0, column=0, sticky="ew")
         self.toggle_button = tk.Button(
             self.header,
             width=2,
@@ -218,10 +219,9 @@ class CollapsibleSection:
         self.toggle_button.grid(row=0, column=0, padx=(0, 5))
         self.title_label = ttk.Label(self.header, text=title)
         self.title_label.grid(row=0, column=1, sticky="w")
-        self.frame.configure(labelwidget=self.header)
 
-        self.body = ttk.Frame(self.frame)
-        self.body.grid(row=0, column=0, sticky="nsew")
+        self.body = ttk.Frame(self.frame, padding=padding)
+        self.body.grid(row=1, column=0, sticky="ew")
         self.body.columnconfigure(0, weight=1)
 
         self.expanded = True

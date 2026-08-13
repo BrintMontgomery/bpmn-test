@@ -351,6 +351,18 @@ class CollapsibleSectionTests(unittest.TestCase):
         self.assertEqual("grid", source.body.winfo_manager())
         self.assertEqual("grid", prompt.body.winfo_manager())
 
+    def test_collapsing_removes_the_body_height_from_the_layout(self) -> None:
+        self.root.deiconify()
+        self.root.update()
+        expanded_height = self.app.prompt_section.frame.winfo_height()
+        build_y_before = self.app.build_section.frame.winfo_y()
+
+        self.app.prompt_section.toggle()
+        self.root.update()
+
+        self.assertLess(self.app.prompt_section.frame.winfo_height(), expanded_height)
+        self.assertLess(self.app.build_section.frame.winfo_y(), build_y_before)
+
 
 if __name__ == "__main__":
     unittest.main()
