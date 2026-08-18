@@ -1,0 +1,1374 @@
+{
+  "edges": [
+    {
+      "source": "StartEvent_ScheduledAdmission",
+      "target": "Task_SendAdmissionEmail"
+    },
+    {
+      "source": "Task_SendAdmissionEmail",
+      "target": "Task_SendAvailableRecords"
+    },
+    {
+      "source": "Task_SendAvailableRecords",
+      "target": "Gateway_ChangedAdmission"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_ChangedAdmission",
+      "target": "Gateway_RushAdmission"
+    },
+    {
+      "condition": "Planned date, arrival time, unit, Physician, or other admission information changed",
+      "label": "Admission information changed",
+      "source": "Gateway_ChangedAdmission",
+      "target": "Task_I_DistributeUpdatedInformation"
+    },
+    {
+      "source": "Task_I_DistributeUpdatedInformation",
+      "target": "Task_I_DoNotUseEarlierPack"
+    },
+    {
+      "source": "Task_I_DoNotUseEarlierPack",
+      "target": "Task_I_PrintOrUpdatePack"
+    },
+    {
+      "source": "Task_I_PrintOrUpdatePack",
+      "target": "Gateway_RushAdmission"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_RushAdmission",
+      "target": "Task_PrintNursingAdmitPack"
+    },
+    {
+      "condition": "Substantially less advance notice than usual",
+      "label": "Rush admission",
+      "source": "Gateway_RushAdmission",
+      "target": "Task_G_UsePreprintedPack"
+    },
+    {
+      "source": "Task_G_UsePreprintedPack",
+      "target": "Task_G_ConfirmCurrentInformation"
+    },
+    {
+      "source": "Task_G_ConfirmCurrentInformation",
+      "target": "Task_RequestMHT"
+    },
+    {
+      "source": "Task_PrintNursingAdmitPack",
+      "target": "Task_RequestMHT"
+    },
+    {
+      "source": "Task_RequestMHT",
+      "target": "Task_SecurityReportsReady"
+    },
+    {
+      "source": "Task_SecurityReportsReady",
+      "target": "Gateway_MultipleConsumers"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_MultipleConsumers",
+      "target": "Gateway_AfterHours"
+    },
+    {
+      "condition": "Two or more Consumers require admission processing during the same period",
+      "label": "Multiple Consumers arrive",
+      "source": "Gateway_MultipleConsumers",
+      "target": "Task_H_MaintainWaitingConsumers"
+    },
+    {
+      "source": "Task_H_MaintainWaitingConsumers",
+      "target": "Task_H_ProcessEachConsumer"
+    },
+    {
+      "source": "Task_H_ProcessEachConsumer",
+      "target": "Task_H_AdjustMHTAssignments"
+    },
+    {
+      "source": "Task_H_AdjustMHTAssignments",
+      "target": "Gateway_AfterHours"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_AfterHours",
+      "target": "Task_BeginNursingAdmission"
+    },
+    {
+      "condition": "Consumer arrives outside the usual daytime admission period",
+      "label": "After-hours arrival",
+      "source": "Gateway_AfterHours",
+      "target": "Task_J_FollowStandardProcess"
+    },
+    {
+      "source": "Task_J_FollowStandardProcess",
+      "target": "Task_J_CoordinateAvailability"
+    },
+    {
+      "source": "Task_J_CoordinateAvailability",
+      "target": "Task_J_CompleteDuringShift"
+    },
+    {
+      "source": "Task_J_CompleteDuringShift",
+      "target": "Task_BeginNursingAdmission"
+    },
+    {
+      "source": "Task_BeginNursingAdmission",
+      "target": "Gateway_MedicalException"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_MedicalException",
+      "target": "Gateway_AggressiveUnsafe"
+    },
+    {
+      "condition": "Known or observed medical needs may exceed OFC level of care or make routine admission medically unsafe",
+      "label": "Medical exception identified",
+      "source": "Gateway_MedicalException",
+      "target": "Task_C_AssessMedicalCondition"
+    },
+    {
+      "source": "Task_C_AssessMedicalCondition",
+      "target": "Task_C_InformPhysician"
+    },
+    {
+      "source": "Task_C_InformPhysician",
+      "target": "Task_C_CoordinateAdmissionStatus"
+    },
+    {
+      "source": "Task_C_CoordinateAdmissionStatus",
+      "target": "Gateway_C_LegalReview"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_C_LegalReview",
+      "target": "Gateway_C_SafeAtOFC"
+    },
+    {
+      "condition": "Acceptance, diversion, court-order, or legal-custody question requires legal review",
+      "label": "Legal review required",
+      "source": "Gateway_C_LegalReview",
+      "target": "Task_C_LegalReview"
+    },
+    {
+      "source": "Task_C_LegalReview",
+      "target": "Gateway_C_SafeAtOFC"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_C_SafeAtOFC",
+      "target": "Task_C_DirectEmergencyOrDiversion"
+    },
+    {
+      "condition": "Medical disposition permits routine admission at OFC",
+      "label": "Can safely be managed at OFC",
+      "source": "Gateway_C_SafeAtOFC",
+      "target": "Gateway_AggressiveUnsafe"
+    },
+    {
+      "source": "Task_C_DirectEmergencyOrDiversion",
+      "target": "EndEvent_C_MedicalDisposition"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_AggressiveUnsafe",
+      "target": "Gateway_SameSexStaffing"
+    },
+    {
+      "condition": "Consumer is violent, aggressive, highly agitated, or presents an immediate behavioral safety concern",
+      "label": "Aggressive or unsafe Consumer",
+      "source": "Gateway_AggressiveUnsafe",
+      "target": "Task_B_AssessSafetyConcern"
+    },
+    {
+      "source": "Task_B_AssessSafetyConcern",
+      "target": "Task_B_ContactPhysician"
+    },
+    {
+      "source": "Task_B_ContactPhysician",
+      "target": "Gateway_B_AdditionalPrecautions"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_B_AdditionalPrecautions",
+      "target": "Gateway_B_ImmediateIntervention"
+    },
+    {
+      "condition": "Additional security precautions are required",
+      "label": "Additional precautions required",
+      "source": "Gateway_B_AdditionalPrecautions",
+      "target": "Task_B_InformSecurity"
+    },
+    {
+      "source": "Task_B_InformSecurity",
+      "target": "Gateway_B_ImmediateIntervention"
+    },
+    {
+      "label": "No immediate intervention",
+      "source": "Gateway_B_ImmediateIntervention",
+      "target": "Task_B_ConfirmRoutineCanContinue"
+    },
+    {
+      "condition": "Physician determines immediate medication or another clinical intervention is required",
+      "label": "Immediate intervention required",
+      "source": "Gateway_B_ImmediateIntervention",
+      "target": "Task_B_AdjustPrecautions"
+    },
+    {
+      "source": "Task_B_AdjustPrecautions",
+      "target": "Task_B_ConfirmRoutineCanContinue"
+    },
+    {
+      "source": "Task_B_ConfirmRoutineCanContinue",
+      "target": "Gateway_SameSexStaffing"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_SameSexStaffing",
+      "target": "Task_LiceCheckTreatment"
+    },
+    {
+      "condition": "Consumer is female and same-sex staffing is required for applicable personal-care activity",
+      "label": "Same-sex staffing required",
+      "source": "Gateway_SameSexStaffing",
+      "target": "Task_A_ConfirmFemaleStaff"
+    },
+    {
+      "source": "Task_A_ConfirmFemaleStaff",
+      "target": "Gateway_A_FemaleSecurityAvailable"
+    },
+    {
+      "label": "Female Security Officer available",
+      "source": "Gateway_A_FemaleSecurityAvailable",
+      "target": "Task_A_MaintainSameSexSupervision"
+    },
+    {
+      "condition": "Female Security Officer is not available",
+      "label": "Female Security Officer unavailable",
+      "source": "Gateway_A_FemaleSecurityAvailable",
+      "target": "Task_A_FemaleMHTAssists"
+    },
+    {
+      "source": "Task_A_FemaleMHTAssists",
+      "target": "Task_A_MaintainSameSexSupervision"
+    },
+    {
+      "source": "Task_A_MaintainSameSexSupervision",
+      "target": "Task_LiceCheckTreatment"
+    },
+    {
+      "source": "Task_LiceCheckTreatment",
+      "target": "Task_BeginBiophysicalAssessment"
+    },
+    {
+      "source": "Task_BeginBiophysicalAssessment",
+      "target": "Gateway_CannotParticipate"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_CannotParticipate",
+      "target": "Task_AssistShower"
+    },
+    {
+      "condition": "Consumer is unable or unwilling to participate effectively because of current behavior or mental status",
+      "label": "Cannot meaningfully participate",
+      "source": "Gateway_CannotParticipate",
+      "target": "Task_F_CompleteSafeActivities"
+    },
+    {
+      "source": "Task_F_CompleteSafeActivities",
+      "target": "Task_F_DocumentCooperation"
+    },
+    {
+      "source": "Task_F_DocumentCooperation",
+      "target": "Task_F_LeaveUnavailableInfoUnresolved"
+    },
+    {
+      "source": "Task_F_LeaveUnavailableInfoUnresolved",
+      "target": "Task_F_ReturnToUnresolvedItems"
+    },
+    {
+      "source": "Task_F_ReturnToUnresolvedItems",
+      "target": "Task_F_ContinueNonvoluntaryActivities"
+    },
+    {
+      "source": "Task_F_ContinueNonvoluntaryActivities",
+      "target": "Task_AssistShower"
+    },
+    {
+      "source": "Task_AssistShower",
+      "target": "Task_ConsumerCompletesShower"
+    },
+    {
+      "source": "Task_ConsumerCompletesShower",
+      "target": "Task_EscortToUnit"
+    },
+    {
+      "source": "Task_EscortToUnit",
+      "target": "Task_ReceiveConsumerAndVitals"
+    },
+    {
+      "source": "Task_ReceiveConsumerAndVitals",
+      "target": "Task_UpdateBiophysicalAssessment"
+    },
+    {
+      "source": "Task_UpdateBiophysicalAssessment",
+      "target": "Task_CompleteTraumaAndSuicideAssessment"
+    },
+    {
+      "source": "Task_CompleteTraumaAndSuicideAssessment",
+      "target": "Task_CompleteSafeTSteps1And2"
+    },
+    {
+      "source": "Task_CompleteSafeTSteps1And2",
+      "target": "Task_ContactPhysicianForEncounter"
+    },
+    {
+      "source": "Task_ContactPhysicianForEncounter",
+      "target": "Task_PhysicianInterview"
+    },
+    {
+      "source": "Task_PhysicianInterview",
+      "target": "Task_PhysicianPaperworkAndSafeT"
+    },
+    {
+      "source": "Task_PhysicianPaperworkAndSafeT",
+      "target": "Gateway_MedicationHistoryUnavailable"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_MedicationHistoryUnavailable",
+      "target": "Task_CompleteMedicationReconciliation"
+    },
+    {
+      "condition": "Physician, Unit Nurse, and Consumer cannot establish current or recent medication regimen",
+      "label": "Medication history unavailable",
+      "source": "Gateway_MedicationHistoryUnavailable",
+      "target": "Task_D_InformPhysician"
+    },
+    {
+      "source": "Task_D_InformPhysician",
+      "target": "Gateway_D_AdditionalInformationRequested"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_D_AdditionalInformationRequested",
+      "target": "Task_CompleteMedicationReconciliation"
+    },
+    {
+      "condition": "Physician requests additional medication information",
+      "label": "Additional information requested",
+      "source": "Gateway_D_AdditionalInformationRequested",
+      "target": "Task_D_ContactOriginatingJail"
+    },
+    {
+      "source": "Task_D_ContactOriginatingJail",
+      "target": "Task_D_ProvideMedicationInformation"
+    },
+    {
+      "source": "Task_D_ProvideMedicationInformation",
+      "target": "Task_D_UpdateReconciliation"
+    },
+    {
+      "source": "Task_D_UpdateReconciliation",
+      "target": "Task_CompleteMedicationReconciliation"
+    },
+    {
+      "source": "Task_CompleteMedicationReconciliation",
+      "target": "Task_OfferConsentDocuments"
+    },
+    {
+      "source": "Task_OfferConsentDocuments",
+      "target": "Gateway_ConsentRefusal"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_ConsentRefusal",
+      "target": "Task_ConsumerSignsConsent"
+    },
+    {
+      "condition": "Consumer declines one or more consent documents",
+      "label": "Consent documents declined",
+      "source": "Gateway_ConsentRefusal",
+      "target": "Task_E_ExplainAndOfferConsent"
+    },
+    {
+      "source": "Task_E_ExplainAndOfferConsent",
+      "target": "Gateway_E_SignsAfterExplanation"
+    },
+    {
+      "label": "Consumer declines",
+      "source": "Gateway_E_SignsAfterExplanation",
+      "target": "Task_E_ConsumerRefusesConsent"
+    },
+    {
+      "condition": "Consumer signs after explanation",
+      "label": "Consumer signs",
+      "source": "Gateway_E_SignsAfterExplanation",
+      "target": "Task_ConsumerSignsConsent"
+    },
+    {
+      "source": "Task_E_ConsumerRefusesConsent",
+      "target": "Task_E_RecordRefusal"
+    },
+    {
+      "source": "Task_E_RecordRefusal",
+      "target": "Gateway_E_SeparateBarrier"
+    },
+    {
+      "label": "No separate legal or clinical barrier",
+      "source": "Gateway_E_SeparateBarrier",
+      "target": "Task_E_ContinueAdmission"
+    },
+    {
+      "condition": "Refusal creates a separate legal or clinical barrier",
+      "label": "Separate barrier exists",
+      "source": "Gateway_E_SeparateBarrier",
+      "target": "EndEvent_E_SeparateResolution"
+    },
+    {
+      "source": "Task_E_ContinueAdmission",
+      "target": "Gateway_PsychoactiveMedication"
+    },
+    {
+      "source": "Task_ConsumerSignsConsent",
+      "target": "Gateway_PsychoactiveMedication"
+    },
+    {
+      "label": "Otherwise",
+      "source": "Gateway_PsychoactiveMedication",
+      "target": "Task_OrientConsumerToUnit"
+    },
+    {
+      "condition": "Psychoactive medication is prescribed or proposed",
+      "label": "Psychoactive medication prescribed or proposed",
+      "source": "Gateway_PsychoactiveMedication",
+      "target": "Task_ReviewPsychoactiveConsent"
+    },
+    {
+      "source": "Task_ReviewPsychoactiveConsent",
+      "target": "Task_OrientConsumerToUnit"
+    },
+    {
+      "source": "Task_OrientConsumerToUnit",
+      "target": "Task_GiveInformationalMaterials"
+    },
+    {
+      "source": "Task_GiveInformationalMaterials",
+      "target": "Task_CollateAdmissionRecord"
+    },
+    {
+      "source": "Task_CollateAdmissionRecord",
+      "target": "Task_ReviewDocumentsForCompleteness"
+    },
+    {
+      "source": "Task_ReviewDocumentsForCompleteness",
+      "target": "Task_RouteMedicationInformation"
+    },
+    {
+      "source": "Task_RouteMedicationInformation",
+      "target": "Task_PharmacyReceivesInformation"
+    },
+    {
+      "source": "Task_PharmacyReceivesInformation",
+      "target": "Task_RouteNutritionalScreening"
+    },
+    {
+      "source": "Task_RouteNutritionalScreening",
+      "target": "Task_DietaryReceivesScreening"
+    },
+    {
+      "source": "Task_DietaryReceivesScreening",
+      "target": "Task_FilePaperAdmissionDocuments"
+    },
+    {
+      "source": "Task_FilePaperAdmissionDocuments",
+      "target": "Task_EnterAdmissionIntoAvatar"
+    },
+    {
+      "source": "Task_EnterAdmissionIntoAvatar",
+      "target": "Task_CompleteAvatarIPGeneralNote"
+    },
+    {
+      "source": "Task_CompleteAvatarIPGeneralNote",
+      "target": "Task_CompleteAvatarNursingAssessment"
+    },
+    {
+      "source": "Task_CompleteAvatarNursingAssessment",
+      "target": "Task_CompleteAvatarTraumaAssessment"
+    },
+    {
+      "source": "Task_CompleteAvatarTraumaAssessment",
+      "target": "Task_CompleteAvatarFallAssessment"
+    },
+    {
+      "source": "Task_CompleteAvatarFallAssessment",
+      "target": "Task_CompleteAvatarDailyFunctioning"
+    },
+    {
+      "source": "Task_CompleteAvatarDailyFunctioning",
+      "target": "Task_VerifyAdmissionCompletion"
+    },
+    {
+      "source": "Task_VerifyAdmissionCompletion",
+      "target": "Task_AuditDocumentation"
+    },
+    {
+      "source": "Task_AuditDocumentation",
+      "target": "Task_CommunicateUnresolvedIssues"
+    },
+    {
+      "source": "Task_CommunicateUnresolvedIssues",
+      "target": "EndEvent_NursingAdmissionComplete"
+    }
+  ],
+  "lanes": [
+    {
+      "id": "Lane_AdmissionsCoordinator",
+      "name": "Admissions Coordinator"
+    },
+    {
+      "id": "Lane_MedicalRecords",
+      "name": "Medical Records Staff"
+    },
+    {
+      "id": "Lane_Security",
+      "name": "Security Officer"
+    },
+    {
+      "id": "Lane_UnitNurse",
+      "name": "Unit Nurse"
+    },
+    {
+      "id": "Lane_ChargeAide",
+      "name": "Charge Aide"
+    },
+    {
+      "id": "Lane_MHT",
+      "name": "Mental Health Technician (MHT)"
+    },
+    {
+      "id": "Lane_Consumer",
+      "name": "Consumer"
+    },
+    {
+      "id": "Lane_SocialWorker",
+      "name": "Social Worker"
+    },
+    {
+      "id": "Lane_Physician",
+      "name": "Physician"
+    },
+    {
+      "id": "Lane_HIC",
+      "name": "Health Information Coordinator"
+    },
+    {
+      "id": "Lane_Pharmacy",
+      "name": "Pharmacy Staff"
+    },
+    {
+      "id": "Lane_Dietary",
+      "name": "Dietary Manager"
+    },
+    {
+      "id": "Lane_OriginatingJail",
+      "name": "Originating Jail Staff"
+    },
+    {
+      "id": "Lane_LegalCounsel",
+      "name": "Legal Counsel"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "StartEvent_ScheduledAdmission",
+      "kind": "start_message",
+      "lane": "Lane_AdmissionsCoordinator",
+      "name": "Scheduled nursing admission is planned",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_SendAdmissionEmail",
+      "kind": "task",
+      "lane": "Lane_AdmissionsCoordinator",
+      "name": "Send scheduled admission email",
+      "note": "This email is sent to security, nurse managers, nurse coordinators, Pharmacy, Psychology, Social Work, Supply, Medical Records, the admitting Physician, and other established operational recipients. The email identifies the consumer, county, expected arrival time, assigned unit, assigned Physician, and order-to-treat status and includes the available consumer information attachment.",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_SendAvailableRecords",
+      "kind": "task",
+      "lane": "Lane_MedicalRecords",
+      "name": "Send available Avatar-number and prior-admission information to Nursing",
+      "phase": "Phase_1"
+    },
+    {
+      "doc": [
+        "Option I — the planned date, arrival time, unit, Physician, or other admission information changes after initial notification."
+      ],
+      "id": "Gateway_ChangedAdmission",
+      "kind": "gateway_x",
+      "lane": "Lane_AdmissionsCoordinator",
+      "name": "Admission information changed or rescheduled?",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_I_DistributeUpdatedInformation",
+      "kind": "task",
+      "lane": "Lane_AdmissionsCoordinator",
+      "name": "Distribute updated admission information",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_I_DoNotUseEarlierPack",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Do not rely on a Nursing Admit Pack printed for an earlier date",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_I_PrintOrUpdatePack",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Print or update the Nursing Admit Pack for the confirmed admission day",
+      "phase": "Phase_1"
+    },
+    {
+      "doc": [
+        "Option G — OFC knows the Consumer is expected but receives substantially less advance notice than usual."
+      ],
+      "id": "Gateway_RushAdmission",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Substantially less advance notice than usual?",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_G_UsePreprintedPack",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Use an available preprinted admission packet when necessary",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_G_ConfirmCurrentInformation",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Confirm current admission information before using the packet",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_PrintNursingAdmitPack",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Print the Nursing Admit Pack on the confirmed admission day",
+      "note": "Print the Nursing Admit Pack on the confirmed admission day rather than solely in response to the advance email because admission dates and arrival times may change. The interview established no required email subject-line format or threading convention.",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_RequestMHT",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Request an available Mental Health Technician to assist",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_SecurityReportsReady",
+      "kind": "task",
+      "lane": "Lane_Security",
+      "name": "Report that the Consumer is ready for nursing admission",
+      "phase": "Phase_1"
+    },
+    {
+      "doc": [
+        "Option H — two or more Consumers require admission processing during the same period."
+      ],
+      "id": "Gateway_MultipleConsumers",
+      "kind": "gateway_x",
+      "lane": "Lane_Security",
+      "name": "Multiple Consumers arrive together?",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_H_MaintainWaitingConsumers",
+      "kind": "task",
+      "lane": "Lane_Security",
+      "name": "Maintain waiting Consumers in the available secure holding area",
+      "phase": "Phase_1"
+    },
+    {
+      "doc": [
+        "The IR remains a single-Consumer process instance; the extraction does not specify queue-instance mechanics."
+      ],
+      "id": "Task_H_ProcessEachConsumer",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Process each Consumer in turn as capacity permits",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_H_AdjustMHTAssignments",
+      "kind": "task",
+      "lane": "Lane_MHT",
+      "name": "Adjust MHT assignments for unit staffing needs",
+      "phase": "Phase_1"
+    },
+    {
+      "doc": [
+        "Option J — a Consumer arrives outside the usual daytime admission period."
+      ],
+      "id": "Gateway_AfterHours",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Consumer arrives after hours?",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_J_FollowStandardProcess",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Follow the standard nursing admission process",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_J_CoordinateAvailability",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Coordinate Physician, Security Officer, and MHT availability",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_J_CompleteDuringShift",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Plan to complete the admission during the admitting shift whenever practicable",
+      "phase": "Phase_1"
+    },
+    {
+      "id": "Task_BeginNursingAdmission",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Report to the admissions area and begin nursing admission",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "Option C — known or observed medical needs may exceed OFC's available level of care or make routine admission medically unsafe."
+      ],
+      "id": "Gateway_MedicalException",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Significant medical exception identified?",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_C_AssessMedicalCondition",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Assess current medical condition and available medical records",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_C_InformPhysician",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Immediately inform the Physician of the medical concern",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_C_CoordinateAdmissionStatus",
+      "kind": "task",
+      "lane": "Lane_AdmissionsCoordinator",
+      "name": "Coordinate required admission-status decision with clinical leadership",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "Legal Counsel participates when acceptance, diversion, court-order, or legal-custody questions require legal review."
+      ],
+      "id": "Gateway_C_LegalReview",
+      "kind": "gateway_x",
+      "lane": "Lane_LegalCounsel",
+      "name": "Legal review required?",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_C_LegalReview",
+      "kind": "task",
+      "lane": "Lane_LegalCounsel",
+      "name": "Participate in acceptance, diversion, court-order, or custody review",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "The safe-to-continue decision is an IR judgment derived from the trigger and the instruction not to continue routine activities until medical disposition is resolved."
+      ],
+      "id": "Gateway_C_SafeAtOFC",
+      "kind": "gateway_x",
+      "lane": "Lane_Physician",
+      "name": "Consumer can safely be managed at OFC?",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_C_DirectEmergencyOrDiversion",
+      "kind": "task",
+      "lane": "Lane_Physician",
+      "name": "Direct emergency evaluation or hospital diversion",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "EndEvent_C_MedicalDisposition",
+      "kind": "end",
+      "lane": "Lane_UnitNurse",
+      "name": "Routine nursing admission does not continue pending medical disposition",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "Option B — the Consumer is violent, aggressive, highly agitated, or presents an immediate behavioral safety concern during nursing admission."
+      ],
+      "id": "Gateway_AggressiveUnsafe",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Consumer is aggressive, unsafe, or highly agitated?",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_B_AssessSafetyConcern",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Assess the immediate clinical and safety concern",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "Split from Option B step 2 to distinguish the required Physician contact from the conditional Security notification."
+      ],
+      "id": "Task_B_ContactPhysician",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Contact the Physician about the safety concern",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Gateway_B_AdditionalPrecautions",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Additional security precautions required?",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "Split from Option B step 2 because the extraction makes Security notification conditional."
+      ],
+      "id": "Task_B_InformSecurity",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Inform Security Officer of required additional precautions",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Gateway_B_ImmediateIntervention",
+      "kind": "gateway_x",
+      "lane": "Lane_Physician",
+      "name": "Immediate medication or another clinical intervention required?",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_B_AdjustPrecautions",
+      "kind": "task",
+      "lane": "Lane_Security",
+      "name": "Adjust movement or staffing precautions according to clinical direction",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_B_ConfirmRoutineCanContinue",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Confirm with the Physician that routine admission activities can continue",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "Option A — the Consumer is female and same-sex staffing is required for the search, shower, or related personal-care activities."
+      ],
+      "id": "Gateway_SameSexStaffing",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Same-sex staffing required for personal-care activity?",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_A_ConfirmFemaleStaff",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Coordinate with Security Officer to confirm available female staff",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Gateway_A_FemaleSecurityAvailable",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Female Security Officer available?",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_A_FemaleMHTAssists",
+      "kind": "task",
+      "lane": "Lane_MHT",
+      "name": "Have a female MHT or other authorized female staff member assist",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "Ownership is a modeling judgment: the extraction names only Staff, so the task is assigned to the Unit Nurse as the admission owner."
+      ],
+      "id": "Task_A_MaintainSameSexSupervision",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Maintain same-sex supervision during the applicable activity",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_LiceCheckTreatment",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Perform required lice check and treatment",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_BeginBiophysicalAssessment",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Interview Consumer and begin Nursing Unit Biophysical Assessment, including scarring and tattoo sheet",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "Option F — the Consumer is unable or unwilling to participate effectively in questioning, consent review, or informational activities because of current behavior or mental status."
+      ],
+      "id": "Gateway_CannotParticipate",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Consumer cannot meaningfully participate?",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_F_CompleteSafeActivities",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete clinical activities that can safely be performed",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_F_DocumentCooperation",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Document cooperation level and observed condition",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_F_LeaveUnavailableInfoUnresolved",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Leave unavailable historical information unresolved rather than inventing responses",
+      "phase": "Phase_2"
+    },
+    {
+      "doc": [
+        "The extraction does not identify a specific re-entry step, so this task rejoins the next modeled nursing activity."
+      ],
+      "id": "Task_F_ReturnToUnresolvedItems",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Return to unresolved questions or documents when clinically appropriate",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_F_ContinueNonvoluntaryActivities",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Continue custody, safety, and treatment activities not dependent on voluntary participation",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_AssistShower",
+      "kind": "task",
+      "lane": "Lane_MHT",
+      "name": "Assist with shower process under staffing and supervision requirements",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_ConsumerCompletesShower",
+      "kind": "task",
+      "lane": "Lane_Consumer",
+      "name": "Complete shower",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_EscortToUnit",
+      "kind": "task",
+      "lane": "Lane_Security",
+      "name": "Escort Consumer with MHT from shower area to assigned unit",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_ReceiveConsumerAndVitals",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Receive Consumer on unit and obtain complete vital signs",
+      "phase": "Phase_2"
+    },
+    {
+      "id": "Task_UpdateBiophysicalAssessment",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Update Biophysical Assessment and record vital-sign information",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_CompleteTraumaAndSuicideAssessment",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete nursing trauma questions and initial suicide-risk assessment",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_CompleteSafeTSteps1And2",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete SAFE-T Protocol Signature Page steps 1 and 2",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_ContactPhysicianForEncounter",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Contact Physician when Consumer is ready for physician encounter; Social Worker may arrange remote telemedicine",
+      "note": "The Social Worker may arrange the telemedicine session when the Physician is remote.",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_PhysicianInterview",
+      "kind": "task",
+      "lane": "Lane_Physician",
+      "name": "Interview Consumer on medical history, mental-health history, trauma, suicide risk, substance use, current condition, and admission issues",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_PhysicianPaperworkAndSafeT",
+      "kind": "task",
+      "lane": "Lane_Physician",
+      "name": "Complete physician admission paperwork and SAFE-T Protocol Signature Page steps 3 through 5",
+      "phase": "Phase_3"
+    },
+    {
+      "doc": [
+        "Option D — the Physician, Unit Nurse, and Consumer cannot establish the Consumer's current or recent medication regimen."
+      ],
+      "id": "Gateway_MedicationHistoryUnavailable",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Medication history unavailable?",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_D_InformPhysician",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Inform Physician that medication history is incomplete",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Gateway_D_AdditionalInformationRequested",
+      "kind": "gateway_x",
+      "lane": "Lane_Physician",
+      "name": "Physician requests additional medication information?",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_D_ContactOriginatingJail",
+      "kind": "task",
+      "lane": "Lane_SocialWorker",
+      "name": "Contact Originating Jail Staff for medication information",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_D_ProvideMedicationInformation",
+      "kind": "task",
+      "lane": "Lane_OriginatingJail",
+      "name": "Provide available medication information",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_D_UpdateReconciliation",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Update Medication Reconciliation Form with verified information",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_CompleteMedicationReconciliation",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete Medication Reconciliation Form with Physician",
+      "note": "Medication history may come from the Physician, Consumer, originating jail, legal documentation, legal records, or other available records. Nurses do not enter an unverified medication as established fact when the information cannot be confirmed.",
+      "phase": "Phase_3"
+    },
+    {
+      "id": "Task_OfferConsentDocuments",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Offer required consent documents after physician encounter and record signatures",
+      "phase": "Phase_4"
+    },
+    {
+      "doc": [
+        "Option E — the Consumer declines to sign one or more consent documents."
+      ],
+      "id": "Gateway_ConsentRefusal",
+      "kind": "gateway_x",
+      "lane": "Lane_Consumer",
+      "name": "Consumer declines one or more consent documents?",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_E_ExplainAndOfferConsent",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Explain applicable document and offer Consumer opportunity to sign",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Gateway_E_SignsAfterExplanation",
+      "kind": "gateway_x",
+      "lane": "Lane_Consumer",
+      "name": "Consumer signs after explanation?",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_E_ConsumerRefusesConsent",
+      "kind": "task",
+      "lane": "Lane_Consumer",
+      "name": "Refuse voluntary consent document",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_E_RecordRefusal",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Record refusal using the applicable form or documentation process",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Gateway_E_SeparateBarrier",
+      "kind": "gateway_x",
+      "lane": "Lane_UnitNurse",
+      "name": "Separate legal or clinical barrier created by refusal?",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_E_ContinueAdmission",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Continue the remainder of admission",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "EndEvent_E_SeparateResolution",
+      "kind": "end",
+      "lane": "Lane_UnitNurse",
+      "name": "Routine admission awaits separate legal or clinical resolution",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_ConsumerSignsConsent",
+      "kind": "task",
+      "lane": "Lane_Consumer",
+      "name": "Sign consent documents",
+      "note": "The Consumer may refuse the consent documents. The informational materials provided by the Mental Health Technician are distinct from consent documents and are provided for consumer information. The Consent for Treatment with Psychoactive Medication requires coordination with the Physician.",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Gateway_PsychoactiveMedication",
+      "kind": "gateway_x",
+      "lane": "Lane_Physician",
+      "name": "Psychoactive medication prescribed or proposed?",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_ReviewPsychoactiveConsent",
+      "kind": "task",
+      "lane": "Lane_Physician",
+      "name": "Review Consent for Treatment with Psychoactive Medication with Consumer",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_OrientConsumerToUnit",
+      "kind": "task",
+      "lane": "Lane_MHT",
+      "name": "Orient Consumer to assigned unit locations",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_GiveInformationalMaterials",
+      "kind": "task",
+      "lane": "Lane_MHT",
+      "name": "Give Consumer informational materials and explain they are not mandatory consent documents",
+      "phase": "Phase_4"
+    },
+    {
+      "id": "Task_CollateAdmissionRecord",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Collate completed nursing, physician, and applicable security paperwork",
+      "phase": "Phase_5"
+    },
+    {
+      "id": "Task_ReviewDocumentsForCompleteness",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Review required documents for completeness and obtain available corrections",
+      "phase": "Phase_5"
+    },
+    {
+      "id": "Task_RouteMedicationInformation",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Route medication-related documentation or information to Pharmacy",
+      "phase": "Phase_5"
+    },
+    {
+      "id": "Task_PharmacyReceivesInformation",
+      "kind": "task",
+      "lane": "Lane_Pharmacy",
+      "name": "Receive medication information for medication-management process",
+      "phase": "Phase_5"
+    },
+    {
+      "id": "Task_RouteNutritionalScreening",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Route Nutritional Screening to Dietary Manager",
+      "phase": "Phase_5"
+    },
+    {
+      "id": "Task_DietaryReceivesScreening",
+      "kind": "task",
+      "lane": "Lane_Dietary",
+      "name": "Receive Nutritional Screening for dietary tracking and follow-up",
+      "phase": "Phase_5"
+    },
+    {
+      "id": "Task_FilePaperAdmissionDocuments",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "File completed paper admission documents in Consumer chart",
+      "phase": "Phase_5"
+    },
+    {
+      "id": "Task_EnterAdmissionIntoAvatar",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Enter nursing admission information into Avatar",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "Task_CompleteAvatarIPGeneralNote",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete Avatar IP General Note",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "Task_CompleteAvatarNursingAssessment",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete Avatar Nursing Assessment",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "Task_CompleteAvatarTraumaAssessment",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete Avatar OK Trauma Assessment",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "Task_CompleteAvatarFallAssessment",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete Avatar OK Fall Assessment",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "Task_CompleteAvatarDailyFunctioning",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete Avatar OK Daily Functioning Assessment",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "Task_VerifyAdmissionCompletion",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Verify nursing admission completion during admitting shift whenever practicable",
+      "note": "The interview described completion before the 7:00 p.m. shift change as normal operational practice, not as a formally cited regulatory SLA. Routine admissions are expected to be completed before the 7:00 p.m. shift change",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "Task_AuditDocumentation",
+      "kind": "task",
+      "lane": "Lane_HIC",
+      "name": "Audit nursing paperwork, Avatar documentation, and applicable progress notes",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "Task_CommunicateUnresolvedIssues",
+      "kind": "task",
+      "lane": "Lane_UnitNurse",
+      "name": "Complete nursing admission and communicate unresolved issues",
+      "note": "This may include clinical, medication, behavioral, or support issues to the Physician, Social Worker, or other responsible treatment staff for continued action.",
+      "phase": "Phase_6"
+    },
+    {
+      "id": "EndEvent_NursingAdmissionComplete",
+      "kind": "end",
+      "lane": "Lane_UnitNurse",
+      "name": "Nursing admission complete",
+      "phase": "Phase_6"
+    }
+  ],
+  "participant_name": "Oklahoma Forensic Center",
+  "phases": [
+    {
+      "id": "Phase_1",
+      "name": "Admission preparation and arrival coordination"
+    },
+    {
+      "id": "Phase_2",
+      "name": "Initial nursing admission and transfer to unit"
+    },
+    {
+      "id": "Phase_3",
+      "name": "Clinical and physician admission"
+    },
+    {
+      "id": "Phase_4",
+      "name": "Consents and unit orientation"
+    },
+    {
+      "id": "Phase_5",
+      "name": "Paper record completion and required routing"
+    },
+    {
+      "id": "Phase_6",
+      "name": "Avatar documentation, review, and handoff"
+    }
+  ],
+  "process_doc": "Models the extracted nursing-admission workflow from scheduled notification through documentation quality review and handoff of unresolved issues. Main-path task ownership follows the first bold actor; later bold actors are represented as counterparties in task names unless the extraction gives them a distinct task. Where a main-path step states that either actor may act, the first listed actor owns one task and the alternate actor remains explicit in the task name. Option entry and rejoin locations are modeling judgments where the extraction does not identify an exact point: changed and rush admissions are placed before preparation; simultaneous and after-hours admissions before nursing begins; medical, behavioral, and same-sex staffing exceptions during the initial nursing portion; participation during the first consumer interview; medication-history exception at reconciliation; and consent refusal at signing. Option C ends the routine process when disposition is outside OFC, and Option E ends the routine path when a separate legal or clinical barrier exists, because the extraction gives no continuation path for either condition.",
+  "process_id": "OFC-002_NursingIntakesConsumer",
+  "process_name": "OFC-002 Nursing Intakes Consumer",
+  "schema_version": 1
+}

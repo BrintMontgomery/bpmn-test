@@ -1,0 +1,1961 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_OFC-002_NursingIntakesConsumer" targetNamespace="http://oklahoma.gov/odmhsas/ofc/bpmn" exporter="ir.py" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_OFC-002_NursingIntakesConsumer">
+    <bpmn:participant id="Participant_OFC-002_NursingIntakesConsumer" name="Oklahoma Forensic Center" processRef="OFC-002_NursingIntakesConsumer"/>
+  </bpmn:collaboration>
+  <bpmn:process id="OFC-002_NursingIntakesConsumer" name="OFC-002 Nursing Intakes Consumer" isExecutable="false">
+    <bpmn:documentation>- Models the extracted nursing-admission workflow from scheduled notification through documentation quality review and handoff of unresolved issues. Main-path task ownership follows the first bold actor; later bold actors are represented as counterparties in task names unless the extraction gives them a distinct task. Where a main-path step states that either actor may act, the first listed actor owns one task and the alternate actor remains explicit in the task name. Option entry and rejoin locations are modeling judgments where the extraction does not identify an exact point: changed and rush admissions are placed before preparation; simultaneous and after-hours admissions before nursing begins; medical, behavioral, and same-sex staffing exceptions during the initial nursing portion; participation during the first consumer interview; medication-history exception at reconciliation; and consent refusal at signing. Option C ends the routine process when disposition is outside OFC, and Option E ends the routine path when a separate legal or clinical barrier exists, because the extraction gives no continuation path for either condition.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_OFC-002_NursingIntakesConsumer">
+      <bpmn:lane id="Lane_AdmissionsCoordinator" name="Admissions Coordinator">
+        <bpmn:flowNodeRef>StartEvent_ScheduledAdmission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendAdmissionEmail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ChangedAdmission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_I_DistributeUpdatedInformation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_C_CoordinateAdmissionStatus</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_MedicalRecords" name="Medical Records Staff">
+        <bpmn:flowNodeRef>Task_SendAvailableRecords</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Security" name="Security Officer">
+        <bpmn:flowNodeRef>Task_SecurityReportsReady</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_MultipleConsumers</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_H_MaintainWaitingConsumers</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_B_AdjustPrecautions</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EscortToUnit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_UnitNurse" name="Unit Nurse">
+        <bpmn:flowNodeRef>Task_I_DoNotUseEarlierPack</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_I_PrintOrUpdatePack</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RushAdmission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_G_UsePreprintedPack</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_G_ConfirmCurrentInformation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrintNursingAdmitPack</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RequestMHT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_H_ProcessEachConsumer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AfterHours</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_J_FollowStandardProcess</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_J_CoordinateAvailability</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_J_CompleteDuringShift</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_BeginNursingAdmission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_MedicalException</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_C_AssessMedicalCondition</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_C_InformPhysician</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_C_MedicalDisposition</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AggressiveUnsafe</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_B_AssessSafetyConcern</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_B_ContactPhysician</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_B_AdditionalPrecautions</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_B_InformSecurity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_B_ConfirmRoutineCanContinue</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_SameSexStaffing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_A_ConfirmFemaleStaff</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_A_FemaleSecurityAvailable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_A_MaintainSameSexSupervision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LiceCheckTreatment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_BeginBiophysicalAssessment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CannotParticipate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_F_CompleteSafeActivities</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_F_DocumentCooperation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_F_LeaveUnavailableInfoUnresolved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_F_ReturnToUnresolvedItems</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_F_ContinueNonvoluntaryActivities</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReceiveConsumerAndVitals</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdateBiophysicalAssessment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteTraumaAndSuicideAssessment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteSafeTSteps1And2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ContactPhysicianForEncounter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_MedicationHistoryUnavailable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_D_InformPhysician</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_D_UpdateReconciliation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteMedicationReconciliation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_OfferConsentDocuments</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_E_ExplainAndOfferConsent</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_E_RecordRefusal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_E_SeparateBarrier</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_E_ContinueAdmission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_E_SeparateResolution</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CollateAdmissionRecord</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewDocumentsForCompleteness</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RouteMedicationInformation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RouteNutritionalScreening</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FilePaperAdmissionDocuments</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnterAdmissionIntoAvatar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteAvatarIPGeneralNote</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteAvatarNursingAssessment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteAvatarTraumaAssessment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteAvatarFallAssessment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CompleteAvatarDailyFunctioning</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerifyAdmissionCompletion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CommunicateUnresolvedIssues</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_NursingAdmissionComplete</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ChargeAide" name="Charge Aide"/>
+      <bpmn:lane id="Lane_MHT" name="Mental Health Technician (MHT)">
+        <bpmn:flowNodeRef>Task_H_AdjustMHTAssignments</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_A_FemaleMHTAssists</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AssistShower</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_OrientConsumerToUnit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GiveInformationalMaterials</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Consumer" name="Consumer">
+        <bpmn:flowNodeRef>Task_ConsumerCompletesShower</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ConsentRefusal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_E_SignsAfterExplanation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_E_ConsumerRefusesConsent</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConsumerSignsConsent</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_SocialWorker" name="Social Worker">
+        <bpmn:flowNodeRef>Task_D_ContactOriginatingJail</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Physician" name="Physician">
+        <bpmn:flowNodeRef>Gateway_C_SafeAtOFC</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_C_DirectEmergencyOrDiversion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_B_ImmediateIntervention</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PhysicianInterview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PhysicianPaperworkAndSafeT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_D_AdditionalInformationRequested</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_PsychoactiveMedication</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReviewPsychoactiveConsent</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_HIC" name="Health Information Coordinator">
+        <bpmn:flowNodeRef>Task_AuditDocumentation</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Pharmacy" name="Pharmacy Staff">
+        <bpmn:flowNodeRef>Task_PharmacyReceivesInformation</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Dietary" name="Dietary Manager">
+        <bpmn:flowNodeRef>Task_DietaryReceivesScreening</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_OriginatingJail" name="Originating Jail Staff">
+        <bpmn:flowNodeRef>Task_D_ProvideMedicationInformation</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_LegalCounsel" name="Legal Counsel">
+        <bpmn:flowNodeRef>Gateway_C_LegalReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_C_LegalReview</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_ScheduledAdmission" name="Scheduled nursing admission is planned">
+      <bpmn:outgoing>Flow_StartEvent_ScheduledAdmission__Task_SendAdmissionEmail</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MsgDef_StartEvent_ScheduledAdmission"/>
+    </bpmn:startEvent>
+    <bpmn:manualTask id="Task_SendAdmissionEmail" name="Send scheduled admission email">
+      <bpmn:incoming>Flow_StartEvent_ScheduledAdmission__Task_SendAdmissionEmail</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_SendAdmissionEmail__Task_SendAvailableRecords</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_SendAvailableRecords" name="Send available Avatar-number and prior-admission information to Nursing">
+      <bpmn:incoming>Flow_Task_SendAdmissionEmail__Task_SendAvailableRecords</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_SendAvailableRecords__Gateway_ChangedAdmission</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_ChangedAdmission" name="Admission information changed or rescheduled?" default="Flow_Gateway_ChangedAdmission__Gateway_RushAdmission">
+      <bpmn:documentation>- Option I — the planned date, arrival time, unit, Physician, or other admission information changes after initial notification.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_SendAvailableRecords__Gateway_ChangedAdmission</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ChangedAdmission__Gateway_RushAdmission</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_ChangedAdmission__Task_I_DistributeUpdatedInformation</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_I_DistributeUpdatedInformation" name="Distribute updated admission information">
+      <bpmn:incoming>Flow_Gateway_ChangedAdmission__Task_I_DistributeUpdatedInformation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_I_DistributeUpdatedInformation__Task_I_DoNotUseEarlierPack</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_I_DoNotUseEarlierPack" name="Do not rely on a Nursing Admit Pack printed for an earlier date">
+      <bpmn:incoming>Flow_Task_I_DistributeUpdatedInformation__Task_I_DoNotUseEarlierPack</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_I_DoNotUseEarlierPack__Task_I_PrintOrUpdatePack</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_I_PrintOrUpdatePack" name="Print or update the Nursing Admit Pack for the confirmed admission day">
+      <bpmn:incoming>Flow_Task_I_DoNotUseEarlierPack__Task_I_PrintOrUpdatePack</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_I_PrintOrUpdatePack__Gateway_RushAdmission</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_RushAdmission" name="Substantially less advance notice than usual?" default="Flow_Gateway_RushAdmission__Task_PrintNursingAdmitPack">
+      <bpmn:documentation>- Option G — OFC knows the Consumer is expected but receives substantially less advance notice than usual.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_ChangedAdmission__Gateway_RushAdmission</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_I_PrintOrUpdatePack__Gateway_RushAdmission</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_RushAdmission__Task_PrintNursingAdmitPack</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_RushAdmission__Task_G_UsePreprintedPack</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_G_UsePreprintedPack" name="Use an available preprinted admission packet when necessary">
+      <bpmn:incoming>Flow_Gateway_RushAdmission__Task_G_UsePreprintedPack</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_G_UsePreprintedPack__Task_G_ConfirmCurrentInformation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_G_ConfirmCurrentInformation" name="Confirm current admission information before using the packet">
+      <bpmn:incoming>Flow_Task_G_UsePreprintedPack__Task_G_ConfirmCurrentInformation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_G_ConfirmCurrentInformation__Task_RequestMHT</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_PrintNursingAdmitPack" name="Print the Nursing Admit Pack on the confirmed admission day">
+      <bpmn:incoming>Flow_Gateway_RushAdmission__Task_PrintNursingAdmitPack</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PrintNursingAdmitPack__Task_RequestMHT</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_RequestMHT" name="Request an available Mental Health Technician to assist">
+      <bpmn:incoming>Flow_Task_G_ConfirmCurrentInformation__Task_RequestMHT</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_PrintNursingAdmitPack__Task_RequestMHT</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RequestMHT__Task_SecurityReportsReady</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_SecurityReportsReady" name="Report that the Consumer is ready for nursing admission">
+      <bpmn:incoming>Flow_Task_RequestMHT__Task_SecurityReportsReady</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_SecurityReportsReady__Gateway_MultipleConsumers</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_MultipleConsumers" name="Multiple Consumers arrive together?" default="Flow_Gateway_MultipleConsumers__Gateway_AfterHours">
+      <bpmn:documentation>- Option H — two or more Consumers require admission processing during the same period.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_SecurityReportsReady__Gateway_MultipleConsumers</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_MultipleConsumers__Gateway_AfterHours</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_MultipleConsumers__Task_H_MaintainWaitingConsumers</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_H_MaintainWaitingConsumers" name="Maintain waiting Consumers in the available secure holding area">
+      <bpmn:incoming>Flow_Gateway_MultipleConsumers__Task_H_MaintainWaitingConsumers</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_H_MaintainWaitingConsumers__Task_H_ProcessEachConsumer</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_H_ProcessEachConsumer" name="Process each Consumer in turn as capacity permits">
+      <bpmn:documentation>- The IR remains a single-Consumer process instance; the extraction does not specify queue-instance mechanics.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_H_MaintainWaitingConsumers__Task_H_ProcessEachConsumer</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_H_ProcessEachConsumer__Task_H_AdjustMHTAssignments</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_H_AdjustMHTAssignments" name="Adjust MHT assignments for unit staffing needs">
+      <bpmn:incoming>Flow_Task_H_ProcessEachConsumer__Task_H_AdjustMHTAssignments</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_H_AdjustMHTAssignments__Gateway_AfterHours</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_AfterHours" name="Consumer arrives after hours?" default="Flow_Gateway_AfterHours__Task_BeginNursingAdmission">
+      <bpmn:documentation>- Option J — a Consumer arrives outside the usual daytime admission period.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_MultipleConsumers__Gateway_AfterHours</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_H_AdjustMHTAssignments__Gateway_AfterHours</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_AfterHours__Task_BeginNursingAdmission</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_AfterHours__Task_J_FollowStandardProcess</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_J_FollowStandardProcess" name="Follow the standard nursing admission process">
+      <bpmn:incoming>Flow_Gateway_AfterHours__Task_J_FollowStandardProcess</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_J_FollowStandardProcess__Task_J_CoordinateAvailability</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_J_CoordinateAvailability" name="Coordinate Physician, Security Officer, and MHT availability">
+      <bpmn:incoming>Flow_Task_J_FollowStandardProcess__Task_J_CoordinateAvailability</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_J_CoordinateAvailability__Task_J_CompleteDuringShift</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_J_CompleteDuringShift" name="Plan to complete the admission during the admitting shift whenever practicable">
+      <bpmn:incoming>Flow_Task_J_CoordinateAvailability__Task_J_CompleteDuringShift</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_J_CompleteDuringShift__Task_BeginNursingAdmission</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_BeginNursingAdmission" name="Report to the admissions area and begin nursing admission">
+      <bpmn:incoming>Flow_Gateway_AfterHours__Task_BeginNursingAdmission</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_J_CompleteDuringShift__Task_BeginNursingAdmission</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_BeginNursingAdmission__Gateway_MedicalException</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_MedicalException" name="Significant medical exception identified?" default="Flow_Gateway_MedicalException__Gateway_AggressiveUnsafe">
+      <bpmn:documentation>- Option C — known or observed medical needs may exceed OFC's available level of care or make routine admission medically unsafe.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_BeginNursingAdmission__Gateway_MedicalException</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_MedicalException__Gateway_AggressiveUnsafe</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_MedicalException__Task_C_AssessMedicalCondition</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_C_AssessMedicalCondition" name="Assess current medical condition and available medical records">
+      <bpmn:incoming>Flow_Gateway_MedicalException__Task_C_AssessMedicalCondition</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_C_AssessMedicalCondition__Task_C_InformPhysician</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_C_InformPhysician" name="Immediately inform the Physician of the medical concern">
+      <bpmn:incoming>Flow_Task_C_AssessMedicalCondition__Task_C_InformPhysician</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_C_InformPhysician__Task_C_CoordinateAdmissionStatus</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_C_CoordinateAdmissionStatus" name="Coordinate required admission-status decision with clinical leadership">
+      <bpmn:incoming>Flow_Task_C_InformPhysician__Task_C_CoordinateAdmissionStatus</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_C_CoordinateAdmissionStatus__Gateway_C_LegalReview</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_C_LegalReview" name="Legal review required?" default="Flow_Gateway_C_LegalReview__Gateway_C_SafeAtOFC">
+      <bpmn:documentation>- Legal Counsel participates when acceptance, diversion, court-order, or legal-custody questions require legal review.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_C_CoordinateAdmissionStatus__Gateway_C_LegalReview</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_C_LegalReview__Gateway_C_SafeAtOFC</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_C_LegalReview__Task_C_LegalReview</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_C_LegalReview" name="Participate in acceptance, diversion, court-order, or custody review">
+      <bpmn:incoming>Flow_Gateway_C_LegalReview__Task_C_LegalReview</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_C_LegalReview__Gateway_C_SafeAtOFC</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_C_SafeAtOFC" name="Consumer can safely be managed at OFC?" default="Flow_Gateway_C_SafeAtOFC__Task_C_DirectEmergencyOrDiversion">
+      <bpmn:documentation>- The safe-to-continue decision is an IR judgment derived from the trigger and the instruction not to continue routine activities until medical disposition is resolved.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_C_LegalReview__Gateway_C_SafeAtOFC</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_C_LegalReview__Gateway_C_SafeAtOFC</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_C_SafeAtOFC__Task_C_DirectEmergencyOrDiversion</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_C_SafeAtOFC__Gateway_AggressiveUnsafe</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_C_DirectEmergencyOrDiversion" name="Direct emergency evaluation or hospital diversion">
+      <bpmn:incoming>Flow_Gateway_C_SafeAtOFC__Task_C_DirectEmergencyOrDiversion</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_C_DirectEmergencyOrDiversion__EndEvent_C_MedicalDisposition</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="EndEvent_C_MedicalDisposition" name="Routine nursing admission does not continue pending medical disposition">
+      <bpmn:incoming>Flow_Task_C_DirectEmergencyOrDiversion__EndEvent_C_MedicalDisposition</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gateway_AggressiveUnsafe" name="Consumer is aggressive, unsafe, or highly agitated?" default="Flow_Gateway_AggressiveUnsafe__Gateway_SameSexStaffing">
+      <bpmn:documentation>- Option B — the Consumer is violent, aggressive, highly agitated, or presents an immediate behavioral safety concern during nursing admission.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_MedicalException__Gateway_AggressiveUnsafe</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_C_SafeAtOFC__Gateway_AggressiveUnsafe</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_AggressiveUnsafe__Gateway_SameSexStaffing</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_AggressiveUnsafe__Task_B_AssessSafetyConcern</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_B_AssessSafetyConcern" name="Assess the immediate clinical and safety concern">
+      <bpmn:incoming>Flow_Gateway_AggressiveUnsafe__Task_B_AssessSafetyConcern</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_B_AssessSafetyConcern__Task_B_ContactPhysician</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_B_ContactPhysician" name="Contact the Physician about the safety concern">
+      <bpmn:documentation>- Split from Option B step 2 to distinguish the required Physician contact from the conditional Security notification.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_B_AssessSafetyConcern__Task_B_ContactPhysician</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_B_ContactPhysician__Gateway_B_AdditionalPrecautions</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_B_AdditionalPrecautions" name="Additional security precautions required?" default="Flow_Gateway_B_AdditionalPrecautions__Gateway_B_ImmediateIntervention">
+      <bpmn:incoming>Flow_Task_B_ContactPhysician__Gateway_B_AdditionalPrecautions</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_B_AdditionalPrecautions__Gateway_B_ImmediateIntervention</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_B_AdditionalPrecautions__Task_B_InformSecurity</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_B_InformSecurity" name="Inform Security Officer of required additional precautions">
+      <bpmn:documentation>- Split from Option B step 2 because the extraction makes Security notification conditional.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_B_AdditionalPrecautions__Task_B_InformSecurity</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_B_InformSecurity__Gateway_B_ImmediateIntervention</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_B_ImmediateIntervention" name="Immediate medication or another clinical intervention required?" default="Flow_Gateway_B_ImmediateIntervention__Task_B_ConfirmRoutineCanContinue">
+      <bpmn:incoming>Flow_Gateway_B_AdditionalPrecautions__Gateway_B_ImmediateIntervention</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_B_InformSecurity__Gateway_B_ImmediateIntervention</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_B_ImmediateIntervention__Task_B_ConfirmRoutineCanContinue</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_B_ImmediateIntervention__Task_B_AdjustPrecautions</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_B_AdjustPrecautions" name="Adjust movement or staffing precautions according to clinical direction">
+      <bpmn:incoming>Flow_Gateway_B_ImmediateIntervention__Task_B_AdjustPrecautions</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_B_AdjustPrecautions__Task_B_ConfirmRoutineCanContinue</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_B_ConfirmRoutineCanContinue" name="Confirm with the Physician that routine admission activities can continue">
+      <bpmn:incoming>Flow_Gateway_B_ImmediateIntervention__Task_B_ConfirmRoutineCanContinue</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_B_AdjustPrecautions__Task_B_ConfirmRoutineCanContinue</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_B_ConfirmRoutineCanContinue__Gateway_SameSexStaffing</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_SameSexStaffing" name="Same-sex staffing required for personal-care activity?" default="Flow_Gateway_SameSexStaffing__Task_LiceCheckTreatment">
+      <bpmn:documentation>- Option A — the Consumer is female and same-sex staffing is required for the search, shower, or related personal-care activities.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_AggressiveUnsafe__Gateway_SameSexStaffing</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_B_ConfirmRoutineCanContinue__Gateway_SameSexStaffing</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_SameSexStaffing__Task_LiceCheckTreatment</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_SameSexStaffing__Task_A_ConfirmFemaleStaff</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_A_ConfirmFemaleStaff" name="Coordinate with Security Officer to confirm available female staff">
+      <bpmn:incoming>Flow_Gateway_SameSexStaffing__Task_A_ConfirmFemaleStaff</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_A_ConfirmFemaleStaff__Gateway_A_FemaleSecurityAvailable</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_A_FemaleSecurityAvailable" name="Female Security Officer available?" default="Flow_Gateway_A_FemaleSecurityAvailable__Task_A_MaintainSameSexSupervision">
+      <bpmn:incoming>Flow_Task_A_ConfirmFemaleStaff__Gateway_A_FemaleSecurityAvailable</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_A_FemaleSecurityAvailable__Task_A_MaintainSameSexSupervision</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_A_FemaleSecurityAvailable__Task_A_FemaleMHTAssists</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_A_FemaleMHTAssists" name="Have a female MHT or other authorized female staff member assist">
+      <bpmn:incoming>Flow_Gateway_A_FemaleSecurityAvailable__Task_A_FemaleMHTAssists</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_A_FemaleMHTAssists__Task_A_MaintainSameSexSupervision</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_A_MaintainSameSexSupervision" name="Maintain same-sex supervision during the applicable activity">
+      <bpmn:documentation>- Ownership is a modeling judgment: the extraction names only Staff, so the task is assigned to the Unit Nurse as the admission owner.</bpmn:documentation>
+      <bpmn:incoming>Flow_Gateway_A_FemaleSecurityAvailable__Task_A_MaintainSameSexSupervision</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_A_FemaleMHTAssists__Task_A_MaintainSameSexSupervision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_A_MaintainSameSexSupervision__Task_LiceCheckTreatment</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_LiceCheckTreatment" name="Perform required lice check and treatment">
+      <bpmn:incoming>Flow_Gateway_SameSexStaffing__Task_LiceCheckTreatment</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_A_MaintainSameSexSupervision__Task_LiceCheckTreatment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_LiceCheckTreatment__Task_BeginBiophysicalAssessment</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_BeginBiophysicalAssessment" name="Interview Consumer and begin Nursing Unit Biophysical Assessment, including scarring and tattoo sheet">
+      <bpmn:incoming>Flow_Task_LiceCheckTreatment__Task_BeginBiophysicalAssessment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_BeginBiophysicalAssessment__Gateway_CannotParticipate</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_CannotParticipate" name="Consumer cannot meaningfully participate?" default="Flow_Gateway_CannotParticipate__Task_AssistShower">
+      <bpmn:documentation>- Option F — the Consumer is unable or unwilling to participate effectively in questioning, consent review, or informational activities because of current behavior or mental status.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_BeginBiophysicalAssessment__Gateway_CannotParticipate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_CannotParticipate__Task_AssistShower</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_CannotParticipate__Task_F_CompleteSafeActivities</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_F_CompleteSafeActivities" name="Complete clinical activities that can safely be performed">
+      <bpmn:incoming>Flow_Gateway_CannotParticipate__Task_F_CompleteSafeActivities</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_F_CompleteSafeActivities__Task_F_DocumentCooperation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_F_DocumentCooperation" name="Document cooperation level and observed condition">
+      <bpmn:incoming>Flow_Task_F_CompleteSafeActivities__Task_F_DocumentCooperation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_F_DocumentCooperation__Task_F_LeaveUnavailableInfoUnresolved</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_F_LeaveUnavailableInfoUnresolved" name="Leave unavailable historical information unresolved rather than inventing responses">
+      <bpmn:incoming>Flow_Task_F_DocumentCooperation__Task_F_LeaveUnavailableInfoUnresolved</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_F_LeaveUnavailableInfoUnresolved__Task_F_ReturnToUnresolvedItems</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_F_ReturnToUnresolvedItems" name="Return to unresolved questions or documents when clinically appropriate">
+      <bpmn:documentation>- The extraction does not identify a specific re-entry step, so this task rejoins the next modeled nursing activity.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_F_LeaveUnavailableInfoUnresolved__Task_F_ReturnToUnresolvedItems</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_F_ReturnToUnresolvedItems__Task_F_ContinueNonvoluntaryActivities</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_F_ContinueNonvoluntaryActivities" name="Continue custody, safety, and treatment activities not dependent on voluntary participation">
+      <bpmn:incoming>Flow_Task_F_ReturnToUnresolvedItems__Task_F_ContinueNonvoluntaryActivities</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_F_ContinueNonvoluntaryActivities__Task_AssistShower</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_AssistShower" name="Assist with shower process under staffing and supervision requirements">
+      <bpmn:incoming>Flow_Gateway_CannotParticipate__Task_AssistShower</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_F_ContinueNonvoluntaryActivities__Task_AssistShower</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_AssistShower__Task_ConsumerCompletesShower</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ConsumerCompletesShower" name="Complete shower">
+      <bpmn:incoming>Flow_Task_AssistShower__Task_ConsumerCompletesShower</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ConsumerCompletesShower__Task_EscortToUnit</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_EscortToUnit" name="Escort Consumer with MHT from shower area to assigned unit">
+      <bpmn:incoming>Flow_Task_ConsumerCompletesShower__Task_EscortToUnit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_EscortToUnit__Task_ReceiveConsumerAndVitals</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ReceiveConsumerAndVitals" name="Receive Consumer on unit and obtain complete vital signs">
+      <bpmn:incoming>Flow_Task_EscortToUnit__Task_ReceiveConsumerAndVitals</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReceiveConsumerAndVitals__Task_UpdateBiophysicalAssessment</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_UpdateBiophysicalAssessment" name="Update Biophysical Assessment and record vital-sign information">
+      <bpmn:incoming>Flow_Task_ReceiveConsumerAndVitals__Task_UpdateBiophysicalAssessment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_UpdateBiophysicalAssessment__Task_CompleteTraumaAndSuicideAssessment</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CompleteTraumaAndSuicideAssessment" name="Complete nursing trauma questions and initial suicide-risk assessment">
+      <bpmn:incoming>Flow_Task_UpdateBiophysicalAssessment__Task_CompleteTraumaAndSuicideAssessment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteTraumaAndSuicideAssessment__Task_CompleteSafeTSteps1And2</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CompleteSafeTSteps1And2" name="Complete SAFE-T Protocol Signature Page steps 1 and 2">
+      <bpmn:incoming>Flow_Task_CompleteTraumaAndSuicideAssessment__Task_CompleteSafeTSteps1And2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteSafeTSteps1And2__Task_ContactPhysicianForEncounter</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ContactPhysicianForEncounter" name="Contact Physician when Consumer is ready for physician encounter; Social Worker may arrange remote telemedicine">
+      <bpmn:incoming>Flow_Task_CompleteSafeTSteps1And2__Task_ContactPhysicianForEncounter</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ContactPhysicianForEncounter__Task_PhysicianInterview</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_PhysicianInterview" name="Interview Consumer on medical history, mental-health history, trauma, suicide risk, substance use, current condition, and admission issues">
+      <bpmn:incoming>Flow_Task_ContactPhysicianForEncounter__Task_PhysicianInterview</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PhysicianInterview__Task_PhysicianPaperworkAndSafeT</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_PhysicianPaperworkAndSafeT" name="Complete physician admission paperwork and SAFE-T Protocol Signature Page steps 3 through 5">
+      <bpmn:incoming>Flow_Task_PhysicianInterview__Task_PhysicianPaperworkAndSafeT</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PhysicianPaperworkAndSafeT__Gateway_MedicationHistoryUnavailable</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_MedicationHistoryUnavailable" name="Medication history unavailable?" default="Flow_Gateway_MedicationHistoryUnavailable__Task_CompleteMedicationReconciliation">
+      <bpmn:documentation>- Option D — the Physician, Unit Nurse, and Consumer cannot establish the Consumer's current or recent medication regimen.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_PhysicianPaperworkAndSafeT__Gateway_MedicationHistoryUnavailable</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_MedicationHistoryUnavailable__Task_CompleteMedicationReconciliation</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_MedicationHistoryUnavailable__Task_D_InformPhysician</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_D_InformPhysician" name="Inform Physician that medication history is incomplete">
+      <bpmn:incoming>Flow_Gateway_MedicationHistoryUnavailable__Task_D_InformPhysician</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_D_InformPhysician__Gateway_D_AdditionalInformationRequested</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_D_AdditionalInformationRequested" name="Physician requests additional medication information?" default="Flow_Gateway_D_AdditionalInformationRequested__Task_CompleteMedicationReconciliation">
+      <bpmn:incoming>Flow_Task_D_InformPhysician__Gateway_D_AdditionalInformationRequested</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_D_AdditionalInformationRequested__Task_CompleteMedicationReconciliation</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_D_AdditionalInformationRequested__Task_D_ContactOriginatingJail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_D_ContactOriginatingJail" name="Contact Originating Jail Staff for medication information">
+      <bpmn:incoming>Flow_Gateway_D_AdditionalInformationRequested__Task_D_ContactOriginatingJail</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_D_ContactOriginatingJail__Task_D_ProvideMedicationInformation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_D_ProvideMedicationInformation" name="Provide available medication information">
+      <bpmn:incoming>Flow_Task_D_ContactOriginatingJail__Task_D_ProvideMedicationInformation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_D_ProvideMedicationInformation__Task_D_UpdateReconciliation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_D_UpdateReconciliation" name="Update Medication Reconciliation Form with verified information">
+      <bpmn:incoming>Flow_Task_D_ProvideMedicationInformation__Task_D_UpdateReconciliation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_D_UpdateReconciliation__Task_CompleteMedicationReconciliation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CompleteMedicationReconciliation" name="Complete Medication Reconciliation Form with Physician">
+      <bpmn:incoming>Flow_Gateway_MedicationHistoryUnavailable__Task_CompleteMedicationReconciliation</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_D_AdditionalInformationRequested__Task_CompleteMedicationReconciliation</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_D_UpdateReconciliation__Task_CompleteMedicationReconciliation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteMedicationReconciliation__Task_OfferConsentDocuments</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_OfferConsentDocuments" name="Offer required consent documents after physician encounter and record signatures">
+      <bpmn:incoming>Flow_Task_CompleteMedicationReconciliation__Task_OfferConsentDocuments</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_OfferConsentDocuments__Gateway_ConsentRefusal</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_ConsentRefusal" name="Consumer declines one or more consent documents?" default="Flow_Gateway_ConsentRefusal__Task_ConsumerSignsConsent">
+      <bpmn:documentation>- Option E — the Consumer declines to sign one or more consent documents.</bpmn:documentation>
+      <bpmn:incoming>Flow_Task_OfferConsentDocuments__Gateway_ConsentRefusal</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ConsentRefusal__Task_ConsumerSignsConsent</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_ConsentRefusal__Task_E_ExplainAndOfferConsent</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_E_ExplainAndOfferConsent" name="Explain applicable document and offer Consumer opportunity to sign">
+      <bpmn:incoming>Flow_Gateway_ConsentRefusal__Task_E_ExplainAndOfferConsent</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_E_ExplainAndOfferConsent__Gateway_E_SignsAfterExplanation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_E_SignsAfterExplanation" name="Consumer signs after explanation?" default="Flow_Gateway_E_SignsAfterExplanation__Task_E_ConsumerRefusesConsent">
+      <bpmn:incoming>Flow_Task_E_ExplainAndOfferConsent__Gateway_E_SignsAfterExplanation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_E_SignsAfterExplanation__Task_E_ConsumerRefusesConsent</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_E_SignsAfterExplanation__Task_ConsumerSignsConsent</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_E_ConsumerRefusesConsent" name="Refuse voluntary consent document">
+      <bpmn:incoming>Flow_Gateway_E_SignsAfterExplanation__Task_E_ConsumerRefusesConsent</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_E_ConsumerRefusesConsent__Task_E_RecordRefusal</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_E_RecordRefusal" name="Record refusal using the applicable form or documentation process">
+      <bpmn:incoming>Flow_Task_E_ConsumerRefusesConsent__Task_E_RecordRefusal</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_E_RecordRefusal__Gateway_E_SeparateBarrier</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_E_SeparateBarrier" name="Separate legal or clinical barrier created by refusal?" default="Flow_Gateway_E_SeparateBarrier__Task_E_ContinueAdmission">
+      <bpmn:incoming>Flow_Task_E_RecordRefusal__Gateway_E_SeparateBarrier</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_E_SeparateBarrier__Task_E_ContinueAdmission</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_E_SeparateBarrier__EndEvent_E_SeparateResolution</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_E_ContinueAdmission" name="Continue the remainder of admission">
+      <bpmn:incoming>Flow_Gateway_E_SeparateBarrier__Task_E_ContinueAdmission</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_E_ContinueAdmission__Gateway_PsychoactiveMedication</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="EndEvent_E_SeparateResolution" name="Routine admission awaits separate legal or clinical resolution">
+      <bpmn:incoming>Flow_Gateway_E_SeparateBarrier__EndEvent_E_SeparateResolution</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:manualTask id="Task_ConsumerSignsConsent" name="Sign consent documents">
+      <bpmn:incoming>Flow_Gateway_ConsentRefusal__Task_ConsumerSignsConsent</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_E_SignsAfterExplanation__Task_ConsumerSignsConsent</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ConsumerSignsConsent__Gateway_PsychoactiveMedication</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_PsychoactiveMedication" name="Psychoactive medication prescribed or proposed?" default="Flow_Gateway_PsychoactiveMedication__Task_OrientConsumerToUnit">
+      <bpmn:incoming>Flow_Task_E_ContinueAdmission__Gateway_PsychoactiveMedication</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_ConsumerSignsConsent__Gateway_PsychoactiveMedication</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_PsychoactiveMedication__Task_OrientConsumerToUnit</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_PsychoactiveMedication__Task_ReviewPsychoactiveConsent</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_ReviewPsychoactiveConsent" name="Review Consent for Treatment with Psychoactive Medication with Consumer">
+      <bpmn:incoming>Flow_Gateway_PsychoactiveMedication__Task_ReviewPsychoactiveConsent</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReviewPsychoactiveConsent__Task_OrientConsumerToUnit</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_OrientConsumerToUnit" name="Orient Consumer to assigned unit locations">
+      <bpmn:incoming>Flow_Gateway_PsychoactiveMedication__Task_OrientConsumerToUnit</bpmn:incoming>
+      <bpmn:incoming>Flow_Task_ReviewPsychoactiveConsent__Task_OrientConsumerToUnit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_OrientConsumerToUnit__Task_GiveInformationalMaterials</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_GiveInformationalMaterials" name="Give Consumer informational materials and explain they are not mandatory consent documents">
+      <bpmn:incoming>Flow_Task_OrientConsumerToUnit__Task_GiveInformationalMaterials</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_GiveInformationalMaterials__Task_CollateAdmissionRecord</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CollateAdmissionRecord" name="Collate completed nursing, physician, and applicable security paperwork">
+      <bpmn:incoming>Flow_Task_GiveInformationalMaterials__Task_CollateAdmissionRecord</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CollateAdmissionRecord__Task_ReviewDocumentsForCompleteness</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ReviewDocumentsForCompleteness" name="Review required documents for completeness and obtain available corrections">
+      <bpmn:incoming>Flow_Task_CollateAdmissionRecord__Task_ReviewDocumentsForCompleteness</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_ReviewDocumentsForCompleteness__Task_RouteMedicationInformation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_RouteMedicationInformation" name="Route medication-related documentation or information to Pharmacy">
+      <bpmn:incoming>Flow_Task_ReviewDocumentsForCompleteness__Task_RouteMedicationInformation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RouteMedicationInformation__Task_PharmacyReceivesInformation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_PharmacyReceivesInformation" name="Receive medication information for medication-management process">
+      <bpmn:incoming>Flow_Task_RouteMedicationInformation__Task_PharmacyReceivesInformation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_PharmacyReceivesInformation__Task_RouteNutritionalScreening</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_RouteNutritionalScreening" name="Route Nutritional Screening to Dietary Manager">
+      <bpmn:incoming>Flow_Task_PharmacyReceivesInformation__Task_RouteNutritionalScreening</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_RouteNutritionalScreening__Task_DietaryReceivesScreening</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_DietaryReceivesScreening" name="Receive Nutritional Screening for dietary tracking and follow-up">
+      <bpmn:incoming>Flow_Task_RouteNutritionalScreening__Task_DietaryReceivesScreening</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_DietaryReceivesScreening__Task_FilePaperAdmissionDocuments</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_FilePaperAdmissionDocuments" name="File completed paper admission documents in Consumer chart">
+      <bpmn:incoming>Flow_Task_DietaryReceivesScreening__Task_FilePaperAdmissionDocuments</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_FilePaperAdmissionDocuments__Task_EnterAdmissionIntoAvatar</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_EnterAdmissionIntoAvatar" name="Enter nursing admission information into Avatar">
+      <bpmn:incoming>Flow_Task_FilePaperAdmissionDocuments__Task_EnterAdmissionIntoAvatar</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_EnterAdmissionIntoAvatar__Task_CompleteAvatarIPGeneralNote</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CompleteAvatarIPGeneralNote" name="Complete Avatar IP General Note">
+      <bpmn:incoming>Flow_Task_EnterAdmissionIntoAvatar__Task_CompleteAvatarIPGeneralNote</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteAvatarIPGeneralNote__Task_CompleteAvatarNursingAssessment</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CompleteAvatarNursingAssessment" name="Complete Avatar Nursing Assessment">
+      <bpmn:incoming>Flow_Task_CompleteAvatarIPGeneralNote__Task_CompleteAvatarNursingAssessment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteAvatarNursingAssessment__Task_CompleteAvatarTraumaAssessment</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CompleteAvatarTraumaAssessment" name="Complete Avatar OK Trauma Assessment">
+      <bpmn:incoming>Flow_Task_CompleteAvatarNursingAssessment__Task_CompleteAvatarTraumaAssessment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteAvatarTraumaAssessment__Task_CompleteAvatarFallAssessment</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CompleteAvatarFallAssessment" name="Complete Avatar OK Fall Assessment">
+      <bpmn:incoming>Flow_Task_CompleteAvatarTraumaAssessment__Task_CompleteAvatarFallAssessment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteAvatarFallAssessment__Task_CompleteAvatarDailyFunctioning</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CompleteAvatarDailyFunctioning" name="Complete Avatar OK Daily Functioning Assessment">
+      <bpmn:incoming>Flow_Task_CompleteAvatarFallAssessment__Task_CompleteAvatarDailyFunctioning</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CompleteAvatarDailyFunctioning__Task_VerifyAdmissionCompletion</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_VerifyAdmissionCompletion" name="Verify nursing admission completion during admitting shift whenever practicable">
+      <bpmn:incoming>Flow_Task_CompleteAvatarDailyFunctioning__Task_VerifyAdmissionCompletion</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_VerifyAdmissionCompletion__Task_AuditDocumentation</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_AuditDocumentation" name="Audit nursing paperwork, Avatar documentation, and applicable progress notes">
+      <bpmn:incoming>Flow_Task_VerifyAdmissionCompletion__Task_AuditDocumentation</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_AuditDocumentation__Task_CommunicateUnresolvedIssues</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CommunicateUnresolvedIssues" name="Complete nursing admission and communicate unresolved issues">
+      <bpmn:incoming>Flow_Task_AuditDocumentation__Task_CommunicateUnresolvedIssues</bpmn:incoming>
+      <bpmn:outgoing>Flow_Task_CommunicateUnresolvedIssues__EndEvent_NursingAdmissionComplete</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="EndEvent_NursingAdmissionComplete" name="Nursing admission complete">
+      <bpmn:incoming>Flow_Task_CommunicateUnresolvedIssues__EndEvent_NursingAdmissionComplete</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_StartEvent_ScheduledAdmission__Task_SendAdmissionEmail" sourceRef="StartEvent_ScheduledAdmission" targetRef="Task_SendAdmissionEmail"/>
+    <bpmn:sequenceFlow id="Flow_Task_SendAdmissionEmail__Task_SendAvailableRecords" sourceRef="Task_SendAdmissionEmail" targetRef="Task_SendAvailableRecords"/>
+    <bpmn:sequenceFlow id="Flow_Task_SendAvailableRecords__Gateway_ChangedAdmission" sourceRef="Task_SendAvailableRecords" targetRef="Gateway_ChangedAdmission"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ChangedAdmission__Gateway_RushAdmission" sourceRef="Gateway_ChangedAdmission" targetRef="Gateway_RushAdmission" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ChangedAdmission__Task_I_DistributeUpdatedInformation" sourceRef="Gateway_ChangedAdmission" targetRef="Task_I_DistributeUpdatedInformation" name="Admission information changed">
+      <bpmn:conditionExpression>Planned date, arrival time, unit, Physician, or other admission information changed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_I_DistributeUpdatedInformation__Task_I_DoNotUseEarlierPack" sourceRef="Task_I_DistributeUpdatedInformation" targetRef="Task_I_DoNotUseEarlierPack"/>
+    <bpmn:sequenceFlow id="Flow_Task_I_DoNotUseEarlierPack__Task_I_PrintOrUpdatePack" sourceRef="Task_I_DoNotUseEarlierPack" targetRef="Task_I_PrintOrUpdatePack"/>
+    <bpmn:sequenceFlow id="Flow_Task_I_PrintOrUpdatePack__Gateway_RushAdmission" sourceRef="Task_I_PrintOrUpdatePack" targetRef="Gateway_RushAdmission"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_RushAdmission__Task_PrintNursingAdmitPack" sourceRef="Gateway_RushAdmission" targetRef="Task_PrintNursingAdmitPack" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_RushAdmission__Task_G_UsePreprintedPack" sourceRef="Gateway_RushAdmission" targetRef="Task_G_UsePreprintedPack" name="Rush admission">
+      <bpmn:conditionExpression>Substantially less advance notice than usual</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_G_UsePreprintedPack__Task_G_ConfirmCurrentInformation" sourceRef="Task_G_UsePreprintedPack" targetRef="Task_G_ConfirmCurrentInformation"/>
+    <bpmn:sequenceFlow id="Flow_Task_G_ConfirmCurrentInformation__Task_RequestMHT" sourceRef="Task_G_ConfirmCurrentInformation" targetRef="Task_RequestMHT"/>
+    <bpmn:sequenceFlow id="Flow_Task_PrintNursingAdmitPack__Task_RequestMHT" sourceRef="Task_PrintNursingAdmitPack" targetRef="Task_RequestMHT"/>
+    <bpmn:sequenceFlow id="Flow_Task_RequestMHT__Task_SecurityReportsReady" sourceRef="Task_RequestMHT" targetRef="Task_SecurityReportsReady"/>
+    <bpmn:sequenceFlow id="Flow_Task_SecurityReportsReady__Gateway_MultipleConsumers" sourceRef="Task_SecurityReportsReady" targetRef="Gateway_MultipleConsumers"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_MultipleConsumers__Gateway_AfterHours" sourceRef="Gateway_MultipleConsumers" targetRef="Gateway_AfterHours" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_MultipleConsumers__Task_H_MaintainWaitingConsumers" sourceRef="Gateway_MultipleConsumers" targetRef="Task_H_MaintainWaitingConsumers" name="Multiple Consumers arrive">
+      <bpmn:conditionExpression>Two or more Consumers require admission processing during the same period</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_H_MaintainWaitingConsumers__Task_H_ProcessEachConsumer" sourceRef="Task_H_MaintainWaitingConsumers" targetRef="Task_H_ProcessEachConsumer"/>
+    <bpmn:sequenceFlow id="Flow_Task_H_ProcessEachConsumer__Task_H_AdjustMHTAssignments" sourceRef="Task_H_ProcessEachConsumer" targetRef="Task_H_AdjustMHTAssignments"/>
+    <bpmn:sequenceFlow id="Flow_Task_H_AdjustMHTAssignments__Gateway_AfterHours" sourceRef="Task_H_AdjustMHTAssignments" targetRef="Gateway_AfterHours"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AfterHours__Task_BeginNursingAdmission" sourceRef="Gateway_AfterHours" targetRef="Task_BeginNursingAdmission" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AfterHours__Task_J_FollowStandardProcess" sourceRef="Gateway_AfterHours" targetRef="Task_J_FollowStandardProcess" name="After-hours arrival">
+      <bpmn:conditionExpression>Consumer arrives outside the usual daytime admission period</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_J_FollowStandardProcess__Task_J_CoordinateAvailability" sourceRef="Task_J_FollowStandardProcess" targetRef="Task_J_CoordinateAvailability"/>
+    <bpmn:sequenceFlow id="Flow_Task_J_CoordinateAvailability__Task_J_CompleteDuringShift" sourceRef="Task_J_CoordinateAvailability" targetRef="Task_J_CompleteDuringShift"/>
+    <bpmn:sequenceFlow id="Flow_Task_J_CompleteDuringShift__Task_BeginNursingAdmission" sourceRef="Task_J_CompleteDuringShift" targetRef="Task_BeginNursingAdmission"/>
+    <bpmn:sequenceFlow id="Flow_Task_BeginNursingAdmission__Gateway_MedicalException" sourceRef="Task_BeginNursingAdmission" targetRef="Gateway_MedicalException"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_MedicalException__Gateway_AggressiveUnsafe" sourceRef="Gateway_MedicalException" targetRef="Gateway_AggressiveUnsafe" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_MedicalException__Task_C_AssessMedicalCondition" sourceRef="Gateway_MedicalException" targetRef="Task_C_AssessMedicalCondition" name="Medical exception identified">
+      <bpmn:conditionExpression>Known or observed medical needs may exceed OFC level of care or make routine admission medically unsafe</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_C_AssessMedicalCondition__Task_C_InformPhysician" sourceRef="Task_C_AssessMedicalCondition" targetRef="Task_C_InformPhysician"/>
+    <bpmn:sequenceFlow id="Flow_Task_C_InformPhysician__Task_C_CoordinateAdmissionStatus" sourceRef="Task_C_InformPhysician" targetRef="Task_C_CoordinateAdmissionStatus"/>
+    <bpmn:sequenceFlow id="Flow_Task_C_CoordinateAdmissionStatus__Gateway_C_LegalReview" sourceRef="Task_C_CoordinateAdmissionStatus" targetRef="Gateway_C_LegalReview"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_C_LegalReview__Gateway_C_SafeAtOFC" sourceRef="Gateway_C_LegalReview" targetRef="Gateway_C_SafeAtOFC" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_C_LegalReview__Task_C_LegalReview" sourceRef="Gateway_C_LegalReview" targetRef="Task_C_LegalReview" name="Legal review required">
+      <bpmn:conditionExpression>Acceptance, diversion, court-order, or legal-custody question requires legal review</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_C_LegalReview__Gateway_C_SafeAtOFC" sourceRef="Task_C_LegalReview" targetRef="Gateway_C_SafeAtOFC"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_C_SafeAtOFC__Task_C_DirectEmergencyOrDiversion" sourceRef="Gateway_C_SafeAtOFC" targetRef="Task_C_DirectEmergencyOrDiversion" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_C_SafeAtOFC__Gateway_AggressiveUnsafe" sourceRef="Gateway_C_SafeAtOFC" targetRef="Gateway_AggressiveUnsafe" name="Can safely be managed at OFC">
+      <bpmn:conditionExpression>Medical disposition permits routine admission at OFC</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_C_DirectEmergencyOrDiversion__EndEvent_C_MedicalDisposition" sourceRef="Task_C_DirectEmergencyOrDiversion" targetRef="EndEvent_C_MedicalDisposition"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AggressiveUnsafe__Gateway_SameSexStaffing" sourceRef="Gateway_AggressiveUnsafe" targetRef="Gateway_SameSexStaffing" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_AggressiveUnsafe__Task_B_AssessSafetyConcern" sourceRef="Gateway_AggressiveUnsafe" targetRef="Task_B_AssessSafetyConcern" name="Aggressive or unsafe Consumer">
+      <bpmn:conditionExpression>Consumer is violent, aggressive, highly agitated, or presents an immediate behavioral safety concern</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_B_AssessSafetyConcern__Task_B_ContactPhysician" sourceRef="Task_B_AssessSafetyConcern" targetRef="Task_B_ContactPhysician"/>
+    <bpmn:sequenceFlow id="Flow_Task_B_ContactPhysician__Gateway_B_AdditionalPrecautions" sourceRef="Task_B_ContactPhysician" targetRef="Gateway_B_AdditionalPrecautions"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_B_AdditionalPrecautions__Gateway_B_ImmediateIntervention" sourceRef="Gateway_B_AdditionalPrecautions" targetRef="Gateway_B_ImmediateIntervention" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_B_AdditionalPrecautions__Task_B_InformSecurity" sourceRef="Gateway_B_AdditionalPrecautions" targetRef="Task_B_InformSecurity" name="Additional precautions required">
+      <bpmn:conditionExpression>Additional security precautions are required</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_B_InformSecurity__Gateway_B_ImmediateIntervention" sourceRef="Task_B_InformSecurity" targetRef="Gateway_B_ImmediateIntervention"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_B_ImmediateIntervention__Task_B_ConfirmRoutineCanContinue" sourceRef="Gateway_B_ImmediateIntervention" targetRef="Task_B_ConfirmRoutineCanContinue" name="No immediate intervention"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_B_ImmediateIntervention__Task_B_AdjustPrecautions" sourceRef="Gateway_B_ImmediateIntervention" targetRef="Task_B_AdjustPrecautions" name="Immediate intervention required">
+      <bpmn:conditionExpression>Physician determines immediate medication or another clinical intervention is required</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_B_AdjustPrecautions__Task_B_ConfirmRoutineCanContinue" sourceRef="Task_B_AdjustPrecautions" targetRef="Task_B_ConfirmRoutineCanContinue"/>
+    <bpmn:sequenceFlow id="Flow_Task_B_ConfirmRoutineCanContinue__Gateway_SameSexStaffing" sourceRef="Task_B_ConfirmRoutineCanContinue" targetRef="Gateway_SameSexStaffing"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_SameSexStaffing__Task_LiceCheckTreatment" sourceRef="Gateway_SameSexStaffing" targetRef="Task_LiceCheckTreatment" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_SameSexStaffing__Task_A_ConfirmFemaleStaff" sourceRef="Gateway_SameSexStaffing" targetRef="Task_A_ConfirmFemaleStaff" name="Same-sex staffing required">
+      <bpmn:conditionExpression>Consumer is female and same-sex staffing is required for applicable personal-care activity</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_A_ConfirmFemaleStaff__Gateway_A_FemaleSecurityAvailable" sourceRef="Task_A_ConfirmFemaleStaff" targetRef="Gateway_A_FemaleSecurityAvailable"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_A_FemaleSecurityAvailable__Task_A_MaintainSameSexSupervision" sourceRef="Gateway_A_FemaleSecurityAvailable" targetRef="Task_A_MaintainSameSexSupervision" name="Female Security Officer available"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_A_FemaleSecurityAvailable__Task_A_FemaleMHTAssists" sourceRef="Gateway_A_FemaleSecurityAvailable" targetRef="Task_A_FemaleMHTAssists" name="Female Security Officer unavailable">
+      <bpmn:conditionExpression>Female Security Officer is not available</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_A_FemaleMHTAssists__Task_A_MaintainSameSexSupervision" sourceRef="Task_A_FemaleMHTAssists" targetRef="Task_A_MaintainSameSexSupervision"/>
+    <bpmn:sequenceFlow id="Flow_Task_A_MaintainSameSexSupervision__Task_LiceCheckTreatment" sourceRef="Task_A_MaintainSameSexSupervision" targetRef="Task_LiceCheckTreatment"/>
+    <bpmn:sequenceFlow id="Flow_Task_LiceCheckTreatment__Task_BeginBiophysicalAssessment" sourceRef="Task_LiceCheckTreatment" targetRef="Task_BeginBiophysicalAssessment"/>
+    <bpmn:sequenceFlow id="Flow_Task_BeginBiophysicalAssessment__Gateway_CannotParticipate" sourceRef="Task_BeginBiophysicalAssessment" targetRef="Gateway_CannotParticipate"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_CannotParticipate__Task_AssistShower" sourceRef="Gateway_CannotParticipate" targetRef="Task_AssistShower" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_CannotParticipate__Task_F_CompleteSafeActivities" sourceRef="Gateway_CannotParticipate" targetRef="Task_F_CompleteSafeActivities" name="Cannot meaningfully participate">
+      <bpmn:conditionExpression>Consumer is unable or unwilling to participate effectively because of current behavior or mental status</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_F_CompleteSafeActivities__Task_F_DocumentCooperation" sourceRef="Task_F_CompleteSafeActivities" targetRef="Task_F_DocumentCooperation"/>
+    <bpmn:sequenceFlow id="Flow_Task_F_DocumentCooperation__Task_F_LeaveUnavailableInfoUnresolved" sourceRef="Task_F_DocumentCooperation" targetRef="Task_F_LeaveUnavailableInfoUnresolved"/>
+    <bpmn:sequenceFlow id="Flow_Task_F_LeaveUnavailableInfoUnresolved__Task_F_ReturnToUnresolvedItems" sourceRef="Task_F_LeaveUnavailableInfoUnresolved" targetRef="Task_F_ReturnToUnresolvedItems"/>
+    <bpmn:sequenceFlow id="Flow_Task_F_ReturnToUnresolvedItems__Task_F_ContinueNonvoluntaryActivities" sourceRef="Task_F_ReturnToUnresolvedItems" targetRef="Task_F_ContinueNonvoluntaryActivities"/>
+    <bpmn:sequenceFlow id="Flow_Task_F_ContinueNonvoluntaryActivities__Task_AssistShower" sourceRef="Task_F_ContinueNonvoluntaryActivities" targetRef="Task_AssistShower"/>
+    <bpmn:sequenceFlow id="Flow_Task_AssistShower__Task_ConsumerCompletesShower" sourceRef="Task_AssistShower" targetRef="Task_ConsumerCompletesShower"/>
+    <bpmn:sequenceFlow id="Flow_Task_ConsumerCompletesShower__Task_EscortToUnit" sourceRef="Task_ConsumerCompletesShower" targetRef="Task_EscortToUnit"/>
+    <bpmn:sequenceFlow id="Flow_Task_EscortToUnit__Task_ReceiveConsumerAndVitals" sourceRef="Task_EscortToUnit" targetRef="Task_ReceiveConsumerAndVitals"/>
+    <bpmn:sequenceFlow id="Flow_Task_ReceiveConsumerAndVitals__Task_UpdateBiophysicalAssessment" sourceRef="Task_ReceiveConsumerAndVitals" targetRef="Task_UpdateBiophysicalAssessment"/>
+    <bpmn:sequenceFlow id="Flow_Task_UpdateBiophysicalAssessment__Task_CompleteTraumaAndSuicideAssessment" sourceRef="Task_UpdateBiophysicalAssessment" targetRef="Task_CompleteTraumaAndSuicideAssessment"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteTraumaAndSuicideAssessment__Task_CompleteSafeTSteps1And2" sourceRef="Task_CompleteTraumaAndSuicideAssessment" targetRef="Task_CompleteSafeTSteps1And2"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteSafeTSteps1And2__Task_ContactPhysicianForEncounter" sourceRef="Task_CompleteSafeTSteps1And2" targetRef="Task_ContactPhysicianForEncounter"/>
+    <bpmn:sequenceFlow id="Flow_Task_ContactPhysicianForEncounter__Task_PhysicianInterview" sourceRef="Task_ContactPhysicianForEncounter" targetRef="Task_PhysicianInterview"/>
+    <bpmn:sequenceFlow id="Flow_Task_PhysicianInterview__Task_PhysicianPaperworkAndSafeT" sourceRef="Task_PhysicianInterview" targetRef="Task_PhysicianPaperworkAndSafeT"/>
+    <bpmn:sequenceFlow id="Flow_Task_PhysicianPaperworkAndSafeT__Gateway_MedicationHistoryUnavailable" sourceRef="Task_PhysicianPaperworkAndSafeT" targetRef="Gateway_MedicationHistoryUnavailable"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_MedicationHistoryUnavailable__Task_CompleteMedicationReconciliation" sourceRef="Gateway_MedicationHistoryUnavailable" targetRef="Task_CompleteMedicationReconciliation" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_MedicationHistoryUnavailable__Task_D_InformPhysician" sourceRef="Gateway_MedicationHistoryUnavailable" targetRef="Task_D_InformPhysician" name="Medication history unavailable">
+      <bpmn:conditionExpression>Physician, Unit Nurse, and Consumer cannot establish current or recent medication regimen</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_D_InformPhysician__Gateway_D_AdditionalInformationRequested" sourceRef="Task_D_InformPhysician" targetRef="Gateway_D_AdditionalInformationRequested"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_D_AdditionalInformationRequested__Task_CompleteMedicationReconciliation" sourceRef="Gateway_D_AdditionalInformationRequested" targetRef="Task_CompleteMedicationReconciliation" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_D_AdditionalInformationRequested__Task_D_ContactOriginatingJail" sourceRef="Gateway_D_AdditionalInformationRequested" targetRef="Task_D_ContactOriginatingJail" name="Additional information requested">
+      <bpmn:conditionExpression>Physician requests additional medication information</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_D_ContactOriginatingJail__Task_D_ProvideMedicationInformation" sourceRef="Task_D_ContactOriginatingJail" targetRef="Task_D_ProvideMedicationInformation"/>
+    <bpmn:sequenceFlow id="Flow_Task_D_ProvideMedicationInformation__Task_D_UpdateReconciliation" sourceRef="Task_D_ProvideMedicationInformation" targetRef="Task_D_UpdateReconciliation"/>
+    <bpmn:sequenceFlow id="Flow_Task_D_UpdateReconciliation__Task_CompleteMedicationReconciliation" sourceRef="Task_D_UpdateReconciliation" targetRef="Task_CompleteMedicationReconciliation"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteMedicationReconciliation__Task_OfferConsentDocuments" sourceRef="Task_CompleteMedicationReconciliation" targetRef="Task_OfferConsentDocuments"/>
+    <bpmn:sequenceFlow id="Flow_Task_OfferConsentDocuments__Gateway_ConsentRefusal" sourceRef="Task_OfferConsentDocuments" targetRef="Gateway_ConsentRefusal"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ConsentRefusal__Task_ConsumerSignsConsent" sourceRef="Gateway_ConsentRefusal" targetRef="Task_ConsumerSignsConsent" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_ConsentRefusal__Task_E_ExplainAndOfferConsent" sourceRef="Gateway_ConsentRefusal" targetRef="Task_E_ExplainAndOfferConsent" name="Consent documents declined">
+      <bpmn:conditionExpression>Consumer declines one or more consent documents</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_E_ExplainAndOfferConsent__Gateway_E_SignsAfterExplanation" sourceRef="Task_E_ExplainAndOfferConsent" targetRef="Gateway_E_SignsAfterExplanation"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_E_SignsAfterExplanation__Task_E_ConsumerRefusesConsent" sourceRef="Gateway_E_SignsAfterExplanation" targetRef="Task_E_ConsumerRefusesConsent" name="Consumer declines"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_E_SignsAfterExplanation__Task_ConsumerSignsConsent" sourceRef="Gateway_E_SignsAfterExplanation" targetRef="Task_ConsumerSignsConsent" name="Consumer signs">
+      <bpmn:conditionExpression>Consumer signs after explanation</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_E_ConsumerRefusesConsent__Task_E_RecordRefusal" sourceRef="Task_E_ConsumerRefusesConsent" targetRef="Task_E_RecordRefusal"/>
+    <bpmn:sequenceFlow id="Flow_Task_E_RecordRefusal__Gateway_E_SeparateBarrier" sourceRef="Task_E_RecordRefusal" targetRef="Gateway_E_SeparateBarrier"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_E_SeparateBarrier__Task_E_ContinueAdmission" sourceRef="Gateway_E_SeparateBarrier" targetRef="Task_E_ContinueAdmission" name="No separate legal or clinical barrier"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_E_SeparateBarrier__EndEvent_E_SeparateResolution" sourceRef="Gateway_E_SeparateBarrier" targetRef="EndEvent_E_SeparateResolution" name="Separate barrier exists">
+      <bpmn:conditionExpression>Refusal creates a separate legal or clinical barrier</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_E_ContinueAdmission__Gateway_PsychoactiveMedication" sourceRef="Task_E_ContinueAdmission" targetRef="Gateway_PsychoactiveMedication"/>
+    <bpmn:sequenceFlow id="Flow_Task_ConsumerSignsConsent__Gateway_PsychoactiveMedication" sourceRef="Task_ConsumerSignsConsent" targetRef="Gateway_PsychoactiveMedication"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_PsychoactiveMedication__Task_OrientConsumerToUnit" sourceRef="Gateway_PsychoactiveMedication" targetRef="Task_OrientConsumerToUnit" name="Otherwise"/>
+    <bpmn:sequenceFlow id="Flow_Gateway_PsychoactiveMedication__Task_ReviewPsychoactiveConsent" sourceRef="Gateway_PsychoactiveMedication" targetRef="Task_ReviewPsychoactiveConsent" name="Psychoactive medication prescribed or proposed">
+      <bpmn:conditionExpression>Psychoactive medication is prescribed or proposed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Task_ReviewPsychoactiveConsent__Task_OrientConsumerToUnit" sourceRef="Task_ReviewPsychoactiveConsent" targetRef="Task_OrientConsumerToUnit"/>
+    <bpmn:sequenceFlow id="Flow_Task_OrientConsumerToUnit__Task_GiveInformationalMaterials" sourceRef="Task_OrientConsumerToUnit" targetRef="Task_GiveInformationalMaterials"/>
+    <bpmn:sequenceFlow id="Flow_Task_GiveInformationalMaterials__Task_CollateAdmissionRecord" sourceRef="Task_GiveInformationalMaterials" targetRef="Task_CollateAdmissionRecord"/>
+    <bpmn:sequenceFlow id="Flow_Task_CollateAdmissionRecord__Task_ReviewDocumentsForCompleteness" sourceRef="Task_CollateAdmissionRecord" targetRef="Task_ReviewDocumentsForCompleteness"/>
+    <bpmn:sequenceFlow id="Flow_Task_ReviewDocumentsForCompleteness__Task_RouteMedicationInformation" sourceRef="Task_ReviewDocumentsForCompleteness" targetRef="Task_RouteMedicationInformation"/>
+    <bpmn:sequenceFlow id="Flow_Task_RouteMedicationInformation__Task_PharmacyReceivesInformation" sourceRef="Task_RouteMedicationInformation" targetRef="Task_PharmacyReceivesInformation"/>
+    <bpmn:sequenceFlow id="Flow_Task_PharmacyReceivesInformation__Task_RouteNutritionalScreening" sourceRef="Task_PharmacyReceivesInformation" targetRef="Task_RouteNutritionalScreening"/>
+    <bpmn:sequenceFlow id="Flow_Task_RouteNutritionalScreening__Task_DietaryReceivesScreening" sourceRef="Task_RouteNutritionalScreening" targetRef="Task_DietaryReceivesScreening"/>
+    <bpmn:sequenceFlow id="Flow_Task_DietaryReceivesScreening__Task_FilePaperAdmissionDocuments" sourceRef="Task_DietaryReceivesScreening" targetRef="Task_FilePaperAdmissionDocuments"/>
+    <bpmn:sequenceFlow id="Flow_Task_FilePaperAdmissionDocuments__Task_EnterAdmissionIntoAvatar" sourceRef="Task_FilePaperAdmissionDocuments" targetRef="Task_EnterAdmissionIntoAvatar"/>
+    <bpmn:sequenceFlow id="Flow_Task_EnterAdmissionIntoAvatar__Task_CompleteAvatarIPGeneralNote" sourceRef="Task_EnterAdmissionIntoAvatar" targetRef="Task_CompleteAvatarIPGeneralNote"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteAvatarIPGeneralNote__Task_CompleteAvatarNursingAssessment" sourceRef="Task_CompleteAvatarIPGeneralNote" targetRef="Task_CompleteAvatarNursingAssessment"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteAvatarNursingAssessment__Task_CompleteAvatarTraumaAssessment" sourceRef="Task_CompleteAvatarNursingAssessment" targetRef="Task_CompleteAvatarTraumaAssessment"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteAvatarTraumaAssessment__Task_CompleteAvatarFallAssessment" sourceRef="Task_CompleteAvatarTraumaAssessment" targetRef="Task_CompleteAvatarFallAssessment"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteAvatarFallAssessment__Task_CompleteAvatarDailyFunctioning" sourceRef="Task_CompleteAvatarFallAssessment" targetRef="Task_CompleteAvatarDailyFunctioning"/>
+    <bpmn:sequenceFlow id="Flow_Task_CompleteAvatarDailyFunctioning__Task_VerifyAdmissionCompletion" sourceRef="Task_CompleteAvatarDailyFunctioning" targetRef="Task_VerifyAdmissionCompletion"/>
+    <bpmn:sequenceFlow id="Flow_Task_VerifyAdmissionCompletion__Task_AuditDocumentation" sourceRef="Task_VerifyAdmissionCompletion" targetRef="Task_AuditDocumentation"/>
+    <bpmn:sequenceFlow id="Flow_Task_AuditDocumentation__Task_CommunicateUnresolvedIssues" sourceRef="Task_AuditDocumentation" targetRef="Task_CommunicateUnresolvedIssues"/>
+    <bpmn:sequenceFlow id="Flow_Task_CommunicateUnresolvedIssues__EndEvent_NursingAdmissionComplete" sourceRef="Task_CommunicateUnresolvedIssues" targetRef="EndEvent_NursingAdmissionComplete"/>
+    <bpmn:textAnnotation id="Ann_Task_SendAdmissionEmail">
+      <bpmn:text>This email is sent to security, nurse managers, nurse coordinators, Pharmacy, Psychology, Social Work, Supply, Medical Records, the admitting Physician, and other established operational recipients. The email identifies the consumer, county, expected arrival time, assigned unit, assigned Physician, and order-to-treat status and includes the available consumer information attachment.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_SendAdmissionEmail" sourceRef="Task_SendAdmissionEmail" targetRef="Ann_Task_SendAdmissionEmail"/>
+    <bpmn:textAnnotation id="Ann_Task_PrintNursingAdmitPack">
+      <bpmn:text>Print the Nursing Admit Pack on the confirmed admission day rather than solely in response to the advance email because admission dates and arrival times may change. The interview established no required email subject-line format or threading convention.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_PrintNursingAdmitPack" sourceRef="Task_PrintNursingAdmitPack" targetRef="Ann_Task_PrintNursingAdmitPack"/>
+    <bpmn:textAnnotation id="Ann_Task_ContactPhysicianForEncounter">
+      <bpmn:text>The Social Worker may arrange the telemedicine session when the Physician is remote.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_ContactPhysicianForEncounter" sourceRef="Task_ContactPhysicianForEncounter" targetRef="Ann_Task_ContactPhysicianForEncounter"/>
+    <bpmn:textAnnotation id="Ann_Task_CompleteMedicationReconciliation">
+      <bpmn:text>Medication history may come from the Physician, Consumer, originating jail, legal documentation, legal records, or other available records. Nurses do not enter an unverified medication as established fact when the information cannot be confirmed.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_CompleteMedicationReconciliation" sourceRef="Task_CompleteMedicationReconciliation" targetRef="Ann_Task_CompleteMedicationReconciliation"/>
+    <bpmn:textAnnotation id="Ann_Task_ConsumerSignsConsent">
+      <bpmn:text>The Consumer may refuse the consent documents. The informational materials provided by the Mental Health Technician are distinct from consent documents and are provided for consumer information. The Consent for Treatment with Psychoactive Medication requires coordination with the Physician.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_ConsumerSignsConsent" sourceRef="Task_ConsumerSignsConsent" targetRef="Ann_Task_ConsumerSignsConsent"/>
+    <bpmn:textAnnotation id="Ann_Task_VerifyAdmissionCompletion">
+      <bpmn:text>The interview described completion before the 7:00 p.m. shift change as normal operational practice, not as a formally cited regulatory SLA. Routine admissions are expected to be completed before the 7:00 p.m. shift change</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_VerifyAdmissionCompletion" sourceRef="Task_VerifyAdmissionCompletion" targetRef="Ann_Task_VerifyAdmissionCompletion"/>
+    <bpmn:textAnnotation id="Ann_Task_CommunicateUnresolvedIssues">
+      <bpmn:text>This may include clinical, medication, behavioral, or support issues to the Physician, Social Worker, or other responsible treatment staff for continued action.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Task_CommunicateUnresolvedIssues" sourceRef="Task_CommunicateUnresolvedIssues" targetRef="Ann_Task_CommunicateUnresolvedIssues"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_OFC-002_NursingIntakesConsumer">
+    <bpmndi:BPMNPlane id="BPMNPlane_OFC-002_NursingIntakesConsumer" bpmnElement="Collaboration_OFC-002_NursingIntakesConsumer">
+      <bpmndi:BPMNShape id="Shape_Participant_OFC-002_NursingIntakesConsumer" bpmnElement="Participant_OFC-002_NursingIntakesConsumer" isHorizontal="true">
+        <dc:Bounds x="200" y="260" width="19322" height="6432"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_AdmissionsCoordinator" bpmnElement="Lane_AdmissionsCoordinator" isHorizontal="true">
+        <dc:Bounds x="230" y="260" width="19292" height="509"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_MedicalRecords" bpmnElement="Lane_MedicalRecords" isHorizontal="true">
+        <dc:Bounds x="230" y="769" width="19292" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Security" bpmnElement="Lane_Security" isHorizontal="true">
+        <dc:Bounds x="230" y="949" width="19292" height="630"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_UnitNurse" bpmnElement="Lane_UnitNurse" isHorizontal="true">
+        <dc:Bounds x="230" y="1579" width="19292" height="914"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_ChargeAide" bpmnElement="Lane_ChargeAide" isHorizontal="true">
+        <dc:Bounds x="230" y="2493" width="19292" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_MHT" bpmnElement="Lane_MHT" isHorizontal="true">
+        <dc:Bounds x="230" y="2673" width="19292" height="630"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Consumer" bpmnElement="Lane_Consumer" isHorizontal="true">
+        <dc:Bounds x="230" y="3303" width="19292" height="629"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_SocialWorker" bpmnElement="Lane_SocialWorker" isHorizontal="true">
+        <dc:Bounds x="230" y="3932" width="19292" height="630"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Physician" bpmnElement="Lane_Physician" isHorizontal="true">
+        <dc:Bounds x="230" y="4562" width="19292" height="480"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_HIC" bpmnElement="Lane_HIC" isHorizontal="true">
+        <dc:Bounds x="230" y="5042" width="19292" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Pharmacy" bpmnElement="Lane_Pharmacy" isHorizontal="true">
+        <dc:Bounds x="230" y="5222" width="19292" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Dietary" bpmnElement="Lane_Dietary" isHorizontal="true">
+        <dc:Bounds x="230" y="5402" width="19292" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_OriginatingJail" bpmnElement="Lane_OriginatingJail" isHorizontal="true">
+        <dc:Bounds x="230" y="5582" width="19292" height="630"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_LegalCounsel" bpmnElement="Lane_LegalCounsel" isHorizontal="true">
+        <dc:Bounds x="230" y="6212" width="19292" height="480"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_StartEvent_ScheduledAdmission" bpmnElement="StartEvent_ScheduledAdmission">
+        <dc:Bounds x="308" y="511" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="271" y="552" width="110" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SendAdmissionEmail" bpmnElement="Task_SendAdmissionEmail">
+        <dc:Bounds x="422" y="489" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SendAvailableRecords" bpmnElement="Task_SendAvailableRecords">
+        <dc:Bounds x="640" y="819" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ChangedAdmission" bpmnElement="Gateway_ChangedAdmission" isMarkerVisible="true">
+        <dc:Bounds x="858" y="504" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="813" y="453" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_I_DistributeUpdatedInformation" bpmnElement="Task_I_DistributeUpdatedInformation">
+        <dc:Bounds x="986" y="639" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_I_DoNotUseEarlierPack" bpmnElement="Task_I_DoNotUseEarlierPack">
+        <dc:Bounds x="1204" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_I_PrintOrUpdatePack" bpmnElement="Task_I_PrintOrUpdatePack">
+        <dc:Bounds x="1422" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_RushAdmission" bpmnElement="Gateway_RushAdmission" isMarkerVisible="true">
+        <dc:Bounds x="1640" y="1778" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1595" y="1727" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_G_UsePreprintedPack" bpmnElement="Task_G_UsePreprintedPack">
+        <dc:Bounds x="1768" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_G_ConfirmCurrentInformation" bpmnElement="Task_G_ConfirmCurrentInformation">
+        <dc:Bounds x="1986" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PrintNursingAdmitPack" bpmnElement="Task_PrintNursingAdmitPack">
+        <dc:Bounds x="1768" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RequestMHT" bpmnElement="Task_RequestMHT">
+        <dc:Bounds x="2204" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SecurityReportsReady" bpmnElement="Task_SecurityReportsReady">
+        <dc:Bounds x="2422" y="999" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_MultipleConsumers" bpmnElement="Gateway_MultipleConsumers" isMarkerVisible="true">
+        <dc:Bounds x="2640" y="1014" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2595" y="976" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_H_MaintainWaitingConsumers" bpmnElement="Task_H_MaintainWaitingConsumers">
+        <dc:Bounds x="2768" y="1149" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_H_ProcessEachConsumer" bpmnElement="Task_H_ProcessEachConsumer">
+        <dc:Bounds x="2986" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_H_AdjustMHTAssignments" bpmnElement="Task_H_AdjustMHTAssignments">
+        <dc:Bounds x="3204" y="2873" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_AfterHours" bpmnElement="Gateway_AfterHours" isMarkerVisible="true">
+        <dc:Bounds x="3422" y="1778" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3377" y="1740" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_J_FollowStandardProcess" bpmnElement="Task_J_FollowStandardProcess">
+        <dc:Bounds x="3550" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_J_CoordinateAvailability" bpmnElement="Task_J_CoordinateAvailability">
+        <dc:Bounds x="3768" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_J_CompleteDuringShift" bpmnElement="Task_J_CompleteDuringShift">
+        <dc:Bounds x="3986" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_BeginNursingAdmission" bpmnElement="Task_BeginNursingAdmission">
+        <dc:Bounds x="4204" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_MedicalException" bpmnElement="Gateway_MedicalException" isMarkerVisible="true">
+        <dc:Bounds x="4422" y="1778" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4377" y="1740" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_C_AssessMedicalCondition" bpmnElement="Task_C_AssessMedicalCondition">
+        <dc:Bounds x="4550" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_C_InformPhysician" bpmnElement="Task_C_InformPhysician">
+        <dc:Bounds x="4768" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_C_CoordinateAdmissionStatus" bpmnElement="Task_C_CoordinateAdmissionStatus">
+        <dc:Bounds x="4986" y="639" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_C_LegalReview" bpmnElement="Gateway_C_LegalReview" isMarkerVisible="true">
+        <dc:Bounds x="5204" y="6427" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5159" y="6389" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_C_LegalReview" bpmnElement="Task_C_LegalReview">
+        <dc:Bounds x="5332" y="6562" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_C_SafeAtOFC" bpmnElement="Gateway_C_SafeAtOFC" isMarkerVisible="true">
+        <dc:Bounds x="5550" y="4777" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5505" y="4739" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_C_DirectEmergencyOrDiversion" bpmnElement="Task_C_DirectEmergencyOrDiversion">
+        <dc:Bounds x="5678" y="4912" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndEvent_C_MedicalDisposition" bpmnElement="EndEvent_C_MedicalDisposition">
+        <dc:Bounds x="5896" y="1935" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5859" y="1861" width="110" height="69"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_AggressiveUnsafe" bpmnElement="Gateway_AggressiveUnsafe" isMarkerVisible="true">
+        <dc:Bounds x="5723" y="1778" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5678" y="1727" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_B_AssessSafetyConcern" bpmnElement="Task_B_AssessSafetyConcern">
+        <dc:Bounds x="6010" y="2063" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_B_ContactPhysician" bpmnElement="Task_B_ContactPhysician">
+        <dc:Bounds x="6228" y="2063" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_B_AdditionalPrecautions" bpmnElement="Gateway_B_AdditionalPrecautions" isMarkerVisible="true">
+        <dc:Bounds x="6446" y="2078" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6401" y="2040" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_B_InformSecurity" bpmnElement="Task_B_InformSecurity">
+        <dc:Bounds x="6574" y="2363" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_B_ImmediateIntervention" bpmnElement="Gateway_B_ImmediateIntervention" isMarkerVisible="true">
+        <dc:Bounds x="6792" y="4777" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6747" y="4726" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_B_AdjustPrecautions" bpmnElement="Task_B_AdjustPrecautions">
+        <dc:Bounds x="6920" y="1449" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_B_ConfirmRoutineCanContinue" bpmnElement="Task_B_ConfirmRoutineCanContinue">
+        <dc:Bounds x="7138" y="2063" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_SameSexStaffing" bpmnElement="Gateway_SameSexStaffing" isMarkerVisible="true">
+        <dc:Bounds x="7356" y="1778" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7311" y="1727" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_A_ConfirmFemaleStaff" bpmnElement="Task_A_ConfirmFemaleStaff">
+        <dc:Bounds x="7484" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_A_FemaleSecurityAvailable" bpmnElement="Gateway_A_FemaleSecurityAvailable" isMarkerVisible="true">
+        <dc:Bounds x="7702" y="1928" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7657" y="1890" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_A_FemaleMHTAssists" bpmnElement="Task_A_FemaleMHTAssists">
+        <dc:Bounds x="7830" y="3173" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_A_MaintainSameSexSupervision" bpmnElement="Task_A_MaintainSameSexSupervision">
+        <dc:Bounds x="8048" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_LiceCheckTreatment" bpmnElement="Task_LiceCheckTreatment">
+        <dc:Bounds x="8266" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_BeginBiophysicalAssessment" bpmnElement="Task_BeginBiophysicalAssessment">
+        <dc:Bounds x="8484" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_CannotParticipate" bpmnElement="Gateway_CannotParticipate" isMarkerVisible="true">
+        <dc:Bounds x="8702" y="1778" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="8657" y="1740" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_F_CompleteSafeActivities" bpmnElement="Task_F_CompleteSafeActivities">
+        <dc:Bounds x="8830" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_F_DocumentCooperation" bpmnElement="Task_F_DocumentCooperation">
+        <dc:Bounds x="9048" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_F_LeaveUnavailableInfoUnresolved" bpmnElement="Task_F_LeaveUnavailableInfoUnresolved">
+        <dc:Bounds x="9266" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_F_ReturnToUnresolvedItems" bpmnElement="Task_F_ReturnToUnresolvedItems">
+        <dc:Bounds x="9484" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_F_ContinueNonvoluntaryActivities" bpmnElement="Task_F_ContinueNonvoluntaryActivities">
+        <dc:Bounds x="9702" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_AssistShower" bpmnElement="Task_AssistShower">
+        <dc:Bounds x="9920" y="2723" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ConsumerCompletesShower" bpmnElement="Task_ConsumerCompletesShower">
+        <dc:Bounds x="10138" y="3353" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EscortToUnit" bpmnElement="Task_EscortToUnit">
+        <dc:Bounds x="10356" y="999" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReceiveConsumerAndVitals" bpmnElement="Task_ReceiveConsumerAndVitals">
+        <dc:Bounds x="10574" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_UpdateBiophysicalAssessment" bpmnElement="Task_UpdateBiophysicalAssessment">
+        <dc:Bounds x="10792" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteTraumaAndSuicideAssessment" bpmnElement="Task_CompleteTraumaAndSuicideAssessment">
+        <dc:Bounds x="11010" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteSafeTSteps1And2" bpmnElement="Task_CompleteSafeTSteps1And2">
+        <dc:Bounds x="11228" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ContactPhysicianForEncounter" bpmnElement="Task_ContactPhysicianForEncounter">
+        <dc:Bounds x="11446" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PhysicianInterview" bpmnElement="Task_PhysicianInterview">
+        <dc:Bounds x="11664" y="4612" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PhysicianPaperworkAndSafeT" bpmnElement="Task_PhysicianPaperworkAndSafeT">
+        <dc:Bounds x="11882" y="4612" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_MedicationHistoryUnavailable" bpmnElement="Gateway_MedicationHistoryUnavailable" isMarkerVisible="true">
+        <dc:Bounds x="12100" y="1778" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="12055" y="1740" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_D_InformPhysician" bpmnElement="Task_D_InformPhysician">
+        <dc:Bounds x="12228" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_D_AdditionalInformationRequested" bpmnElement="Gateway_D_AdditionalInformationRequested" isMarkerVisible="true">
+        <dc:Bounds x="12446" y="4777" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="12401" y="4726" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_D_ContactOriginatingJail" bpmnElement="Task_D_ContactOriginatingJail">
+        <dc:Bounds x="12574" y="4432" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_D_ProvideMedicationInformation" bpmnElement="Task_D_ProvideMedicationInformation">
+        <dc:Bounds x="12792" y="6082" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_D_UpdateReconciliation" bpmnElement="Task_D_UpdateReconciliation">
+        <dc:Bounds x="13010" y="2363" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteMedicationReconciliation" bpmnElement="Task_CompleteMedicationReconciliation">
+        <dc:Bounds x="13228" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_OfferConsentDocuments" bpmnElement="Task_OfferConsentDocuments">
+        <dc:Bounds x="13446" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ConsentRefusal" bpmnElement="Gateway_ConsentRefusal" isMarkerVisible="true">
+        <dc:Bounds x="13664" y="3368" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="13619" y="3317" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_E_ExplainAndOfferConsent" bpmnElement="Task_E_ExplainAndOfferConsent">
+        <dc:Bounds x="13792" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_E_SignsAfterExplanation" bpmnElement="Gateway_E_SignsAfterExplanation" isMarkerVisible="true">
+        <dc:Bounds x="14010" y="3518" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="13965" y="3480" width="140" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_E_ConsumerRefusesConsent" bpmnElement="Task_E_ConsumerRefusesConsent">
+        <dc:Bounds x="14356" y="3653" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_E_RecordRefusal" bpmnElement="Task_E_RecordRefusal">
+        <dc:Bounds x="14574" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_E_SeparateBarrier" bpmnElement="Gateway_E_SeparateBarrier" isMarkerVisible="true">
+        <dc:Bounds x="14792" y="2078" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="14747" y="2027" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_E_ContinueAdmission" bpmnElement="Task_E_ContinueAdmission">
+        <dc:Bounds x="14920" y="1913" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndEvent_E_SeparateResolution" bpmnElement="EndEvent_E_SeparateResolution">
+        <dc:Bounds x="14972" y="2385" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="14935" y="2324" width="110" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ConsumerSignsConsent" bpmnElement="Task_ConsumerSignsConsent">
+        <dc:Bounds x="14138" y="3353" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_PsychoactiveMedication" bpmnElement="Gateway_PsychoactiveMedication" isMarkerVisible="true">
+        <dc:Bounds x="15138" y="4627" width="50" height="50"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="15093" y="4576" width="140" height="43"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReviewPsychoactiveConsent" bpmnElement="Task_ReviewPsychoactiveConsent">
+        <dc:Bounds x="15266" y="4762" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_OrientConsumerToUnit" bpmnElement="Task_OrientConsumerToUnit">
+        <dc:Bounds x="15484" y="2723" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_GiveInformationalMaterials" bpmnElement="Task_GiveInformationalMaterials">
+        <dc:Bounds x="15702" y="2723" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CollateAdmissionRecord" bpmnElement="Task_CollateAdmissionRecord">
+        <dc:Bounds x="15920" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ReviewDocumentsForCompleteness" bpmnElement="Task_ReviewDocumentsForCompleteness">
+        <dc:Bounds x="16138" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RouteMedicationInformation" bpmnElement="Task_RouteMedicationInformation">
+        <dc:Bounds x="16356" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_PharmacyReceivesInformation" bpmnElement="Task_PharmacyReceivesInformation">
+        <dc:Bounds x="16574" y="5272" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RouteNutritionalScreening" bpmnElement="Task_RouteNutritionalScreening">
+        <dc:Bounds x="16792" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_DietaryReceivesScreening" bpmnElement="Task_DietaryReceivesScreening">
+        <dc:Bounds x="17010" y="5452" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_FilePaperAdmissionDocuments" bpmnElement="Task_FilePaperAdmissionDocuments">
+        <dc:Bounds x="17228" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_EnterAdmissionIntoAvatar" bpmnElement="Task_EnterAdmissionIntoAvatar">
+        <dc:Bounds x="17446" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteAvatarIPGeneralNote" bpmnElement="Task_CompleteAvatarIPGeneralNote">
+        <dc:Bounds x="17664" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteAvatarNursingAssessment" bpmnElement="Task_CompleteAvatarNursingAssessment">
+        <dc:Bounds x="17882" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteAvatarTraumaAssessment" bpmnElement="Task_CompleteAvatarTraumaAssessment">
+        <dc:Bounds x="18100" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteAvatarFallAssessment" bpmnElement="Task_CompleteAvatarFallAssessment">
+        <dc:Bounds x="18318" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CompleteAvatarDailyFunctioning" bpmnElement="Task_CompleteAvatarDailyFunctioning">
+        <dc:Bounds x="18536" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_VerifyAdmissionCompletion" bpmnElement="Task_VerifyAdmissionCompletion">
+        <dc:Bounds x="18754" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_AuditDocumentation" bpmnElement="Task_AuditDocumentation">
+        <dc:Bounds x="18972" y="5092" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CommunicateUnresolvedIssues" bpmnElement="Task_CommunicateUnresolvedIssues">
+        <dc:Bounds x="19190" y="1763" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndEvent_NursingAdmissionComplete" bpmnElement="EndEvent_NursingAdmissionComplete">
+        <dc:Bounds x="19408" y="1785" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="19371" y="1826" width="110" height="30"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_SendAdmissionEmail" bpmnElement="Ann_Task_SendAdmissionEmail">
+        <dc:Bounds x="352" y="288" width="280" height="153"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_PrintNursingAdmitPack" bpmnElement="Ann_Task_PrintNursingAdmitPack">
+        <dc:Bounds x="1698" y="1607" width="280" height="108"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_ContactPhysicianForEncounter" bpmnElement="Ann_Task_ContactPhysicianForEncounter">
+        <dc:Bounds x="11376" y="1636" width="280" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_CompleteMedicationReconciliation" bpmnElement="Ann_Task_CompleteMedicationReconciliation">
+        <dc:Bounds x="13158" y="1607" width="280" height="108"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_ConsumerSignsConsent" bpmnElement="Ann_Task_ConsumerSignsConsent">
+        <dc:Bounds x="14068" y="3781" width="280" height="123"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_VerifyAdmissionCompletion" bpmnElement="Ann_Task_VerifyAdmissionCompletion">
+        <dc:Bounds x="18684" y="1607" width="280" height="108"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Ann_Task_CommunicateUnresolvedIssues" bpmnElement="Ann_Task_CommunicateUnresolvedIssues">
+        <dc:Bounds x="19120" y="1622" width="280" height="78"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_StartEvent_ScheduledAdmission__Task_SendAdmissionEmail" bpmnElement="Flow_StartEvent_ScheduledAdmission__Task_SendAdmissionEmail">
+        <di:waypoint x="344" y="529"/>
+        <di:waypoint x="422" y="529"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_SendAdmissionEmail__Task_SendAvailableRecords" bpmnElement="Flow_Task_SendAdmissionEmail__Task_SendAvailableRecords">
+        <di:waypoint x="562" y="529"/>
+        <di:waypoint x="601" y="529"/>
+        <di:waypoint x="601" y="859"/>
+        <di:waypoint x="640" y="859"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_SendAvailableRecords__Gateway_ChangedAdmission" bpmnElement="Flow_Task_SendAvailableRecords__Gateway_ChangedAdmission">
+        <di:waypoint x="780" y="859"/>
+        <di:waypoint x="819" y="859"/>
+        <di:waypoint x="819" y="529"/>
+        <di:waypoint x="858" y="529"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ChangedAdmission__Gateway_RushAdmission" bpmnElement="Flow_Gateway_ChangedAdmission__Gateway_RushAdmission">
+        <di:waypoint x="908" y="529"/>
+        <di:waypoint x="1595" y="529"/>
+        <di:waypoint x="1595" y="1803"/>
+        <di:waypoint x="1640" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1236" y="535" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ChangedAdmission__Task_I_DistributeUpdatedInformation" bpmnElement="Flow_Gateway_ChangedAdmission__Task_I_DistributeUpdatedInformation">
+        <di:waypoint x="908" y="529"/>
+        <di:waypoint x="947" y="529"/>
+        <di:waypoint x="947" y="679"/>
+        <di:waypoint x="986" y="679"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="912" y="535" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_I_DistributeUpdatedInformation__Task_I_DoNotUseEarlierPack" bpmnElement="Flow_Task_I_DistributeUpdatedInformation__Task_I_DoNotUseEarlierPack">
+        <di:waypoint x="1126" y="679"/>
+        <di:waypoint x="1165" y="679"/>
+        <di:waypoint x="1165" y="1953"/>
+        <di:waypoint x="1204" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_I_DoNotUseEarlierPack__Task_I_PrintOrUpdatePack" bpmnElement="Flow_Task_I_DoNotUseEarlierPack__Task_I_PrintOrUpdatePack">
+        <di:waypoint x="1344" y="1953"/>
+        <di:waypoint x="1422" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_I_PrintOrUpdatePack__Gateway_RushAdmission" bpmnElement="Flow_Task_I_PrintOrUpdatePack__Gateway_RushAdmission">
+        <di:waypoint x="1562" y="1953"/>
+        <di:waypoint x="1607" y="1953"/>
+        <di:waypoint x="1607" y="1803"/>
+        <di:waypoint x="1640" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_RushAdmission__Task_PrintNursingAdmitPack" bpmnElement="Flow_Gateway_RushAdmission__Task_PrintNursingAdmitPack">
+        <di:waypoint x="1690" y="1803"/>
+        <di:waypoint x="1768" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1714" y="1779" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_RushAdmission__Task_G_UsePreprintedPack" bpmnElement="Flow_Gateway_RushAdmission__Task_G_UsePreprintedPack">
+        <di:waypoint x="1690" y="1803"/>
+        <di:waypoint x="1729" y="1803"/>
+        <di:waypoint x="1729" y="1953"/>
+        <di:waypoint x="1768" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1694" y="1809" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_G_UsePreprintedPack__Task_G_ConfirmCurrentInformation" bpmnElement="Flow_Task_G_UsePreprintedPack__Task_G_ConfirmCurrentInformation">
+        <di:waypoint x="1908" y="1953"/>
+        <di:waypoint x="1986" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_G_ConfirmCurrentInformation__Task_RequestMHT" bpmnElement="Flow_Task_G_ConfirmCurrentInformation__Task_RequestMHT">
+        <di:waypoint x="2126" y="1953"/>
+        <di:waypoint x="2165" y="1953"/>
+        <di:waypoint x="2165" y="1803"/>
+        <di:waypoint x="2204" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PrintNursingAdmitPack__Task_RequestMHT" bpmnElement="Flow_Task_PrintNursingAdmitPack__Task_RequestMHT">
+        <di:waypoint x="1908" y="1803"/>
+        <di:waypoint x="2204" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RequestMHT__Task_SecurityReportsReady" bpmnElement="Flow_Task_RequestMHT__Task_SecurityReportsReady">
+        <di:waypoint x="2344" y="1803"/>
+        <di:waypoint x="2383" y="1803"/>
+        <di:waypoint x="2383" y="1039"/>
+        <di:waypoint x="2422" y="1039"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_SecurityReportsReady__Gateway_MultipleConsumers" bpmnElement="Flow_Task_SecurityReportsReady__Gateway_MultipleConsumers">
+        <di:waypoint x="2562" y="1039"/>
+        <di:waypoint x="2640" y="1039"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_MultipleConsumers__Gateway_AfterHours" bpmnElement="Flow_Gateway_MultipleConsumers__Gateway_AfterHours">
+        <di:waypoint x="2690" y="1039"/>
+        <di:waypoint x="3377" y="1039"/>
+        <di:waypoint x="3377" y="1803"/>
+        <di:waypoint x="3422" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3018" y="1045" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_MultipleConsumers__Task_H_MaintainWaitingConsumers" bpmnElement="Flow_Gateway_MultipleConsumers__Task_H_MaintainWaitingConsumers">
+        <di:waypoint x="2690" y="1039"/>
+        <di:waypoint x="2729" y="1039"/>
+        <di:waypoint x="2729" y="1189"/>
+        <di:waypoint x="2768" y="1189"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2694" y="1045" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_H_MaintainWaitingConsumers__Task_H_ProcessEachConsumer" bpmnElement="Flow_Task_H_MaintainWaitingConsumers__Task_H_ProcessEachConsumer">
+        <di:waypoint x="2908" y="1189"/>
+        <di:waypoint x="2947" y="1189"/>
+        <di:waypoint x="2947" y="1953"/>
+        <di:waypoint x="2986" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_H_ProcessEachConsumer__Task_H_AdjustMHTAssignments" bpmnElement="Flow_Task_H_ProcessEachConsumer__Task_H_AdjustMHTAssignments">
+        <di:waypoint x="3126" y="1953"/>
+        <di:waypoint x="3165" y="1953"/>
+        <di:waypoint x="3165" y="2913"/>
+        <di:waypoint x="3204" y="2913"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_H_AdjustMHTAssignments__Gateway_AfterHours" bpmnElement="Flow_Task_H_AdjustMHTAssignments__Gateway_AfterHours">
+        <di:waypoint x="3344" y="2913"/>
+        <di:waypoint x="3389" y="2913"/>
+        <di:waypoint x="3389" y="1803"/>
+        <di:waypoint x="3422" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AfterHours__Task_BeginNursingAdmission" bpmnElement="Flow_Gateway_AfterHours__Task_BeginNursingAdmission">
+        <di:waypoint x="3472" y="1803"/>
+        <di:waypoint x="4204" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3823" y="1779" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AfterHours__Task_J_FollowStandardProcess" bpmnElement="Flow_Gateway_AfterHours__Task_J_FollowStandardProcess">
+        <di:waypoint x="3472" y="1803"/>
+        <di:waypoint x="3511" y="1803"/>
+        <di:waypoint x="3511" y="1953"/>
+        <di:waypoint x="3550" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3476" y="1809" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_J_FollowStandardProcess__Task_J_CoordinateAvailability" bpmnElement="Flow_Task_J_FollowStandardProcess__Task_J_CoordinateAvailability">
+        <di:waypoint x="3690" y="1953"/>
+        <di:waypoint x="3768" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_J_CoordinateAvailability__Task_J_CompleteDuringShift" bpmnElement="Flow_Task_J_CoordinateAvailability__Task_J_CompleteDuringShift">
+        <di:waypoint x="3908" y="1953"/>
+        <di:waypoint x="3986" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_J_CompleteDuringShift__Task_BeginNursingAdmission" bpmnElement="Flow_Task_J_CompleteDuringShift__Task_BeginNursingAdmission">
+        <di:waypoint x="4126" y="1953"/>
+        <di:waypoint x="4165" y="1953"/>
+        <di:waypoint x="4165" y="1803"/>
+        <di:waypoint x="4204" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_BeginNursingAdmission__Gateway_MedicalException" bpmnElement="Flow_Task_BeginNursingAdmission__Gateway_MedicalException">
+        <di:waypoint x="4344" y="1803"/>
+        <di:waypoint x="4422" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_MedicalException__Gateway_AggressiveUnsafe" bpmnElement="Flow_Gateway_MedicalException__Gateway_AggressiveUnsafe">
+        <di:waypoint x="4472" y="1803"/>
+        <di:waypoint x="5723" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5082" y="1779" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_MedicalException__Task_C_AssessMedicalCondition" bpmnElement="Flow_Gateway_MedicalException__Task_C_AssessMedicalCondition">
+        <di:waypoint x="4472" y="1803"/>
+        <di:waypoint x="4511" y="1803"/>
+        <di:waypoint x="4511" y="1953"/>
+        <di:waypoint x="4550" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4476" y="1809" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_C_AssessMedicalCondition__Task_C_InformPhysician" bpmnElement="Flow_Task_C_AssessMedicalCondition__Task_C_InformPhysician">
+        <di:waypoint x="4690" y="1953"/>
+        <di:waypoint x="4768" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_C_InformPhysician__Task_C_CoordinateAdmissionStatus" bpmnElement="Flow_Task_C_InformPhysician__Task_C_CoordinateAdmissionStatus">
+        <di:waypoint x="4908" y="1953"/>
+        <di:waypoint x="4947" y="1953"/>
+        <di:waypoint x="4947" y="679"/>
+        <di:waypoint x="4986" y="679"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_C_CoordinateAdmissionStatus__Gateway_C_LegalReview" bpmnElement="Flow_Task_C_CoordinateAdmissionStatus__Gateway_C_LegalReview">
+        <di:waypoint x="5126" y="679"/>
+        <di:waypoint x="5165" y="679"/>
+        <di:waypoint x="5165" y="6452"/>
+        <di:waypoint x="5204" y="6452"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_C_LegalReview__Gateway_C_SafeAtOFC" bpmnElement="Flow_Gateway_C_LegalReview__Gateway_C_SafeAtOFC">
+        <di:waypoint x="5254" y="6452"/>
+        <di:waypoint x="5505" y="6452"/>
+        <di:waypoint x="5505" y="4802"/>
+        <di:waypoint x="5550" y="4802"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5364" y="6428" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_C_LegalReview__Task_C_LegalReview" bpmnElement="Flow_Gateway_C_LegalReview__Task_C_LegalReview">
+        <di:waypoint x="5254" y="6452"/>
+        <di:waypoint x="5293" y="6452"/>
+        <di:waypoint x="5293" y="6602"/>
+        <di:waypoint x="5332" y="6602"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5258" y="6458" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_C_LegalReview__Gateway_C_SafeAtOFC" bpmnElement="Flow_Task_C_LegalReview__Gateway_C_SafeAtOFC">
+        <di:waypoint x="5472" y="6602"/>
+        <di:waypoint x="5517" y="6602"/>
+        <di:waypoint x="5517" y="4802"/>
+        <di:waypoint x="5550" y="4802"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_C_SafeAtOFC__Task_C_DirectEmergencyOrDiversion" bpmnElement="Flow_Gateway_C_SafeAtOFC__Task_C_DirectEmergencyOrDiversion">
+        <di:waypoint x="5600" y="4802"/>
+        <di:waypoint x="5639" y="4802"/>
+        <di:waypoint x="5639" y="4952"/>
+        <di:waypoint x="5678" y="4952"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5604" y="4808" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_C_SafeAtOFC__Gateway_AggressiveUnsafe" bpmnElement="Flow_Gateway_C_SafeAtOFC__Gateway_AggressiveUnsafe">
+        <di:waypoint x="5600" y="4802"/>
+        <di:waypoint x="5684" y="4802"/>
+        <di:waypoint x="5684" y="1803"/>
+        <di:waypoint x="5723" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5627" y="4778" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_C_DirectEmergencyOrDiversion__EndEvent_C_MedicalDisposition" bpmnElement="Flow_Task_C_DirectEmergencyOrDiversion__EndEvent_C_MedicalDisposition">
+        <di:waypoint x="5818" y="4952"/>
+        <di:waypoint x="5857" y="4952"/>
+        <di:waypoint x="5857" y="1953"/>
+        <di:waypoint x="5896" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AggressiveUnsafe__Gateway_SameSexStaffing" bpmnElement="Flow_Gateway_AggressiveUnsafe__Gateway_SameSexStaffing">
+        <di:waypoint x="5773" y="1803"/>
+        <di:waypoint x="7356" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6550" y="1779" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_AggressiveUnsafe__Task_B_AssessSafetyConcern" bpmnElement="Flow_Gateway_AggressiveUnsafe__Task_B_AssessSafetyConcern">
+        <di:waypoint x="5773" y="1803"/>
+        <di:waypoint x="5971" y="1803"/>
+        <di:waypoint x="5971" y="2103"/>
+        <di:waypoint x="6010" y="2103"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5857" y="1809" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_B_AssessSafetyConcern__Task_B_ContactPhysician" bpmnElement="Flow_Task_B_AssessSafetyConcern__Task_B_ContactPhysician">
+        <di:waypoint x="6150" y="2103"/>
+        <di:waypoint x="6228" y="2103"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_B_ContactPhysician__Gateway_B_AdditionalPrecautions" bpmnElement="Flow_Task_B_ContactPhysician__Gateway_B_AdditionalPrecautions">
+        <di:waypoint x="6368" y="2103"/>
+        <di:waypoint x="6446" y="2103"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_B_AdditionalPrecautions__Gateway_B_ImmediateIntervention" bpmnElement="Flow_Gateway_B_AdditionalPrecautions__Gateway_B_ImmediateIntervention">
+        <di:waypoint x="6496" y="2103"/>
+        <di:waypoint x="6747" y="2103"/>
+        <di:waypoint x="6747" y="4802"/>
+        <di:waypoint x="6792" y="4802"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6606" y="2109" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_B_AdditionalPrecautions__Task_B_InformSecurity" bpmnElement="Flow_Gateway_B_AdditionalPrecautions__Task_B_InformSecurity">
+        <di:waypoint x="6496" y="2103"/>
+        <di:waypoint x="6535" y="2103"/>
+        <di:waypoint x="6535" y="2403"/>
+        <di:waypoint x="6574" y="2403"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6500" y="2109" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_B_InformSecurity__Gateway_B_ImmediateIntervention" bpmnElement="Flow_Task_B_InformSecurity__Gateway_B_ImmediateIntervention">
+        <di:waypoint x="6714" y="2403"/>
+        <di:waypoint x="6759" y="2403"/>
+        <di:waypoint x="6759" y="4802"/>
+        <di:waypoint x="6792" y="4802"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_B_ImmediateIntervention__Task_B_ConfirmRoutineCanContinue" bpmnElement="Flow_Gateway_B_ImmediateIntervention__Task_B_ConfirmRoutineCanContinue">
+        <di:waypoint x="6842" y="4802"/>
+        <di:waypoint x="7093" y="4802"/>
+        <di:waypoint x="7093" y="2103"/>
+        <di:waypoint x="7138" y="2103"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6952" y="4778" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_B_ImmediateIntervention__Task_B_AdjustPrecautions" bpmnElement="Flow_Gateway_B_ImmediateIntervention__Task_B_AdjustPrecautions">
+        <di:waypoint x="6842" y="4802"/>
+        <di:waypoint x="6881" y="4802"/>
+        <di:waypoint x="6881" y="1489"/>
+        <di:waypoint x="6920" y="1489"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="6846" y="4778" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_B_AdjustPrecautions__Task_B_ConfirmRoutineCanContinue" bpmnElement="Flow_Task_B_AdjustPrecautions__Task_B_ConfirmRoutineCanContinue">
+        <di:waypoint x="7060" y="1489"/>
+        <di:waypoint x="7105" y="1489"/>
+        <di:waypoint x="7105" y="2103"/>
+        <di:waypoint x="7138" y="2103"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_B_ConfirmRoutineCanContinue__Gateway_SameSexStaffing" bpmnElement="Flow_Task_B_ConfirmRoutineCanContinue__Gateway_SameSexStaffing">
+        <di:waypoint x="7278" y="2103"/>
+        <di:waypoint x="7317" y="2103"/>
+        <di:waypoint x="7317" y="1803"/>
+        <di:waypoint x="7356" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_SameSexStaffing__Task_LiceCheckTreatment" bpmnElement="Flow_Gateway_SameSexStaffing__Task_LiceCheckTreatment">
+        <di:waypoint x="7406" y="1803"/>
+        <di:waypoint x="8266" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7821" y="1779" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_SameSexStaffing__Task_A_ConfirmFemaleStaff" bpmnElement="Flow_Gateway_SameSexStaffing__Task_A_ConfirmFemaleStaff">
+        <di:waypoint x="7406" y="1803"/>
+        <di:waypoint x="7445" y="1803"/>
+        <di:waypoint x="7445" y="1953"/>
+        <di:waypoint x="7484" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7410" y="1809" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_A_ConfirmFemaleStaff__Gateway_A_FemaleSecurityAvailable" bpmnElement="Flow_Task_A_ConfirmFemaleStaff__Gateway_A_FemaleSecurityAvailable">
+        <di:waypoint x="7624" y="1953"/>
+        <di:waypoint x="7702" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_A_FemaleSecurityAvailable__Task_A_MaintainSameSexSupervision" bpmnElement="Flow_Gateway_A_FemaleSecurityAvailable__Task_A_MaintainSameSexSupervision">
+        <di:waypoint x="7752" y="1953"/>
+        <di:waypoint x="8048" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7885" y="1929" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_A_FemaleSecurityAvailable__Task_A_FemaleMHTAssists" bpmnElement="Flow_Gateway_A_FemaleSecurityAvailable__Task_A_FemaleMHTAssists">
+        <di:waypoint x="7752" y="1953"/>
+        <di:waypoint x="7791" y="1953"/>
+        <di:waypoint x="7791" y="3213"/>
+        <di:waypoint x="7830" y="3213"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="7756" y="1959" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_A_FemaleMHTAssists__Task_A_MaintainSameSexSupervision" bpmnElement="Flow_Task_A_FemaleMHTAssists__Task_A_MaintainSameSexSupervision">
+        <di:waypoint x="7970" y="3213"/>
+        <di:waypoint x="8009" y="3213"/>
+        <di:waypoint x="8009" y="1953"/>
+        <di:waypoint x="8048" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_A_MaintainSameSexSupervision__Task_LiceCheckTreatment" bpmnElement="Flow_Task_A_MaintainSameSexSupervision__Task_LiceCheckTreatment">
+        <di:waypoint x="8188" y="1953"/>
+        <di:waypoint x="8227" y="1953"/>
+        <di:waypoint x="8227" y="1803"/>
+        <di:waypoint x="8266" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_LiceCheckTreatment__Task_BeginBiophysicalAssessment" bpmnElement="Flow_Task_LiceCheckTreatment__Task_BeginBiophysicalAssessment">
+        <di:waypoint x="8406" y="1803"/>
+        <di:waypoint x="8484" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_BeginBiophysicalAssessment__Gateway_CannotParticipate" bpmnElement="Flow_Task_BeginBiophysicalAssessment__Gateway_CannotParticipate">
+        <di:waypoint x="8624" y="1803"/>
+        <di:waypoint x="8702" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_CannotParticipate__Task_AssistShower" bpmnElement="Flow_Gateway_CannotParticipate__Task_AssistShower">
+        <di:waypoint x="8752" y="1803"/>
+        <di:waypoint x="9875" y="1803"/>
+        <di:waypoint x="9875" y="2763"/>
+        <di:waypoint x="9920" y="2763"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="9298" y="1809" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_CannotParticipate__Task_F_CompleteSafeActivities" bpmnElement="Flow_Gateway_CannotParticipate__Task_F_CompleteSafeActivities">
+        <di:waypoint x="8752" y="1803"/>
+        <di:waypoint x="8791" y="1803"/>
+        <di:waypoint x="8791" y="1953"/>
+        <di:waypoint x="8830" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="8756" y="1809" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_F_CompleteSafeActivities__Task_F_DocumentCooperation" bpmnElement="Flow_Task_F_CompleteSafeActivities__Task_F_DocumentCooperation">
+        <di:waypoint x="8970" y="1953"/>
+        <di:waypoint x="9048" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_F_DocumentCooperation__Task_F_LeaveUnavailableInfoUnresolved" bpmnElement="Flow_Task_F_DocumentCooperation__Task_F_LeaveUnavailableInfoUnresolved">
+        <di:waypoint x="9188" y="1953"/>
+        <di:waypoint x="9266" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_F_LeaveUnavailableInfoUnresolved__Task_F_ReturnToUnresolvedItems" bpmnElement="Flow_Task_F_LeaveUnavailableInfoUnresolved__Task_F_ReturnToUnresolvedItems">
+        <di:waypoint x="9406" y="1953"/>
+        <di:waypoint x="9484" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_F_ReturnToUnresolvedItems__Task_F_ContinueNonvoluntaryActivities" bpmnElement="Flow_Task_F_ReturnToUnresolvedItems__Task_F_ContinueNonvoluntaryActivities">
+        <di:waypoint x="9624" y="1953"/>
+        <di:waypoint x="9702" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_F_ContinueNonvoluntaryActivities__Task_AssistShower" bpmnElement="Flow_Task_F_ContinueNonvoluntaryActivities__Task_AssistShower">
+        <di:waypoint x="9842" y="1953"/>
+        <di:waypoint x="9887" y="1953"/>
+        <di:waypoint x="9887" y="2763"/>
+        <di:waypoint x="9920" y="2763"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_AssistShower__Task_ConsumerCompletesShower" bpmnElement="Flow_Task_AssistShower__Task_ConsumerCompletesShower">
+        <di:waypoint x="10060" y="2763"/>
+        <di:waypoint x="10099" y="2763"/>
+        <di:waypoint x="10099" y="3393"/>
+        <di:waypoint x="10138" y="3393"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ConsumerCompletesShower__Task_EscortToUnit" bpmnElement="Flow_Task_ConsumerCompletesShower__Task_EscortToUnit">
+        <di:waypoint x="10278" y="3393"/>
+        <di:waypoint x="10317" y="3393"/>
+        <di:waypoint x="10317" y="1039"/>
+        <di:waypoint x="10356" y="1039"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_EscortToUnit__Task_ReceiveConsumerAndVitals" bpmnElement="Flow_Task_EscortToUnit__Task_ReceiveConsumerAndVitals">
+        <di:waypoint x="10496" y="1039"/>
+        <di:waypoint x="10535" y="1039"/>
+        <di:waypoint x="10535" y="1803"/>
+        <di:waypoint x="10574" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReceiveConsumerAndVitals__Task_UpdateBiophysicalAssessment" bpmnElement="Flow_Task_ReceiveConsumerAndVitals__Task_UpdateBiophysicalAssessment">
+        <di:waypoint x="10714" y="1803"/>
+        <di:waypoint x="10792" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_UpdateBiophysicalAssessment__Task_CompleteTraumaAndSuicideAssessment" bpmnElement="Flow_Task_UpdateBiophysicalAssessment__Task_CompleteTraumaAndSuicideAssessment">
+        <di:waypoint x="10932" y="1803"/>
+        <di:waypoint x="11010" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteTraumaAndSuicideAssessment__Task_CompleteSafeTSteps1And2" bpmnElement="Flow_Task_CompleteTraumaAndSuicideAssessment__Task_CompleteSafeTSteps1And2">
+        <di:waypoint x="11150" y="1803"/>
+        <di:waypoint x="11228" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteSafeTSteps1And2__Task_ContactPhysicianForEncounter" bpmnElement="Flow_Task_CompleteSafeTSteps1And2__Task_ContactPhysicianForEncounter">
+        <di:waypoint x="11368" y="1803"/>
+        <di:waypoint x="11446" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ContactPhysicianForEncounter__Task_PhysicianInterview" bpmnElement="Flow_Task_ContactPhysicianForEncounter__Task_PhysicianInterview">
+        <di:waypoint x="11586" y="1803"/>
+        <di:waypoint x="11625" y="1803"/>
+        <di:waypoint x="11625" y="4652"/>
+        <di:waypoint x="11664" y="4652"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PhysicianInterview__Task_PhysicianPaperworkAndSafeT" bpmnElement="Flow_Task_PhysicianInterview__Task_PhysicianPaperworkAndSafeT">
+        <di:waypoint x="11804" y="4652"/>
+        <di:waypoint x="11882" y="4652"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PhysicianPaperworkAndSafeT__Gateway_MedicationHistoryUnavailable" bpmnElement="Flow_Task_PhysicianPaperworkAndSafeT__Gateway_MedicationHistoryUnavailable">
+        <di:waypoint x="12022" y="4652"/>
+        <di:waypoint x="12061" y="4652"/>
+        <di:waypoint x="12061" y="1803"/>
+        <di:waypoint x="12100" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_MedicationHistoryUnavailable__Task_CompleteMedicationReconciliation" bpmnElement="Flow_Gateway_MedicationHistoryUnavailable__Task_CompleteMedicationReconciliation">
+        <di:waypoint x="12150" y="1803"/>
+        <di:waypoint x="13228" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="12674" y="1779" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_MedicationHistoryUnavailable__Task_D_InformPhysician" bpmnElement="Flow_Gateway_MedicationHistoryUnavailable__Task_D_InformPhysician">
+        <di:waypoint x="12150" y="1803"/>
+        <di:waypoint x="12189" y="1803"/>
+        <di:waypoint x="12189" y="1953"/>
+        <di:waypoint x="12228" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="12154" y="1809" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_D_InformPhysician__Gateway_D_AdditionalInformationRequested" bpmnElement="Flow_Task_D_InformPhysician__Gateway_D_AdditionalInformationRequested">
+        <di:waypoint x="12368" y="1953"/>
+        <di:waypoint x="12407" y="1953"/>
+        <di:waypoint x="12407" y="4802"/>
+        <di:waypoint x="12446" y="4802"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_D_AdditionalInformationRequested__Task_CompleteMedicationReconciliation" bpmnElement="Flow_Gateway_D_AdditionalInformationRequested__Task_CompleteMedicationReconciliation">
+        <di:waypoint x="12496" y="4802"/>
+        <di:waypoint x="13183" y="4802"/>
+        <di:waypoint x="13183" y="1803"/>
+        <di:waypoint x="13228" y="1803"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="12824" y="4778" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_D_AdditionalInformationRequested__Task_D_ContactOriginatingJail" bpmnElement="Flow_Gateway_D_AdditionalInformationRequested__Task_D_ContactOriginatingJail">
+        <di:waypoint x="12496" y="4802"/>
+        <di:waypoint x="12535" y="4802"/>
+        <di:waypoint x="12535" y="4472"/>
+        <di:waypoint x="12574" y="4472"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="12500" y="4778" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_D_ContactOriginatingJail__Task_D_ProvideMedicationInformation" bpmnElement="Flow_Task_D_ContactOriginatingJail__Task_D_ProvideMedicationInformation">
+        <di:waypoint x="12714" y="4472"/>
+        <di:waypoint x="12753" y="4472"/>
+        <di:waypoint x="12753" y="6122"/>
+        <di:waypoint x="12792" y="6122"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_D_ProvideMedicationInformation__Task_D_UpdateReconciliation" bpmnElement="Flow_Task_D_ProvideMedicationInformation__Task_D_UpdateReconciliation">
+        <di:waypoint x="12932" y="6122"/>
+        <di:waypoint x="12971" y="6122"/>
+        <di:waypoint x="12971" y="2403"/>
+        <di:waypoint x="13010" y="2403"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_D_UpdateReconciliation__Task_CompleteMedicationReconciliation" bpmnElement="Flow_Task_D_UpdateReconciliation__Task_CompleteMedicationReconciliation">
+        <di:waypoint x="13150" y="2403"/>
+        <di:waypoint x="13195" y="2403"/>
+        <di:waypoint x="13195" y="1803"/>
+        <di:waypoint x="13228" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteMedicationReconciliation__Task_OfferConsentDocuments" bpmnElement="Flow_Task_CompleteMedicationReconciliation__Task_OfferConsentDocuments">
+        <di:waypoint x="13368" y="1803"/>
+        <di:waypoint x="13446" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_OfferConsentDocuments__Gateway_ConsentRefusal" bpmnElement="Flow_Task_OfferConsentDocuments__Gateway_ConsentRefusal">
+        <di:waypoint x="13586" y="1803"/>
+        <di:waypoint x="13625" y="1803"/>
+        <di:waypoint x="13625" y="3393"/>
+        <di:waypoint x="13664" y="3393"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsentRefusal__Task_ConsumerSignsConsent" bpmnElement="Flow_Gateway_ConsentRefusal__Task_ConsumerSignsConsent">
+        <di:waypoint x="13714" y="3393"/>
+        <di:waypoint x="14138" y="3393"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="13911" y="3369" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_ConsentRefusal__Task_E_ExplainAndOfferConsent" bpmnElement="Flow_Gateway_ConsentRefusal__Task_E_ExplainAndOfferConsent">
+        <di:waypoint x="13714" y="3393"/>
+        <di:waypoint x="13753" y="3393"/>
+        <di:waypoint x="13753" y="1953"/>
+        <di:waypoint x="13792" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="13718" y="3369" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_E_ExplainAndOfferConsent__Gateway_E_SignsAfterExplanation" bpmnElement="Flow_Task_E_ExplainAndOfferConsent__Gateway_E_SignsAfterExplanation">
+        <di:waypoint x="13932" y="1953"/>
+        <di:waypoint x="13971" y="1953"/>
+        <di:waypoint x="13971" y="3543"/>
+        <di:waypoint x="14010" y="3543"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_E_SignsAfterExplanation__Task_E_ConsumerRefusesConsent" bpmnElement="Flow_Gateway_E_SignsAfterExplanation__Task_E_ConsumerRefusesConsent">
+        <di:waypoint x="14060" y="3543"/>
+        <di:waypoint x="14317" y="3543"/>
+        <di:waypoint x="14317" y="3693"/>
+        <di:waypoint x="14356" y="3693"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="14174" y="3549" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_E_SignsAfterExplanation__Task_ConsumerSignsConsent" bpmnElement="Flow_Gateway_E_SignsAfterExplanation__Task_ConsumerSignsConsent">
+        <di:waypoint x="14060" y="3543"/>
+        <di:waypoint x="14099" y="3543"/>
+        <di:waypoint x="14099" y="3393"/>
+        <di:waypoint x="14138" y="3393"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="14064" y="3519" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_E_ConsumerRefusesConsent__Task_E_RecordRefusal" bpmnElement="Flow_Task_E_ConsumerRefusesConsent__Task_E_RecordRefusal">
+        <di:waypoint x="14496" y="3693"/>
+        <di:waypoint x="14535" y="3693"/>
+        <di:waypoint x="14535" y="1953"/>
+        <di:waypoint x="14574" y="1953"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_E_RecordRefusal__Gateway_E_SeparateBarrier" bpmnElement="Flow_Task_E_RecordRefusal__Gateway_E_SeparateBarrier">
+        <di:waypoint x="14714" y="1953"/>
+        <di:waypoint x="14753" y="1953"/>
+        <di:waypoint x="14753" y="2103"/>
+        <di:waypoint x="14792" y="2103"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_E_SeparateBarrier__Task_E_ContinueAdmission" bpmnElement="Flow_Gateway_E_SeparateBarrier__Task_E_ContinueAdmission">
+        <di:waypoint x="14842" y="2103"/>
+        <di:waypoint x="14881" y="2103"/>
+        <di:waypoint x="14881" y="1953"/>
+        <di:waypoint x="14920" y="1953"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="14846" y="2079" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_E_SeparateBarrier__EndEvent_E_SeparateResolution" bpmnElement="Flow_Gateway_E_SeparateBarrier__EndEvent_E_SeparateResolution">
+        <di:waypoint x="14842" y="2103"/>
+        <di:waypoint x="14933" y="2103"/>
+        <di:waypoint x="14933" y="2403"/>
+        <di:waypoint x="14972" y="2403"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="14872" y="2109" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_E_ContinueAdmission__Gateway_PsychoactiveMedication" bpmnElement="Flow_Task_E_ContinueAdmission__Gateway_PsychoactiveMedication">
+        <di:waypoint x="15060" y="1953"/>
+        <di:waypoint x="15093" y="1953"/>
+        <di:waypoint x="15093" y="4652"/>
+        <di:waypoint x="15138" y="4652"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ConsumerSignsConsent__Gateway_PsychoactiveMedication" bpmnElement="Flow_Task_ConsumerSignsConsent__Gateway_PsychoactiveMedication">
+        <di:waypoint x="14278" y="3393"/>
+        <di:waypoint x="15105" y="3393"/>
+        <di:waypoint x="15105" y="4652"/>
+        <di:waypoint x="15138" y="4652"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_PsychoactiveMedication__Task_OrientConsumerToUnit" bpmnElement="Flow_Gateway_PsychoactiveMedication__Task_OrientConsumerToUnit">
+        <di:waypoint x="15188" y="4652"/>
+        <di:waypoint x="15439" y="4652"/>
+        <di:waypoint x="15439" y="2763"/>
+        <di:waypoint x="15484" y="2763"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="15298" y="4628" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Gateway_PsychoactiveMedication__Task_ReviewPsychoactiveConsent" bpmnElement="Flow_Gateway_PsychoactiveMedication__Task_ReviewPsychoactiveConsent">
+        <di:waypoint x="15188" y="4652"/>
+        <di:waypoint x="15227" y="4652"/>
+        <di:waypoint x="15227" y="4802"/>
+        <di:waypoint x="15266" y="4802"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="15192" y="4658" width="30" height="18"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReviewPsychoactiveConsent__Task_OrientConsumerToUnit" bpmnElement="Flow_Task_ReviewPsychoactiveConsent__Task_OrientConsumerToUnit">
+        <di:waypoint x="15406" y="4802"/>
+        <di:waypoint x="15451" y="4802"/>
+        <di:waypoint x="15451" y="2763"/>
+        <di:waypoint x="15484" y="2763"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_OrientConsumerToUnit__Task_GiveInformationalMaterials" bpmnElement="Flow_Task_OrientConsumerToUnit__Task_GiveInformationalMaterials">
+        <di:waypoint x="15624" y="2763"/>
+        <di:waypoint x="15702" y="2763"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_GiveInformationalMaterials__Task_CollateAdmissionRecord" bpmnElement="Flow_Task_GiveInformationalMaterials__Task_CollateAdmissionRecord">
+        <di:waypoint x="15842" y="2763"/>
+        <di:waypoint x="15881" y="2763"/>
+        <di:waypoint x="15881" y="1803"/>
+        <di:waypoint x="15920" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CollateAdmissionRecord__Task_ReviewDocumentsForCompleteness" bpmnElement="Flow_Task_CollateAdmissionRecord__Task_ReviewDocumentsForCompleteness">
+        <di:waypoint x="16060" y="1803"/>
+        <di:waypoint x="16138" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_ReviewDocumentsForCompleteness__Task_RouteMedicationInformation" bpmnElement="Flow_Task_ReviewDocumentsForCompleteness__Task_RouteMedicationInformation">
+        <di:waypoint x="16278" y="1803"/>
+        <di:waypoint x="16356" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RouteMedicationInformation__Task_PharmacyReceivesInformation" bpmnElement="Flow_Task_RouteMedicationInformation__Task_PharmacyReceivesInformation">
+        <di:waypoint x="16496" y="1803"/>
+        <di:waypoint x="16535" y="1803"/>
+        <di:waypoint x="16535" y="5312"/>
+        <di:waypoint x="16574" y="5312"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_PharmacyReceivesInformation__Task_RouteNutritionalScreening" bpmnElement="Flow_Task_PharmacyReceivesInformation__Task_RouteNutritionalScreening">
+        <di:waypoint x="16714" y="5312"/>
+        <di:waypoint x="16753" y="5312"/>
+        <di:waypoint x="16753" y="1803"/>
+        <di:waypoint x="16792" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_RouteNutritionalScreening__Task_DietaryReceivesScreening" bpmnElement="Flow_Task_RouteNutritionalScreening__Task_DietaryReceivesScreening">
+        <di:waypoint x="16932" y="1803"/>
+        <di:waypoint x="16971" y="1803"/>
+        <di:waypoint x="16971" y="5492"/>
+        <di:waypoint x="17010" y="5492"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_DietaryReceivesScreening__Task_FilePaperAdmissionDocuments" bpmnElement="Flow_Task_DietaryReceivesScreening__Task_FilePaperAdmissionDocuments">
+        <di:waypoint x="17150" y="5492"/>
+        <di:waypoint x="17189" y="5492"/>
+        <di:waypoint x="17189" y="1803"/>
+        <di:waypoint x="17228" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_FilePaperAdmissionDocuments__Task_EnterAdmissionIntoAvatar" bpmnElement="Flow_Task_FilePaperAdmissionDocuments__Task_EnterAdmissionIntoAvatar">
+        <di:waypoint x="17368" y="1803"/>
+        <di:waypoint x="17446" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_EnterAdmissionIntoAvatar__Task_CompleteAvatarIPGeneralNote" bpmnElement="Flow_Task_EnterAdmissionIntoAvatar__Task_CompleteAvatarIPGeneralNote">
+        <di:waypoint x="17586" y="1803"/>
+        <di:waypoint x="17664" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteAvatarIPGeneralNote__Task_CompleteAvatarNursingAssessment" bpmnElement="Flow_Task_CompleteAvatarIPGeneralNote__Task_CompleteAvatarNursingAssessment">
+        <di:waypoint x="17804" y="1803"/>
+        <di:waypoint x="17882" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteAvatarNursingAssessment__Task_CompleteAvatarTraumaAssessment" bpmnElement="Flow_Task_CompleteAvatarNursingAssessment__Task_CompleteAvatarTraumaAssessment">
+        <di:waypoint x="18022" y="1803"/>
+        <di:waypoint x="18100" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteAvatarTraumaAssessment__Task_CompleteAvatarFallAssessment" bpmnElement="Flow_Task_CompleteAvatarTraumaAssessment__Task_CompleteAvatarFallAssessment">
+        <di:waypoint x="18240" y="1803"/>
+        <di:waypoint x="18318" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteAvatarFallAssessment__Task_CompleteAvatarDailyFunctioning" bpmnElement="Flow_Task_CompleteAvatarFallAssessment__Task_CompleteAvatarDailyFunctioning">
+        <di:waypoint x="18458" y="1803"/>
+        <di:waypoint x="18536" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CompleteAvatarDailyFunctioning__Task_VerifyAdmissionCompletion" bpmnElement="Flow_Task_CompleteAvatarDailyFunctioning__Task_VerifyAdmissionCompletion">
+        <di:waypoint x="18676" y="1803"/>
+        <di:waypoint x="18754" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_VerifyAdmissionCompletion__Task_AuditDocumentation" bpmnElement="Flow_Task_VerifyAdmissionCompletion__Task_AuditDocumentation">
+        <di:waypoint x="18894" y="1803"/>
+        <di:waypoint x="18933" y="1803"/>
+        <di:waypoint x="18933" y="5132"/>
+        <di:waypoint x="18972" y="5132"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_AuditDocumentation__Task_CommunicateUnresolvedIssues" bpmnElement="Flow_Task_AuditDocumentation__Task_CommunicateUnresolvedIssues">
+        <di:waypoint x="19112" y="5132"/>
+        <di:waypoint x="19151" y="5132"/>
+        <di:waypoint x="19151" y="1803"/>
+        <di:waypoint x="19190" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Task_CommunicateUnresolvedIssues__EndEvent_NursingAdmissionComplete" bpmnElement="Flow_Task_CommunicateUnresolvedIssues__EndEvent_NursingAdmissionComplete">
+        <di:waypoint x="19330" y="1803"/>
+        <di:waypoint x="19408" y="1803"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_SendAdmissionEmail" bpmnElement="Assoc_Task_SendAdmissionEmail">
+        <di:waypoint x="492" y="489"/>
+        <di:waypoint x="492" y="441"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_PrintNursingAdmitPack" bpmnElement="Assoc_Task_PrintNursingAdmitPack">
+        <di:waypoint x="1838" y="1763"/>
+        <di:waypoint x="1838" y="1715"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_ContactPhysicianForEncounter" bpmnElement="Assoc_Task_ContactPhysicianForEncounter">
+        <di:waypoint x="11516" y="1763"/>
+        <di:waypoint x="11516" y="1686"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_CompleteMedicationReconciliation" bpmnElement="Assoc_Task_CompleteMedicationReconciliation">
+        <di:waypoint x="13298" y="1763"/>
+        <di:waypoint x="13298" y="1715"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_ConsumerSignsConsent" bpmnElement="Assoc_Task_ConsumerSignsConsent">
+        <di:waypoint x="14208" y="3433"/>
+        <di:waypoint x="14208" y="3781"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_VerifyAdmissionCompletion" bpmnElement="Assoc_Task_VerifyAdmissionCompletion">
+        <di:waypoint x="18824" y="1763"/>
+        <di:waypoint x="18824" y="1715"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Assoc_Task_CommunicateUnresolvedIssues" bpmnElement="Assoc_Task_CommunicateUnresolvedIssues">
+        <di:waypoint x="19260" y="1763"/>
+        <di:waypoint x="19260" y="1700"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
